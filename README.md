@@ -11,6 +11,8 @@
 
 4. Lê Văn Phong
 
+5. Ngô Công Thảo
+
 ## Nội Dung Đề Tài
 Phần mềm hỗ trợ phòng ngừa sử dụng ma túy
 ```
@@ -30,3 +32,9 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 - Quản lý thông tin chuyên viên tư vấn: thông tin chung, bằng cấp, chuyên môn, lịch làm việc, ...
 - Quản lý hồ sơ người dùng, lịch sử đặt lịch hẹn trực tuyến, lịch sử tham gia các chương trình truyền thông và giáo dục cộng đồng.
 - Dashboard & Report.
+
+## Task
+
+[Notion](https://www.notion.so/1f58d2dce42880599cc5c13217803046?v=1f58d2dce42881d09e6f000c797d91a9)
+
+[Meet](https://meet.google.com/izz-oxfi-zfw)
