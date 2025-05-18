@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/drug_prevention_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  jwt:
+    secret: your_jwt_secret_key_should_be_long_and_secure
+    expiration-ms: 86400000 # 24 hours
+
+logging:
+  level:
+    org.springframework: INFO
+    com.drugprevention: DEBUG
