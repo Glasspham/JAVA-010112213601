@@ -9,8 +9,12 @@ import theme from './utils/theme';
 // Context Providers
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
+// Layouts
+import ClientLayout from './components/layout/ClientLayout';
+
 // Pages
 import LoginPage from './pages/auth/LoginPage';
+import ProfilePage from './pages/profile/ProfilePage';
 
 function App() {
   return (
@@ -21,6 +25,13 @@ function App() {
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
+
+            {/* Client Routes with ClientLayout */}
+            <Route path="/profile" element={
+              <ClientLayout>
+                <ProfilePage />
+              </ClientLayout>
+            } />
 
           </Routes>
         </Router>
