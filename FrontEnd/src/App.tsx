@@ -16,6 +16,7 @@ import ClientLayout from './components/layout/ClientLayout';
 import LoginPage from './pages/auth/LoginPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProgramsPage from './pages/programs/ProgramsPage';
+import ProgramDetailPage from './pages/programs/ProgramDetailPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 
@@ -39,6 +40,12 @@ function App() {
             <Route path="/programs" element={
               <ClientLayout>
                 <ProgramsPage />
+              </ClientLayout>
+            } />
+
+            <Route path="/programs/:id" element={
+              <ClientLayout>
+                <ProgramDetailPage />
               </ClientLayout>
             } />
 
