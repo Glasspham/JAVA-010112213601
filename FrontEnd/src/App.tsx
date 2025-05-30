@@ -15,6 +15,7 @@ import ClientLayout from './components/layout/ClientLayout';
 // Pages
 import LoginPage from './pages/auth/LoginPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import ProgramsPage from './pages/programs/ProgramsPage';
 
 function App() {
   return (
@@ -30,6 +31,12 @@ function App() {
             <Route path="/profile" element={
               <ClientLayout>
                 <ProfilePage />
+              </ClientLayout>
+            } />
+
+            <Route path="/programs" element={
+              <ClientLayout>
+                <ProgramsPage />
               </ClientLayout>
             } />
 
