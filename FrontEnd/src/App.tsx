@@ -16,6 +16,7 @@ import ClientLayout from './components/layout/ClientLayout';
 import LoginPage from './pages/auth/LoginPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProgramsPage from './pages/programs/ProgramsPage';
+import ConsultantsPage from './pages/consultants/ConsultantsPage';
 
 function App() {
   return (
@@ -40,6 +41,11 @@ function App() {
               </ClientLayout>
             } />
 
+            <Route path="/consultants" element={
+              <ClientLayout>
+                <ConsultantsPage />
+              </ClientLayout>
+            } />
           </Routes>
         </Router>
       </AuthProvider>
