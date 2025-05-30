@@ -17,6 +17,7 @@ import LoginPage from './pages/auth/LoginPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProgramsPage from './pages/programs/ProgramsPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
+import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 
 function App() {
   return (
@@ -44,6 +45,12 @@ function App() {
             <Route path="/consultants" element={
               <ClientLayout>
                 <ConsultantsPage />
+              </ClientLayout>
+            } />
+            
+            <Route path="/consultants/:id" element={
+              <ClientLayout>
+                <ConsultantDetailPage />
               </ClientLayout>
             } />
           </Routes>
