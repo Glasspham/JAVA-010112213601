@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Layouts
 import ClientLayout from './components/layout/ClientLayout';
+import AdminLayout from './components/layout/AdminLayout';
 
 // Pages
 import HomePage from './pages/home/HomePage';
@@ -20,6 +21,24 @@ import ProgramsPage from './pages/programs/ProgramsPage';
 import ProgramDetailPage from './pages/programs/ProgramDetailPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
+
+// Admin Pages
+import AdminConsultantsPage from './pages/admin/ConsultantsPage';
+
+// Protected route component for admin routes
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (user?.role !== 'admin' && user?.role !== 'manager') {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   return (
@@ -66,6 +85,15 @@ function App() {
               <ClientLayout>
                 <ConsultantDetailPage />
               </ClientLayout>
+            } />
+
+            {/* Admin Routes */}
+            <Route path="/admin/consultants" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminConsultantsPage />
+                </AdminLayout>
+              </AdminRoute>
             } />
           </Routes>
         </Router>
