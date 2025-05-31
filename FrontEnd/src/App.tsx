@@ -25,6 +25,7 @@ import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 
 // Admin Pages
 import AdminConsultantsPage from './pages/admin/ConsultantsPage';
+import AdminProgramsPage from './pages/admin/ProgramsPage';
 
 // Protected route component for admin routes
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -94,6 +95,14 @@ function App() {
               <AdminRoute>
                 <AdminLayout>
                   <AdminConsultantsPage />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+
+            <Route path="/admin/programs" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminProgramsPage />
                 </AdminLayout>
               </AdminRoute>
             } />
