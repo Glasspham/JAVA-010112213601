@@ -16,6 +16,7 @@ import AdminLayout from './components/layout/AdminLayout';
 // Pages
 import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProgramsPage from './pages/programs/ProgramsPage';
 import ProgramDetailPage from './pages/programs/ProgramDetailPage';
@@ -49,6 +50,7 @@ function App() {
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
             {/* Client Routes with ClientLayout */}
             <Route path="/" element={
