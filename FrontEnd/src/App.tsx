@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ClientLayout from './components/layout/ClientLayout';
 
 // Pages
+import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProgramsPage from './pages/programs/ProgramsPage';
@@ -31,6 +32,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
 
             {/* Client Routes with ClientLayout */}
+            <Route path="/" element={
+              <ClientLayout>
+                <HomePage />
+              </ClientLayout>
+            } />
+
             <Route path="/profile" element={
               <ClientLayout>
                 <ProfilePage />
