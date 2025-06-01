@@ -24,6 +24,7 @@ import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 
 // Admin Pages
+import DashboardPage from './pages/dashboard/DashboardPage';
 import UsersPage from './pages/admin/UsersPage';
 import AdminConsultantsPage from './pages/admin/ConsultantsPage';
 import AdminProgramsPage from './pages/admin/ProgramsPage';
@@ -92,6 +93,14 @@ function App() {
             } />
 
             {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <DashboardPage />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            
             <Route path="/admin/users" element={
               <AdminRoute>
                 <AdminLayout>
