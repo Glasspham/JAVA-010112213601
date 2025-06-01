@@ -1,46 +1,71 @@
-# Getting Started with Create React App
+# JAVA-010112213601
+# Drug Use Prevention Support System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Thành Viên Nhóm
 
-## Available Scripts
+| STT | Họ & Tên               | MSSV         |
+| :-: | ---------------------- | :----------: |
+|  1  | Phạm Hà Võ             | 079205013990 |
+|  2  | Su Đức Tiến            | 079205025447 |
+|  3  | Nguyễn Phạm Minh Nhiên | 082205002850 |
+|  4  | Lê Văn Phong           | 036205013933 |
+|  5  | Ngô Công Thảo          | 060205002242 |
 
-In the project directory, you can run:
+## Nội Dung Đề Tài
+Phần mềm hỗ trợ phòng ngừa sử dụng ma túy
+```
+Guest
+Member
+Staff
+Consultant
+Manager
+Admin
+```
+Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng của 01 tổ chức tình nguyện.
+- Trang chủ giới thiệu thông tin tổ chức, blog chia sẽ kinh nghiệm, …
+- Chức năng cho phép người dùng tìm kiếm và đăng ký các khóa học đào tạo online về ma túy (nhận thức ma túy, kỹ năng phòng tránh, kỹ năng từ chối, …), nội dung được phân theo độ tuổi (học sinh, sinh viên, phụ huynh, giáo viên, ...).
+- Chức năng cho phép người dùng làm bài khảo sát trắc nghiệm như ASSIST, CRAFFT, ... để xác định mức độ nguy cơ sử dụng ma túy. Dựa trên kết quả đánh giá này hệ thống đề xuất hành động phù hợp cho người dùng (tham gia khóa đào tạo, gặp chuyên viên tư vấn, ...).
+- Chức năng cho phép người dùng đặt lịch hẹn trực tuyến với chuyên viên tư vấn để hỗ trợ.
+- Quản lý các chương trình truyền thông và giáo dục cộng đồng về ma túy. Ngoài ra hệ thống còn cho phép người dùng thực hiện các bài khảo sát trước/sau tham gia chương trình nhằm rút kinh nghiệm cải tiến chương trình.
+- Quản lý thông tin chuyên viên tư vấn: thông tin chung, bằng cấp, chuyên môn, lịch làm việc, ...
+- Quản lý hồ sơ người dùng, lịch sử đặt lịch hẹn trực tuyến, lịch sử tham gia các chương trình truyền thông và giáo dục cộng đồng.
+- Dashboard & Report.
 
-### `npm start`
+## Task & Meeting
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+[Notion](https://www.notion.so/1f58d2dce42880599cc5c13217803046?v=1f58d2dce42881d09e6f000c797d91a9)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+[Meet](https://meet.google.com/izz-oxfi-zfw)
 
-### `npm test`
+## 💻Languages and Tools
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Languages
+- Front-End
 
-### `npm run build`
+| React | TypeScript | JavaScript |
+| :---: | :--------: | :--------: |
+| <img src="https://github.com/devicons/devicon/blob/master/icons/react/react-original.svg" width="55" height="55"/> | <img src="https://github.com/devicons/devicon/blob/master/icons/typescript/typescript-original.svg" width="55" height="55"/> | <img src="https://github.com/devicons/devicon/blob/master/icons/javascript/javascript-original.svg" width="55" height="55"/> |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Back-End
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Java | Spring-boot |
+| :--: | :---------: |
+| <img src="https://github.com/devicons/devicon/blob/master/icons/java/java-original.svg" width="55" height="55"/> | <img src="https://github.com/devicons/devicon/blob/master/icons/spring/spring-original.svg" width="55" height="55"/> |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Database
 
-### `npm run eject`
+| MySQL |
+| :---: |
+| <img src="https://github.com/devicons/devicon/blob/master/icons/mysql/mysql-original.svg" width="55" height="55"/> |
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Tools
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Maven | Docker | Git |
+| :---: | :----: | :-: |
+| <img src="https://github.com/devicons/devicon/blob/master/icons/maven/maven-original.svg" width="55" height="55"/> | <img src="https://github.com/devicons/devicon/blob/master/icons/docker/docker-original.svg" width="55" height="55"/> | <img src="https://github.com/devicons/devicon/blob/master/icons/git/git-original.svg" width="55" height="55"/> |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### IDE/Text Editor
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+| Vscode | Intellij |
+| :----: | :------: |
+| <img src="https://github.com/devicons/devicon/blob/master/icons/vscode/vscode-original.svg" width="55" height="55"/> | <img src="https://github.com/devicons/devicon/blob/master/icons/intellij/intellij-original.svg" width="55" height="55"/> |
