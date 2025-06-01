@@ -1,0 +1,101 @@
+/* Styles for program cards and detail buttons */
+
+.program-card {
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.program-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.program-card .card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.program-card .card-actions {
+  margin-top: auto;
+  padding: 16px;
+}
+
+.detail-button {
+  background-color: #4ba3c7 !important; /* Nurse blue */
+  color: white !important;
+  font-weight: bold !important;
+  text-transform: none !important;
+  padding: 8px 16px !important;
+  border-radius: 4px !important;
+  transition: background-color 0.3s ease !important;
+  display: block !important;
+  margin-top: 16px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+  z-index: 10 !important;
+  position: relative !important;
+}
+
+.detail-button:hover {
+  background-color: #357ca5 !important; /* Nurse blue dark */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+.detail-button:disabled {
+  background-color: #e0e0e0 !important;
+  color: #9e9e9e !important;
+  box-shadow: none !important;
+}
+
+.program-image {
+  height: 200px;
+  object-fit: cover;
+}
+
+.program-title {
+  font-weight: bold !important;
+  margin-bottom: 12px !important;
+  color: #4ba3c7 !important;
+}
+
+.program-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.program-info-icon {
+  margin-right: 8px;
+  color: #757575;
+}
+
+.program-description {
+  margin-bottom: 16px;
+  color: #616161;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Featured program styles */
+.featured-program {
+  margin-bottom: 32px;
+}
+
+.featured-program .detail-button {
+  margin-top: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .program-image {
+    height: 160px;
+  }
+
+  .detail-button {
+    width: 100%;
+  }
+}
