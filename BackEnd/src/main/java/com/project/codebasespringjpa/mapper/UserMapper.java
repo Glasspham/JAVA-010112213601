@@ -5,6 +5,8 @@ import com.project.codebasespringjpa.dto.user.response.UserResponse;
 import com.project.codebasespringjpa.entity.MajorEntity;
 import com.project.codebasespringjpa.entity.RoleEntity;
 import com.project.codebasespringjpa.entity.UserEntity;
+import com.project.codebasespringjpa.exception.AppException;
+import com.project.codebasespringjpa.exception.ErrorCode;
 import com.project.codebasespringjpa.repository.IMajorRepository;
 import com.project.codebasespringjpa.repository.IRoleRepository;
 import lombok.AccessLevel;
@@ -39,7 +41,9 @@ public class UserMapper {
             }
         }
 
-        RoleEntity role = roleRepository.findByName(request.getRole()).orElse(null);
+        RoleEntity role = roleRepository.findByName(request.getRole()).orElseThrow(
+                () -> new AppException(ErrorCode.ROLE_NOT_FOUND)
+        );
 
         return UserEntity.builder()
                 .username(request.getUsername())
