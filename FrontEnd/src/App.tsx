@@ -20,6 +20,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
 
 // Admin Pages
 import UsersPage from './pages/admin/UsersPage';
@@ -74,6 +75,16 @@ function App() {
               <ClientLayout>
                 <ConsultantDetailPage />
               </ClientLayout>
+            } />
+
+
+            {/* Admin Routes with AdminLayout */}
+            <Route path="/admin/dashboard" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <DashboardPage />
+                </AdminLayout>
+              </AdminRoute>
             } />
 
             <Route path="/admin/users" element={
