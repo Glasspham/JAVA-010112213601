@@ -15,6 +15,7 @@ import ClientLayout from './components/layout/ClientLayout';
 import AdminLayout from './components/layout/AdminLayout';
 
 // Pages
+import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
@@ -54,6 +55,13 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
+            {/* Client Routes with ClientLayout */}
+            <Route path="/" element={
+              <ClientLayout>
+                <HomePage />
+              </ClientLayout>
+            } />
+
 
 
             <Route path="/consultants" element={
@@ -67,7 +75,6 @@ function App() {
                 <ConsultantDetailPage />
               </ClientLayout>
             } />
-
 
             <Route path="/admin/users" element={
               <AdminRoute>
