@@ -22,6 +22,7 @@ import ProgramsPage from './pages/programs/ProgramsPage';
 import ProgramDetailPage from './pages/programs/ProgramDetailPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
+import SurveysPage from './pages/surveys/SurveysPage';
 
 // Admin Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -96,6 +97,12 @@ function App() {
             <Route path="/appointments" element={
               <ClientLayout>
                 <AppointmentsPage />
+              </ClientLayout>
+            } />
+
+            <Route path="/surveys" element={
+              <ClientLayout>
+                <SurveysPage />
               </ClientLayout>
             } />
 
