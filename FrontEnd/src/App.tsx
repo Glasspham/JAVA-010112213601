@@ -23,6 +23,7 @@ import ProgramDetailPage from './pages/programs/ProgramDetailPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 import SurveysPage from './pages/surveys/SurveysPage';
+import CoursesPage from './pages/courses/CoursesPage';
 
 // Admin Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -103,6 +104,12 @@ function App() {
             <Route path="/surveys" element={
               <ClientLayout>
                 <SurveysPage />
+              </ClientLayout>
+            } />
+
+            <Route path="/courses" element={
+              <ClientLayout>
+                <CoursesPage />
               </ClientLayout>
             } />
 
