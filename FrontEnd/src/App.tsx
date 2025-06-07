@@ -23,6 +23,7 @@ import ProgramDetailPage from './pages/programs/ProgramDetailPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 import SurveysPage from './pages/surveys/SurveysPage';
+import SurveyDetailPage from './pages/surveys/SurveyDetailPage';
 import CoursesPage from './pages/courses/CoursesPage';
 import CourseDetailPage from './pages/courses/CourseDetailPage';
 
@@ -105,6 +106,12 @@ function App() {
             <Route path="/surveys" element={
               <ClientLayout>
                 <SurveysPage />
+              </ClientLayout>
+            } />
+
+            <Route path="/surveys/:id" element={
+              <ClientLayout>
+                <SurveyDetailPage />
               </ClientLayout>
             } />
 
