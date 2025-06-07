@@ -24,6 +24,7 @@ import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 import SurveysPage from './pages/surveys/SurveysPage';
 import CoursesPage from './pages/courses/CoursesPage';
+import CourseDetailPage from './pages/courses/CourseDetailPage';
 
 // Admin Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -110,6 +111,12 @@ function App() {
             <Route path="/courses" element={
               <ClientLayout>
                 <CoursesPage />
+              </ClientLayout>
+            } />
+
+            <Route path="/courses/:id" element={
+              <ClientLayout>
+                <CourseDetailPage />
               </ClientLayout>
             } />
 
