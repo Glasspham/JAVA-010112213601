@@ -66,7 +66,6 @@ public class UserService implements IUserService {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
             if (userDetails instanceof UserDetailsImpl)
                 return (UserDetailsImpl) userDetails;
         } catch (Exception e) {
@@ -99,7 +98,6 @@ public class UserService implements IUserService {
             log.error(">>>Khong tim thay majors, update user: " + e.getMessage());
         }
         RoleEntity role = roleRepository.findByName(request.getRole()).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-
         UserEntity userUpdate = this.findEntityById(id);
         userUpdate.setFullname(request.getFullname());
         userUpdate.setEmail(request.getEmail());
@@ -108,7 +106,6 @@ public class UserService implements IUserService {
         userUpdate.setPhone(request.getPhone());
         userUpdate.setMajors(majorEntityList);
         userUpdate.setRole(role);
-
         return userMapper.toResponse(userRepository.save(userUpdate));
     }
 

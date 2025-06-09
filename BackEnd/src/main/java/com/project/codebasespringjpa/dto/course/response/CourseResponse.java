@@ -1,4 +1,4 @@
-package com.project.codebasespringjpa.dto.user.response;
+package com.project.codebasespringjpa.dto.course.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,15 +10,17 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
+public class CourseResponse {
     Long id;
-    String username;
-    String fullname;
-    String email;
+
+    String name;
+    String description;
+    Double duration;
+    String sallybus;
     String avatar;
-    String position;
-    String phone;
-    List<String> majors;
-    String role;
+
     LocalDateTime createDate;
+
+    List<String> objects;
+    List<String> users;
 }

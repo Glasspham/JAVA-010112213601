@@ -66,7 +66,6 @@ public class AuthenService implements IAuthenService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
         String jwt = jwtProvider.generateTokenByUsername(request.getUsername());
 
         return LoginResponse.builder()

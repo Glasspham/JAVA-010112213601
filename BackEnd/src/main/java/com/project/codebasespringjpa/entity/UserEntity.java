@@ -42,6 +42,14 @@ public class UserEntity extends BaseEntity {
     RoleEntity role;
 
 
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_user_program",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "program_id")
+    )
+    List<ProgramEntity> programs;
+
     public UserEntity(String email, String phone, String username, String fullname, String password, String avatar, String position, RoleEntity roleEntity, List<MajorEntity> majors) {
         this.email = email;
         this.phone = phone;
