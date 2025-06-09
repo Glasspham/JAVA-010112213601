@@ -18,13 +18,19 @@ import AdminLayout from './components/layout/AdminLayout';
 import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import ConsultantsPage from './pages/consultants/ConsultantsPage';
-import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
+import CoursesPage from './pages/courses/CoursesPage';
+import CourseDetailPage from './pages/courses/CourseDetailPage';
+
+
+import ProgramsPage from './pages/programs/ProgramsPage';
+import ProgramDetailPage from './pages/programs/ProgramDetailPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 
 // Admin Pages
 import UsersPage from './pages/admin/UsersPage';
 
+import AdminProgramsPage from './pages/admin/ProgramsPage';
+import AdminConsultantsPage from './pages/admin/ConsultantsPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -33,9 +39,9 @@ import 'react-toastify/dist/ReactToastify.css';
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useAuth();
 
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
   // if (user?.role !== 'admin' && user?.role !== 'manager') {
   //   return <Navigate to="/" />;
@@ -63,20 +69,30 @@ function App() {
               </ClientLayout>
             } />
 
-
-
-            <Route path="/consultants" element={
+            <Route path="/courses" element={
               <ClientLayout>
-                <ConsultantsPage />
+                <CoursesPage />
               </ClientLayout>
             } />
 
-            <Route path="/consultants/:id" element={
+            <Route path="/courses/:id" element={
               <ClientLayout>
-                <ConsultantDetailPage />
+                <CourseDetailPage />
               </ClientLayout>
             } />
 
+
+            <Route path="/programs" element={
+              <ClientLayout>
+                <ProgramsPage />
+              </ClientLayout>
+            } />
+
+            <Route path="/programs/:id" element={
+              <ClientLayout>
+                <ProgramDetailPage />
+              </ClientLayout>
+            } />
 
             {/* Admin Routes with AdminLayout */}
             <Route path="/admin/dashboard" element={
@@ -96,11 +112,21 @@ function App() {
             } />
 
 
+            <Route path="/admin/programs" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminProgramsPage />
+                </AdminLayout>
+              </AdminRoute>
+            } />
 
-
-
-
-
+            <Route path="/admin/consultants" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminConsultantsPage />
+                </AdminLayout>
+              </AdminRoute>
+            } />
 
             {/* Redirect old dashboard to admin dashboard */}
             <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />

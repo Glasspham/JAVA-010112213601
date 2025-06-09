@@ -33,8 +33,8 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       var isAuthenStatus = await _authService.isAuthen();
-      // if (!isAuthenStatus)
-      //   navigate('/login');
+      if (!isAuthenStatus)
+        navigate('/login');
     }
 
     checkAuth();
