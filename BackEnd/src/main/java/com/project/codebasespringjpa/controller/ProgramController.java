@@ -56,4 +56,24 @@ public class ProgramController {
                 .data(programService.create(request))
                 .build();
     }
+
+    @PutMapping("/update/{id}")
+    ApiResponse<ProgramResponse> update(
+            @PathVariable Long id,
+            @RequestBody ProgramRequest request) {
+        return ApiResponse.<ProgramResponse>builder()
+                .data(programService.update(id, request))
+                .build();
+    }
+
+    @DeleteMapping("/delete/{id}")
+    ApiResponse<String> delete(
+            @PathVariable Long id) {
+
+        programService.delete(id);
+
+        return ApiResponse.<String>builder()
+                .data("Xóa thành công")
+                .build();
+    }
 }

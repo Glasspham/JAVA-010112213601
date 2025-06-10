@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 public interface IProgramService {
     ProgramEntity findEntityById(Long id);
     ProgramResponse create(ProgramRequest request);
+    ProgramResponse update(Long id, ProgramRequest request);
     ProgramResponse findByid(Long id);
     Page<ProgramResponse> findAll(Pageable pageable, ProgramSearch programSearch);
+    void delete(Long id);
 }
