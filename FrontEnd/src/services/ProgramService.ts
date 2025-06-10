@@ -20,6 +20,23 @@ export class ProgramService {
         ];
     }
 
+    public async updateProgram(id: number, programDTO: ProgramDTO) {
+        const response = await axios.put(`${URL_UPDATE_PROGRAM}/${id}`, programDTO);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async deleteProgram(id: number) {
+        const response = await axios.delete(`${URL_DELETE_PROGRAM}/${id}`);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
 
     public async findAll(programSearch: ProgramSearch) {
         const params = new URLSearchParams();

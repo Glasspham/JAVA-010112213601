@@ -32,6 +32,8 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
   Search as SearchIcon,
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
@@ -89,6 +91,10 @@ const AdminProgramsPage: React.FC = () => {
     status: 'upcoming' as ProgramStatus,
     image: ''
   });
+
+  // State for delete confirmation dialog
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
 
   // State for notifications
   const [snackbar, setSnackbar] = useState({
@@ -296,6 +302,30 @@ const AdminProgramsPage: React.FC = () => {
     setOpenProgramDialog(true);
   };
 
+  const handleOpenEditDialog = (program: Program) => {
+    setDialogMode('edit');
+    setCurrentProgram(program);
+
+    // Retrieve full DTO data to fill form if needed, or rely on existing Program data
+    // Assuming Program object has enough data for editing (e.g. date, time extracted from date object)
+    const programDate = new Date(program.date);
+    const programTime = format(programDate, 'HH:mm'); // Format date object back to HH:mm string
+
+    setFormData({
+      id: parseInt(program.id), // Convert string ID back to number for DTO
+      title: program.title,
+      description: program.description,
+      location: program.location,
+      date: programDate,
+      time: programTime,
+      duration: program.duration,
+      capacity: program.capacity,
+      registrations: program.registrations,
+      status: program.status,
+      image: program.image || ''
+    });
+    setOpenProgramDialog(true);
+  };
 
   const handleCloseProgramDialog = () => {
     setOpenProgramDialog(false);
@@ -338,7 +368,9 @@ const AdminProgramsPage: React.FC = () => {
 
       if (dialogMode === 'add') {
         [code, data, message] = await _programService.createProgram(programDTO);
-      } 
+      } else {
+        [code, data, message] = await _programService.updateProgram(programDTO.id, programDTO);
+      }
 
       if (code === 200) {
         toast.success(message || `Chương trình đã được ${dialogMode === 'add' ? 'thêm' : 'cập nhật'} thành công!`);
@@ -353,6 +385,37 @@ const AdminProgramsPage: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(`Lỗi kết nối: ${error.message}`);
+    }
+  };
+
+  const handleOpenDeleteDialog = (program: Program) => {
+    setProgramToDelete(program);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setProgramToDelete(null);
+  };
+
+  const handleDeleteProgram = async () => {
+    if (programToDelete) {
+      try {
+        const [code, data, message] = await _programService.deleteProgram(parseInt(programToDelete.id)); // Convert ID to number
+        if (code === 200) {
+          toast.success(message || 'Chương trình đã được xóa thành công!');
+          handleCloseDeleteDialog();
+          // Trigger a refresh of the program list
+          setProgramSearch(prev => ({
+            ...prev,
+            timer: Date.now()
+          }));
+        } else {
+          toast.error(message || 'Đã có lỗi xảy ra khi xóa chương trình.');
+        }
+      } catch (error: any) {
+        toast.error(`Lỗi kết nối: ${error.message}`);
+      }
     }
   };
 
@@ -483,7 +546,6 @@ const AdminProgramsPage: React.FC = () => {
                         <VisibilityIcon />
                       </IconButton>
                     </Tooltip>
-                    {/* 
                     <Tooltip title="Chỉnh sửa">
                       <IconButton color="primary" onClick={() => handleOpenEditDialog(program)}>
                         <EditIcon />
@@ -494,7 +556,6 @@ const AdminProgramsPage: React.FC = () => {
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
-                    */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -643,6 +704,22 @@ const AdminProgramsPage: React.FC = () => {
           <Button onClick={handleCloseProgramDialog}>Hủy</Button>
           <Button onClick={handleSaveProgram} variant="contained" color="primary">
             {dialogMode === 'add' ? 'Thêm' : 'Cập nhật'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa chương trình "{programToDelete?.title}" không?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
+          <Button onClick={handleDeleteProgram} color="error" variant="contained">
+            Xóa
           </Button>
         </DialogActions>
       </Dialog>
