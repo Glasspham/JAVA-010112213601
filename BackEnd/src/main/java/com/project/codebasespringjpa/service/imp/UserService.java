@@ -6,7 +6,6 @@ import com.project.codebasespringjpa.entity.UserEntity;
 import com.project.codebasespringjpa.exception.AppException;
 import com.project.codebasespringjpa.exception.ErrorCode;
 import com.project.codebasespringjpa.mapper.UserMapper;
-import com.project.codebasespringjpa.repository.IRoleRepository;
 import com.project.codebasespringjpa.repository.IUserRepository;
 import com.project.codebasespringjpa.service.interfaces.IUserService;
 import jakarta.transaction.Transactional;

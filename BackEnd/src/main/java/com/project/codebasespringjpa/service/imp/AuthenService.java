@@ -3,9 +3,14 @@ package com.project.codebasespringjpa.service.imp;
 import com.project.codebasespringjpa.configuration.security.UserDetailsImpl;
 import com.project.codebasespringjpa.configuration.security.jwtConfig.JwtProvider;
 import com.project.codebasespringjpa.dto.authen.request.LoginRequest;
+import com.project.codebasespringjpa.dto.authen.request.RegisterRequest;
 import com.project.codebasespringjpa.dto.authen.response.LoginResponse;
+import com.project.codebasespringjpa.entity.RoleEntity;
+import com.project.codebasespringjpa.entity.UserEntity;
+import com.project.codebasespringjpa.enums.RoleEnum;
 import com.project.codebasespringjpa.repository.IUserRepository;
 import com.project.codebasespringjpa.service.interfaces.IAuthenService;
+import com.project.codebasespringjpa.util.UtilConst;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -35,6 +40,28 @@ public class AuthenService implements IAuthenService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Override
+    public boolean register(RegisterRequest request) {
+        try {
+            UserEntity user = new UserEntity();
+            user.setUsername(request.getUsername());
+            user.setFullname(request.getFullname());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setPhone(request.getPhone());
+            user.setEmail(request.getEmail());
+
+            RoleEntity role = new RoleEntity(RoleEnum.USER.name());
+            user.setRole(role);
+            user.setAvatar(UtilConst.IMAGE_USER_DEFAULT);
+            userRepository.save(user);
+
+            return true;
+        }catch (Exception e){
+            log.error(">>>Co loi trong qua trinh dang ky: " + e.getMessage());
+            return false;
+        }
+    }
+    
     @Override
     public LoginResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate

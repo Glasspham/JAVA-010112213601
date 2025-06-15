@@ -1,6 +1,7 @@
 package com.project.codebasespringjpa.controller;
 
 import com.project.codebasespringjpa.dto.authen.request.LoginRequest;
+import com.project.codebasespringjpa.dto.authen.request.RegisterRequest;
 import com.project.codebasespringjpa.dto.authen.response.LoginResponse;
 import com.project.codebasespringjpa.dto.user.response.UserResponse;
 import com.project.codebasespringjpa.exception.ApiResponse;
@@ -33,6 +34,23 @@ public class AuthController {
     ApiResponse<UserResponse> findByUsername(@RequestParam(name = "username") String username){
         return ApiResponse.<UserResponse>builder()
                 .data(userService.findByUsername(username))
+                .build();
+    }
+
+    @PostMapping("/register")
+    ApiResponse<String> register(@RequestBody RegisterRequest request){
+        Boolean registStatus = authenService.register(request);
+        String mess = "Đăng ký tài khoản thành công";
+        int code = 200;
+
+        if(registStatus == false){
+            mess = "Đăng ký thất bại";
+            code = 400;
+        }
+
+        return ApiResponse.<String>builder()
+                .data(mess)
+                .code(code)
                 .build();
     }
 }
