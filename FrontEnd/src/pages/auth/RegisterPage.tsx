@@ -15,41 +15,47 @@ import {
 import { PersonAddOutlined } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { AuthService } from '../../services/AuthService';
+import { toast } from 'react-toastify';
 
 const RegisterPage: React.FC = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
+  const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<{
-    firstName?: string;
-    lastName?: string;
+    username?: string;
+    fullname?: string;
     email?: string;
+    phone?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
 
-  const { register, isLoading, error } = useAuth();
+  const authService = new AuthService();
   const navigate = useNavigate();
 
   const validateForm = () => {
     const errors: {
-      firstName?: string;
-      lastName?: string;
+      username?: string;
+      fullname?: string;
       email?: string;
+      phone?: string;
       password?: string;
       confirmPassword?: string;
     } = {};
     let isValid = true;
 
-    if (!firstName) {
-      errors.firstName = 'Tên là bắt buộc';
+    if (!username) {
+      errors.username = 'Tên đăng nhập là bắt buộc';
       isValid = false;
     }
 
-    if (!lastName) {
-      errors.lastName = 'Họ là bắt buộc';
+    if (!fullname) {
+      errors.fullname = 'Họ tên là bắt buộc';
       isValid = false;
     }
 
@@ -58,6 +64,14 @@ const RegisterPage: React.FC = () => {
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       errors.email = 'Email không hợp lệ';
+      isValid = false;
+    }
+
+    if (!phone) {
+      errors.phone = 'Số điện thoại là bắt buộc';
+      isValid = false;
+    } else if (!/^[0-9]{10,11}$/.test(phone)) {
+      errors.phone = 'Số điện thoại không hợp lệ';
       isValid = false;
     }
 
@@ -85,11 +99,31 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
 
     if (validateForm()) {
+      setIsLoading(true);
       try {
-        await register(email, password, firstName, lastName);
-        navigate('/');
-      } catch (error) {
+        const registerData = {
+          username,
+          fullname,
+          password,
+          phone,
+          email
+        };
+
+        const [code, data, message] = await authService.register(registerData);
+
+        if (code === 200) {
+          toast.success('Đăng ký tài khoản thành công!');
+          setTimeout(() => {
+            navigate('/login');
+          }, 750);
+        } else {
+          toast.error(message || 'Đăng ký thất bại');
+        }
+      } catch (error: any) {
         console.error('Registration failed:', error);
+        toast.error(error.response?.data?.message || 'Đăng ký thất bại');
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -114,38 +148,34 @@ const RegisterPage: React.FC = () => {
           Đăng ký tài khoản
         </Typography>
 
-        {error && (
-          <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
+          <Box sx={{ mb: 2 }}>
             <TextField
-              autoComplete="given-name"
-              name="firstName"
+              autoComplete="username"
+              name="username"
               required
               fullWidth
-              id="firstName"
-              label="Tên"
+              id="username"
+              label="Tên đăng nhập"
               autoFocus
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              error={!!formErrors.firstName}
-              helperText={formErrors.firstName}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              error={!!formErrors.username}
+              helperText={formErrors.username}
             />
+          </Box>
+          <Box sx={{ mb: 2 }}>
             <TextField
               required
               fullWidth
-              id="lastName"
-              label="Họ"
-              name="lastName"
-              autoComplete="family-name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              error={!!formErrors.lastName}
-              helperText={formErrors.lastName}
+              id="fullname"
+              label="Họ và tên"
+              name="fullname"
+              autoComplete="name"
+              value={fullname}
+              onChange={(e) => setFullname(e.target.value)}
+              error={!!formErrors.fullname}
+              helperText={formErrors.fullname}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -160,6 +190,20 @@ const RegisterPage: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               error={!!formErrors.email}
               helperText={formErrors.email}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              required
+              fullWidth
+              id="phone"
+              label="Số điện thoại"
+              name="phone"
+              autoComplete="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              error={!!formErrors.phone}
+              helperText={formErrors.phone}
             />
           </Box>
           <Box sx={{ mb: 2 }}>

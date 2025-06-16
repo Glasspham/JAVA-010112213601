@@ -1,6 +1,7 @@
 import axios from "axios";
 import { LoginDTO } from "../pages/auth/LoginDTO";
 import { AuthenDTO } from "../pages/auth/AuthenDTO";
+import { RegisterDTO } from "../pages/auth/RegisterDTO";
 import * as jwt_decode from 'jwt-decode';
 
 interface MyTokenPayload {
@@ -13,6 +14,7 @@ interface MyTokenPayload {
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const API_LOGIN = `${BASE_URL}/auth/login`;
+const API_REGISTER = `${BASE_URL}/auth/register`;
 
 export class AuthService {
     public async login(loginDTO: LoginDTO) {
@@ -23,6 +25,15 @@ export class AuthService {
             response.data.message
         ];
     }
+
+    public async register(registerDTO: RegisterDTO) {
+            const response = await axios.post(API_REGISTER, registerDTO);
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        }
 
     public async writeInfoToLocal(token: any) {
         const { jwtDecode } = jwt_decode;
