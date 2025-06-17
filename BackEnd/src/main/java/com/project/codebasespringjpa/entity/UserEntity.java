@@ -3,6 +3,10 @@ package com.project.codebasespringjpa.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.internal.build.AllowNonPortable;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -27,6 +31,14 @@ public class UserEntity extends BaseEntity {
     String avatar;
     String position;
     String phone;
+
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_user_major",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "major_id")
+    )
+    List<MajorEntity> majors;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
