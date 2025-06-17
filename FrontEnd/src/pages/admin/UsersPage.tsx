@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import {
   Container,
   Typography,
@@ -40,6 +40,12 @@ import {
 } from '@mui/icons-material';
 import { User, UserRole } from '../../types/user';
 import { mockUsers } from '../../utils/mockData';
+import { UserSearch } from '../../dto/UserSearch';
+import { UserService } from '../../services/UserService';
+import { UserDTO } from '../../dto/UserDTO';
+import { toast } from 'react-toastify';
+import { FileService } from '../../services/FileService';
+import Swal from 'sweetalert2';
 
 const UsersPage: React.FC = () => {
   // State for users data
@@ -58,11 +64,17 @@ const UsersPage: React.FC = () => {
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     email: '',
-    firstName: '',
-    lastName: '',
-    role: 'member' as UserRole
+    username: '',
+    fullname: '',
+    password: '1234',
+    avatar: '',
+    position: '',
+    phone: '',
+    major: [],
+    role: 'USER' as UserRole
   });
 
   // State for delete confirmation dialog
@@ -76,6 +88,41 @@ const UsersPage: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
 
+
+
+  //----------------------------------------------------------------
+  const _userService = new UserService();
+  const _fileService = new FileService();
+  const [userSearch, setUserSearch] = useState(new UserSearch());
+  const [listUser, setListUser] = useState<any[]>([]);
+  const [totalPage, setTotalPage] = useState(0);
+  const [fromIndex, setFromIndex] = useState(0);
+  const [toIndex, setToIndex] = useState(0);
+  const [totalElement, setTotalElement] = useState(0);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [newMajor, setNewMajor] = useState('');
+
+  const [userDTO, setUserDTO] = useState<UserDTO>(new UserDTO());
+
+
+  useEffect(() => {
+    const findAllUser = async () => {
+      const [codefindAllUser, pageUser, messageFindAllUser] = await _userService.findAll(userSearch);
+
+      console.log("Thong tin user: ", pageUser);
+
+      setListUser(pageUser.content);
+      setTotalPage(pageUser.totalPages);
+      setFromIndex((userSearch.page - 1) * userSearch.limit);
+      setToIndex(userSearch.page * userSearch.limit);
+      setTotalElement(pageUser.totalElements);
+    }
+
+    findAllUser();
+
+  }, [userSearch.timer]);
+  //----------------------------------------------------------------
+
   // Load users data
   useEffect(() => {
     // In a real app, this would be an API call
@@ -83,31 +130,15 @@ const UsersPage: React.FC = () => {
     setFilteredUsers(mockUsers);
   }, []);
 
-  // Filter users based on search term and role filter
-  useEffect(() => {
-    let result = [...users];
-
-    // Apply search filter
-    if (searchTerm) {
-      result = result.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lastName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Apply role filter
-    if (roleFilter !== 'all') {
-      result = result.filter(user => user.role === roleFilter);
-    }
-
-    setFilteredUsers(result);
-    setPage(0); // Reset to first page when filtering
-  }, [searchTerm, roleFilter, users]);
-
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    // console.log("Chuyển trang 1 ");
+
+    setUserSearch(prev => ({
+      ...prev,
+      page: newPage + 1,
+      timer: Date.now()
+    }));
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,125 +146,279 @@ const UsersPage: React.FC = () => {
     setPage(0);
   };
 
-  // Handle search and filter changes
+  // Handle search and filter changes - call api 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    let keyworkInput = event.target.value;
+    setUserSearch(prev => ({
+      ...prev,
+      keyword: keyworkInput,
+      page: 1,
+      timer: Date.now()
+    }));
   };
 
+
+
+  //---call api - search role 
   const handleRoleFilterChange = (event: SelectChangeEvent) => {
     setRoleFilter(event.target.value);
+    let roleInput: string | null = event.target.value;
+    if (roleInput === 'all')
+      roleInput = null;
+    setUserSearch(prev => ({
+      ...prev,
+      roleName: roleInput,
+      timer: Date.now()
+    }));
+
   };
 
+
+  //----reset filter - call api 
   const handleResetFilters = () => {
     setSearchTerm('');
     setRoleFilter('all');
+    setUserSearch(prev => ({
+      ...prev,
+      keyword: null,
+      roleName: null,
+      timer: Date.now()
+    }));
   };
+
+  //-----xử lý ảnh 
+  // const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const handleAvatarChange = async (event: any) => {
+    const file = event.target.files[0];
+    if (file) {
+
+      //----lưu file vào state
+      const file = event.target.files?.[0] ?? null;
+      setAvatarFile(file);
+
+
+      // Kiểm tra định dạng ảnh (tùy chọn)
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        toast.error('Vui lòng chọn một tệp hình ảnh hợp lệ!');
+        return;
+      }
+
+      // Tạo URL để preview
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl); // state để render ảnh
+      setFormData((prev) => ({
+        ...prev,
+        avatar: file, // lưu file để gửi lên backend
+      }));
+    }
+  };
+
+  //----xóa user 
+  // const deleteUser = (name: any, id: any) => {
+  //   console.log("name = ", name);
+  //   console.log("id = ", id);
+
+
+  // }
+
+  const deleteUser = async (name: string, id: number) => {
+
+    const result = await Swal.fire({
+      title: `Xác nhận xóa?`,
+      text: `Bạn có chắc muốn xóa người dùng "${name}" không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const [code, data, message] = await _userService.deleteUser(id);
+
+
+        await Swal.fire({
+          icon: "success",
+          title: "Đã xóa!",
+          text: `Người dùng "${name}" đã được xóa.`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        setUserSearch(prev => ({
+          ...prev,
+          timer: Date.now()
+        }));
+
+        // TODO: cập nhật lại danh sách người dùng sau khi xóa
+      } catch (error) {
+        console.error("Lỗi khi xóa:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể xóa người dùng. Vui lòng thử lại sau.",
+        });
+      }
+    }
+  };
+
 
   // Handle user dialog
   const handleOpenAddDialog = () => {
     setDialogMode('add');
-    setFormData({
-      email: '',
-      firstName: '',
-      lastName: '',
-      role: 'member'
-    });
+    setUserDTO(new UserDTO());
+    setAvatarPreview(null);
+    setAvatarFile(null);
+    setNewMajor('');
     setOpenUserDialog(true);
   };
 
-  const handleOpenEditDialog = (user: User) => {
+  const handleOpenEditDialog = async (user: any) => {
     setDialogMode('edit');
-    setCurrentUser(user);
-    setFormData({
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role
-    });
+    setCurrentUserId(user.id);
+
+    try {
+      // Gọi API để lấy thông tin chi tiết user
+      const [code, userData, message] = await _userService.getUserById(user.id);
+
+      if (code === 200 && userData) {
+        setUserDTO({
+          id: userData.id || 0,
+          email: userData.email || '',
+          username: userData.username || '',
+          fullname: userData.fullname || '',
+          password: '', // Không hiển thị password cũ
+          avatar: userData.avatar || '',
+          position: userData.position || '',
+          phone: userData.phone || '',
+          majors: userData.majors || [],
+          role: userData.role || 'USER'
+        });
+
+        // Set avatar preview nếu có
+        if (userData.avatar) {
+          setAvatarPreview(`http://localhost:8080/${userData.avatar}`);
+        } else {
+          setAvatarPreview(null);
+        }
+      } else {
+        toast.error(message || 'Không thể tải thông tin người dùng');
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast.error('Có lỗi xảy ra khi tải thông tin người dùng');
+      return;
+    }
+
     setOpenUserDialog(true);
   };
 
   const handleCloseUserDialog = () => {
     setOpenUserDialog(false);
     setCurrentUser(null);
+    setCurrentUserId(null);
+    setUserDTO(new UserDTO());
+    setAvatarPreview(null);
+    setAvatarFile(null);
   };
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData(prev => ({
+    // setFormData(prev => ({
+    //   ...prev,
+    //   [name]: value
+    // }));
+
+    setUserDTO(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
   const handleRoleChange = (event: SelectChangeEvent) => {
-    setFormData(prev => ({
+    setUserDTO(prev => ({
       ...prev,
-      role: event.target.value as UserRole
+      role: event.target.value
     }));
   };
 
-  const handleSaveUser = () => {
-    if (dialogMode === 'add') {
-      // In a real app, this would be an API call to create a new user
-      const newUser: User = {
-        id: String(Date.now()),
-        ...formData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+  const handleAddMajor = () => {
+    if (newMajor.trim() && !userDTO.majors.includes(newMajor.trim())) {
+      setUserDTO(prev => ({
+        ...prev,
+        majors: [...prev.majors, newMajor.trim()]
+      }));
+      setNewMajor('');
+    }
+  };
 
-      setUsers(prev => [...prev, newUser]);
-      setSnackbar({
-        open: true,
-        message: 'Người dùng đã được thêm thành công',
-        severity: 'success'
-      });
+  const handleRemoveMajor = (index: number) => {
+    setUserDTO(prev => ({
+      ...prev,
+      majors: prev.majors.filter((_: string, i: number) => i !== index)
+    }));
+  };
+
+  const handleSaveUser = async () => {
+    if (dialogMode === 'add') {
+      if (!userDTO.role)
+        userDTO.role = 'USER';
+
+      try {
+        let [code, value, mess] = await _userService.createUser(userDTO, avatarFile);
+        if (code === 200) {
+          toast.success("Thêm người dùng thành công")
+          setUserSearch(prev => ({
+            ...prev,
+            timer: Date.now()
+          }));
+        } else {
+          toast.error(mess);
+        }
+      } catch (error) {
+        toast.error("Lỗi khi thêm người dùng");
+      }
+
+      setUserDTO(new UserDTO());
+
     } else {
-      // In a real app, this would be an API call to update the user
-      if (currentUser) {
-        const updatedUsers = users.map(user =>
-          user.id === currentUser.id
-            ? { ...user, ...formData, updatedAt: new Date() }
-            : user
-        );
-        setUsers(updatedUsers);
-        setSnackbar({
-          open: true,
-          message: 'Người dùng đã được cập nhật thành công',
-          severity: 'success'
-        });
+      // Edit mode - call update API
+      if (currentUserId) {
+        try {
+          // Validation
+          if (!userDTO.username || !userDTO.fullname || !userDTO.email) {
+            toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+            return;
+          }
+
+          const [code, data, message] = await _userService.updateUser(currentUserId, userDTO, avatarFile || undefined);
+
+          if (code === 200) {
+            toast.success('Cập nhật người dùng thành công');
+            setUserSearch(prev => ({
+              ...prev,
+              timer: Date.now()
+            }));
+          } else {
+            toast.error(message || 'Cập nhật người dùng thất bại');
+          }
+        } catch (error: any) {
+          console.error('Error updating user:', error);
+          toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật người dùng');
+        }
       }
     }
 
     handleCloseUserDialog();
   };
 
-  // Handle delete user
-  const handleOpenDeleteDialog = (user: User) => {
-    setUserToDelete(user);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-    setUserToDelete(null);
-  };
-
-  const handleDeleteUser = () => {
-    if (userToDelete) {
-      // In a real app, this would be an API call to delete the user
-      const updatedUsers = users.filter(user => user.id !== userToDelete.id);
-      setUsers(updatedUsers);
-      setSnackbar({
-        open: true,
-        message: 'Người dùng đã được xóa thành công',
-        severity: 'success'
-      });
-    }
-
-    handleCloseDeleteDialog();
-  };
 
   // Handle snackbar close
   const handleCloseSnackbar = () => {
@@ -246,18 +431,12 @@ const UsersPage: React.FC = () => {
   // Get role display text and color
   const getRoleDisplay = (role: UserRole) => {
     switch (role) {
-      case 'admin':
+      case 'ADMIN':
         return { text: 'Quản trị viên', color: 'error' };
-      case 'manager':
-        return { text: 'Quản lý', color: 'warning' };
-      case 'consultant':
+      case 'SPECIALIST':
         return { text: 'Chuyên viên', color: 'info' };
-      case 'staff':
-        return { text: 'Nhân viên', color: 'secondary' };
-      case 'member':
-        return { text: 'Thành viên', color: 'primary' };
-      case 'guest':
-        return { text: 'Khách', color: 'default' };
+      case 'USER':
+        return { text: 'Người dùng', color: 'secondary' };
       default:
         return { text: role, color: 'default' };
     }
@@ -303,12 +482,9 @@ const UsersPage: React.FC = () => {
               label="Vai trò"
             >
               <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="admin">Quản trị viên</MenuItem>
-              <MenuItem value="manager">Quản lý</MenuItem>
-              <MenuItem value="consultant">Chuyên viên</MenuItem>
-              <MenuItem value="staff">Nhân viên</MenuItem>
-              <MenuItem value="member">Thành viên</MenuItem>
-              <MenuItem value="guest">Khách</MenuItem>
+              <MenuItem value="ADMIN">Quản trị viên</MenuItem>
+              <MenuItem value="SPECIALIST">Chuyên viên</MenuItem>
+              <MenuItem value="USER">Người dùng</MenuItem>
             </Select>
           </FormControl>
 
@@ -344,58 +520,65 @@ const UsersPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredUsers
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((user) => {
-                  const roleDisplay = getRoleDisplay(user.role);
-                  return (
-                    <TableRow hover key={user.id}>
-                      <TableCell>{user.id}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={roleDisplay.text}
-                          color={roleDisplay.color as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Chỉnh sửa">
-                          <IconButton onClick={() => handleOpenEditDialog(user)} color="primary">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Xóa">
-                          <IconButton onClick={() => handleOpenDeleteDialog(user)} color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+
+              {listUser?.map((user) => {
+                const roleDisplay = getRoleDisplay(user.role);
+                return (
+                  <TableRow hover key={user.id}>
+                    <TableCell>{user.id}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{`${user.fullname}`}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={roleDisplay.text}
+                        color={roleDisplay.color as any}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {new Date(user.createDate).toLocaleDateString('vi-VN')}
+                    </TableCell>
+                    <TableCell align="center">
+                      {user.role !== 'ADMIN' && (
+                        <>
+                          <Tooltip title="Chỉnh sửa">
+                            <IconButton onClick={() => handleOpenEditDialog(user)} color="primary">
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Xóa">
+                            <IconButton onClick={() => deleteUser(user.fullname, user.id)} color="error">
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Nút bấm chuyển trang  */}
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
+          rowsPerPageOptions={[5]}
           component="div"
-          count={filteredUsers.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
+          count={totalElement}
+          rowsPerPage={userSearch.limit}
+          page={userSearch.page - 1}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Số hàng mỗi trang:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}–${Math.min(to, count)} của ${count}`
+          }
         />
       </Paper>
 
       {/* Add/Edit User Dialog */}
-      <Dialog open={openUserDialog} onClose={handleCloseUserDialog} maxWidth="sm" fullWidth>
+      <Dialog open={openUserDialog} onClose={handleCloseUserDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           {dialogMode === 'add' ? 'Thêm người dùng mới' : 'Chỉnh sửa người dùng'}
         </DialogTitle>
@@ -405,68 +588,133 @@ const UsersPage: React.FC = () => {
               name="email"
               label="Email"
               fullWidth
-              value={formData.email}
+              value={userDTO.email}
               onChange={handleFormChange}
-              disabled={dialogMode === 'edit'} // Email không thể thay đổi khi chỉnh sửa
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
-                name="firstName"
-                label="Tên"
+                name="username"
+                label="Tên đăng nhập"
                 fullWidth
-                value={formData.firstName}
+                value={userDTO.username}
                 onChange={handleFormChange}
               />
               <TextField
-                name="lastName"
-                label="Họ"
+                name="fullname"
+                label="Họ và tên"
                 fullWidth
-                value={formData.lastName}
+                value={userDTO.fullname}
                 onChange={handleFormChange}
               />
             </Box>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                name="position"
+                label="Chức vụ"
+                fullWidth
+                value={userDTO.position}
+                onChange={handleFormChange}
+              />
+              <TextField
+                name="phone"
+                label="Số điện thoại"
+                fullWidth
+                value={userDTO.phone}
+                onChange={handleFormChange}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControl sx={{ width: '50%' }}>
+                <InputLabel id="role-label">Vai trò</InputLabel>
+                <Select
+                  labelId="role-label"
+                  id="role"
+                  value={userDTO.role || "USER"}
+                  onChange={handleRoleChange}
+                  label="Vai trò"
+                >
+                  <MenuItem value="ADMIN">Quản trị viên</MenuItem>
+                  <MenuItem value="SPECIALIST">Chuyên viên</MenuItem>
+                  <MenuItem value="USER">Người dùng</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Majors - chỉ hiển thị cho SPECIALIST */}
+            {userDTO.role === 'SPECIALIST' && (
+              <Box>
+                <Typography variant="h6" gutterBottom>Chuyên ngành</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {userDTO.majors.map((major: string, index: number) => (
+                    <Chip
+                      key={index}
+                      label={major}
+                      onDelete={() => handleRemoveMajor(index)}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    label="Thêm chuyên ngành"
+                    value={newMajor}
+                    onChange={(e) => setNewMajor(e.target.value)}
+                    size="small"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddMajor();
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={handleAddMajor}
+                    disabled={!newMajor.trim()}
+                  >
+                    Thêm
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
             <FormControl fullWidth>
-              <InputLabel id="role-label">Vai trò</InputLabel>
-              <Select
-                labelId="role-label"
-                id="role"
-                value={formData.role}
-                onChange={handleRoleChange}
-                label="Vai trò"
-              >
-                <MenuItem value="admin">Quản trị viên</MenuItem>
-                <MenuItem value="manager">Quản lý</MenuItem>
-                <MenuItem value="consultant">Chuyên viên</MenuItem>
-                <MenuItem value="staff">Nhân viên</MenuItem>
-                <MenuItem value="member">Thành viên</MenuItem>
-                <MenuItem value="guest">Khách</MenuItem>
-              </Select>
+              <InputLabel shrink htmlFor="avatar-upload">
+                Ảnh đại diện
+              </InputLabel>
+              <input
+                accept="image/*"
+                id="avatar-upload"
+                type="file"
+                style={{ marginTop: 8 }}
+                onChange={handleAvatarChange}
+              />
+              {avatarPreview && (
+                <img
+                  src={avatarPreview}
+                  alt="Ảnh đại diện preview"
+                  // style={{ marginTop: 16, maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
+
+                  style={{
+                    marginTop: 16,
+                    width: 100,
+                    height: 100,
+                    objectFit: 'cover',
+                    // borderRadius: '50%' 
+                  }}
+                />
+              )}
             </FormControl>
+
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseUserDialog}>Hủy</Button>
           <Button onClick={handleSaveUser} variant="contained" color="primary">
             {dialogMode === 'add' ? 'Thêm' : 'Lưu'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Xác nhận xóa</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa người dùng "{userToDelete?.firstName} {userToDelete?.lastName}" không?
-          </Typography>
-          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            Lưu ý: Hành động này không thể hoàn tác.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
-          <Button onClick={handleDeleteUser} variant="contained" color="error">
-            Xóa
           </Button>
         </DialogActions>
       </Dialog>
