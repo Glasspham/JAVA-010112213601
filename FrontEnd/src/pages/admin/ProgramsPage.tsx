@@ -25,8 +25,6 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  Alert,
-  Snackbar,
   SelectChangeEvent
 } from '@mui/material';
 import {
@@ -37,36 +35,48 @@ import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
   Event as EventIcon,
-  LocationOn as LocationIcon
+  LocationOn as LocationIcon,
+  People as PeopleIcon
 } from '@mui/icons-material';
-import { Program, ProgramStatus } from '../../types/program';
-import { mockPrograms } from '../../utils/mockData';
-import { Link } from 'react-router-dom';
+import { Program } from '../../types/program';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format, isAfter, isBefore } from 'date-fns';
+import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { toast } from 'react-toastify';
+import { ProgramService } from '../../services/ProgramService';
+import { ProgramDTO } from '../../dto/ProgramDTO';
+import { ProgramSearch } from '../../dto/ProgramSearch';
+import Swal from 'sweetalert2';
+import { Link } from 'react-router-dom';
 
 const AdminProgramsPage: React.FC = () => {
   // State for programs data
   const [programs, setPrograms] = useState<Program[]>([]);
   const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([]);
 
+  // NEW STATE FOR API CALLS
+  const _programService = new ProgramService();
+  const [programSearch, setProgramSearch] = useState(new ProgramSearch());
+  const [listProgram, setListProgram] = useState<any[]>([]); // Using any[] for now, will map to Program[]
+  const [totalPage, setTotalPage] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // State for pagination
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(programSearch.limit);
 
   // State for search and filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<Date | null>(null);
+  const [searchTerm, setSearchTerm] = useState(programSearch.keyword || '');
+  const [dateFilter, setDateFilter] = useState<Date | null>(programSearch.date ? new Date(programSearch.date) : null);
 
   // State for program dialog
   const [openProgramDialog, setOpenProgramDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [currentProgram, setCurrentProgram] = useState<Program | null>(null);
   const [formData, setFormData] = useState({
+    id: 0,
     title: '',
     description: '',
     location: '',
@@ -75,44 +85,101 @@ const AdminProgramsPage: React.FC = () => {
     duration: 120,
     capacity: 50,
     registrations: 0,
-    status: 'upcoming' as ProgramStatus,
     image: ''
   });
 
-  // State for delete confirmation dialog
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
+  // State for image upload
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
-  // State for notifications
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
-  });
+  // Helper function to map API response to UI's Program interface
+  const mapApiResponseToProgram = (apiData: any): Program => {
+    // Xử lý an toàn cho date và time
+    let programDate: Date;
+    try {
+      // API trả về date dạng "2025-06-21" và time dạng "00:00:00"
+      const dateStr = apiData.date || new Date().toISOString().split('T')[0];
+      const timeStr = apiData.time || '00:00:00';
 
-  // Load programs data
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hour, minute] = timeStr.split(':').map(Number);
+
+      programDate = new Date(year, month - 1, day, hour, minute);
+
+      // Kiểm tra tính hợp lệ của date
+      if (isNaN(programDate.getTime())) {
+        console.warn('Invalid date detected, using current date');
+        programDate = new Date();
+      }
+    } catch (error) {
+      console.error('Error creating date:', error);
+      programDate = new Date();
+    }
+
+    return {
+      id: apiData.id.toString(),
+      title: apiData.title,
+      description: apiData.description || '',
+      location: apiData.address,
+      date: programDate,
+      duration: 120, // Default duration
+      capacity: apiData.capacity,
+      registrations: apiData.countParticipant || 0,
+      image: apiData.image || '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  };
+
+  // Helper function to map UI's formData to ProgramDTO for API calls
+  const mapFormDataToProgramDTO = (data: typeof formData): ProgramDTO => {
+    const programDTO = new ProgramDTO();
+    programDTO.id = data.id;
+    programDTO.title = data.title;
+    programDTO.description = data.description;
+    programDTO.image = data.image;
+    programDTO.address = data.location; // Map location to address
+    programDTO.date = format(data.date, 'yyyy-MM-dd'); // Format date to YYYY-MM-DD
+    programDTO.hourse = parseInt(data.time.split(':')[0]);
+    programDTO.minus = parseInt(data.time.split(':')[1]);
+    programDTO.capacity = data.capacity;
+    return programDTO;
+  };
+
+  // Load programs data from API
   useEffect(() => {
-    // In a real app, this would be an API call
-    setPrograms(mockPrograms);
-    setFilteredPrograms(mockPrograms);
-  }, []);
+    const findAllPrograms = async () => {
+      try {
+        const [code, pageData, message] = await _programService.findAll(programSearch);
+        if (code === 200 && pageData && pageData.content) {
+          const mappedPrograms = pageData.content.map((apiData: any) => mapApiResponseToProgram(apiData));
+          setListProgram(mappedPrograms); // Keep raw mapped list for display
+          setPrograms(mappedPrograms); // Update main programs state
+          setFilteredPrograms(mappedPrograms); // Update filtered programs state directly
+          setTotalPage(pageData.totalPages);
+          setTotalElements(pageData.totalElements);
+        } else {
+          toast.error(`Lỗi khi tải dữ liệu chương trình: ${message}`);
+        }
+      } catch (error: any) {
+        toast.error(`Lỗi kết nối khi tải dữ liệu chương trình: ${error.message}`);
+      }
+    };
 
-  // Filter programs based on search term, status filter, and date filter
+    findAllPrograms();
+  }, [programSearch.timer, programSearch.page, programSearch.limit]); // Trigger on timer, page, or limit change
+
+  // Existing useEffect for filtering - this will now primarily work on `programs` (the mapped data)
   useEffect(() => {
-    let result = [...programs];
+    let result = [...programs]; // Use the full list from API
 
     // Apply search filter
     if (searchTerm) {
       result = result.filter(program =>
         program.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.description.toLowerCase().includes(searchTerm.toLowerCase()) || // description is empty now, might not work as intended
         program.location.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(program => program.status === statusFilter);
     }
 
     // Apply date filter
@@ -129,53 +196,80 @@ const AdminProgramsPage: React.FC = () => {
     }
 
     setFilteredPrograms(result);
-    setPage(0); // Reset to first page when filtering
-  }, [searchTerm, statusFilter, dateFilter, programs]);
+  }, [searchTerm, dateFilter, programs]); // programs is now updated by API call
 
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    setPage(newPage); // MUI uses 0-indexed
+    setProgramSearch(prev => ({
+      ...prev,
+      page: newPage + 1, // API uses 1-indexed
+      timer: Date.now() // Trigger useEffect
+    }));
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newLimit = parseInt(event.target.value, 10);
+    setRowsPerPage(newLimit);
+    setPage(0); // Reset to first page
+    setProgramSearch(prev => ({
+      ...prev,
+      limit: newLimit,
+      page: 1, // API uses 1-indexed
+      timer: Date.now() // Trigger useEffect
+    }));
   };
 
-  // Handle search and filter changes
+  // Handle search and filter changes - call api
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-  };
-
-  const handleStatusFilterChange = (event: SelectChangeEvent) => {
-    setStatusFilter(event.target.value);
+    setProgramSearch(prev => ({
+      ...prev,
+      keyword: event.target.value,
+      page: 1, // Reset page on new search
+      timer: Date.now()
+    }));
   };
 
   const handleDateFilterChange = (date: Date | null) => {
     setDateFilter(date);
+    setProgramSearch(prev => ({
+      ...prev,
+      date: date ? format(date, 'yyyy-MM-dd') : null,
+      page: 1, // Reset page on new filter
+      timer: Date.now()
+    }));
   };
 
   const handleResetFilters = () => {
     setSearchTerm('');
-    setStatusFilter('all');
     setDateFilter(null);
+    setProgramSearch(prev => ({
+      ...prev,
+      keyword: null,
+      date: null,
+      page: 1, // Reset page
+      timer: Date.now()
+    }));
   };
 
   // Handle program dialog
   const handleOpenAddDialog = () => {
     setDialogMode('add');
     setFormData({
+      id: 0,
       title: '',
       description: '',
       location: '',
       date: new Date(),
       time: '09:00',
       duration: 120,
-      capacity: 50,
+      capacity: 0,
       registrations: 0,
-      status: 'upcoming' as ProgramStatus,
       image: ''
     });
+    setSelectedImageFile(null);
+    setImagePreview('');
     setOpenProgramDialog(true);
   };
 
@@ -183,10 +277,13 @@ const AdminProgramsPage: React.FC = () => {
     setDialogMode('edit');
     setCurrentProgram(program);
 
+    // Retrieve full DTO data to fill form if needed, or rely on existing Program data
+    // Assuming Program object has enough data for editing (e.g. date, time extracted from date object)
     const programDate = new Date(program.date);
-    const programTime = format(programDate, 'HH:mm');
+    const programTime = format(programDate, 'HH:mm'); // Format date object back to HH:mm string
 
     setFormData({
+      id: parseInt(program.id), // Convert string ID back to number for DTO
       title: program.title,
       description: program.description,
       location: program.location,
@@ -195,15 +292,25 @@ const AdminProgramsPage: React.FC = () => {
       duration: program.duration,
       capacity: program.capacity,
       registrations: program.registrations,
-      status: program.status,
       image: program.image || ''
     });
+
+    // Set image preview for existing program
+    setSelectedImageFile(null);
+    if (program.image) {
+      setImagePreview(_programService.getImageUrl(program.image));
+    } else {
+      setImagePreview('');
+    }
+
     setOpenProgramDialog(true);
   };
 
   const handleCloseProgramDialog = () => {
     setOpenProgramDialog(false);
     setCurrentProgram(null);
+    setSelectedImageFile(null);
+    setImagePreview('');
   };
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,13 +318,6 @@ const AdminProgramsPage: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleStatusChange = (event: SelectChangeEvent) => {
-    setFormData(prev => ({
-      ...prev,
-      status: event.target.value as ProgramStatus
     }));
   };
 
@@ -230,131 +330,108 @@ const AdminProgramsPage: React.FC = () => {
     }
   };
 
-  const handleSaveProgram = () => {
-    // Validate form
-    if (!formData.title || !formData.description || !formData.location || !formData.date || !formData.time) {
-      setSnackbar({
-        open: true,
-        message: 'Vui lòng điền đầy đủ thông tin',
-        severity: 'error'
-      });
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProgram = async () => {
+    if (!formData.title || !formData.location || !formData.date || !formData.time || formData.capacity <= 0) {
+      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc và sức chứa phải lớn hơn 0.');
       return;
     }
 
-    // Combine date and time
-    const dateTime = new Date(formData.date);
-    const [hours, minutes] = formData.time.split(':').map(Number);
-    dateTime.setHours(hours, minutes);
+    try {
+      const programDTO = mapFormDataToProgramDTO(formData);
+      let code, data, message;
 
-    if (dialogMode === 'add') {
-      // In a real app, this would be an API call to create a new program
-      const newProgram: Program = {
-        id: String(Date.now()),
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        date: dateTime,
-        duration: formData.duration,
-        capacity: formData.capacity,
-        registrations: formData.registrations,
-        status: formData.status,
-        image: formData.image,
-        createdAt: new Date()
-      };
+      if (dialogMode === 'add') {
+        [code, data, message] = await _programService.createProgram(programDTO, selectedImageFile || undefined);
+      } else {
+        [code, data, message] = await _programService.updateProgram(programDTO.id, programDTO, selectedImageFile || undefined);
+      }
 
-      setPrograms(prev => [...prev, newProgram]);
-      setSnackbar({
-        open: true,
-        message: 'Chương trình đã được thêm thành công',
-        severity: 'success'
-      });
-    } else {
-      // In a real app, this would be an API call to update the program
-      if (currentProgram) {
-        const updatedPrograms = programs.map(program =>
-          program.id === currentProgram.id
-            ? {
-                ...program,
-                title: formData.title,
-                description: formData.description,
-                location: formData.location,
-                date: dateTime,
-                duration: formData.duration,
-                capacity: formData.capacity,
-                registrations: formData.registrations,
-                status: formData.status,
-                image: formData.image
-              }
-            : program
-        );
-        setPrograms(updatedPrograms);
-        setSnackbar({
-          open: true,
-          message: 'Chương trình đã được cập nhật thành công',
-          severity: 'success'
+      if (code === 200) {
+        toast.success(message || `Chương trình đã được ${dialogMode === 'add' ? 'thêm' : 'cập nhật'} thành công!`);
+        handleCloseProgramDialog();
+        // Trigger a refresh of the program list
+        setProgramSearch(prev => ({
+          ...prev,
+          timer: Date.now()
+        }));
+      } else {
+        toast.error(message || `Đã có lỗi xảy ra khi ${dialogMode === 'add' ? 'thêm' : 'cập nhật'} chương trình.`);
+      }
+    } catch (error: any) {
+      toast.error(`Lỗi kết nối: ${error.message}`);
+    }
+  };
+
+  const handleDeleteProgram = async (program: Program) => {
+    const result = await Swal.fire({
+      title: `Xác nhận xóa?`,
+      text: `Bạn có chắc muốn xóa chương trình "${program.title}" không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const [code, data, message] = await _programService.deleteProgram(parseInt(program.id));
+
+        if (code === 200) {
+          await Swal.fire({
+            icon: "success",
+            title: "Đã xóa!",
+            text: `Chương trình "${program.title}" đã được xóa.`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // Trigger a refresh of the program list
+          setProgramSearch(prev => ({
+            ...prev,
+            timer: Date.now()
+          }));
+        } else {
+          toast.error(message || 'Đã có lỗi xảy ra khi xóa chương trình.');
+        }
+      } catch (error: any) {
+        console.error("Lỗi khi xóa:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể xóa chương trình. Vui lòng thử lại sau.",
         });
       }
     }
-
-    handleCloseProgramDialog();
   };
 
-  // Handle delete program
-  const handleOpenDeleteDialog = (program: Program) => {
-    setProgramToDelete(program);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-    setProgramToDelete(null);
-  };
-
-  const handleDeleteProgram = () => {
-    if (programToDelete) {
-      // In a real app, this would be an API call to delete the program
-      const updatedPrograms = programs.filter(program => program.id !== programToDelete.id);
-      setPrograms(updatedPrograms);
-      setSnackbar({
-        open: true,
-        message: 'Chương trình đã được xóa thành công',
-        severity: 'success'
-      });
-    }
-
-    handleCloseDeleteDialog();
-  };
-
-  // Handle snackbar close
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({
-      ...prev,
-      open: false
-    }));
-  };
-
-  // Get status display text and color
-  const getStatusDisplay = (status: ProgramStatus) => {
-    if (status === 'upcoming') return { text: 'Sắp diễn ra', color: 'info' };
-    if (status === 'ongoing') return { text: 'Đang diễn ra', color: 'warning' };
-    if (status === 'completed') return { text: 'Đã hoàn thành', color: 'success' };
-    if (status === 'cancelled') return { text: 'Đã hủy', color: 'error' };
-    return { text: status, color: 'default' };
-  };
-
-  // Calculate registration percentage
   const getRegistrationPercentage = (program: Program) => {
-    return Math.round((program.registrations / program.capacity) * 100);
+    if (program.capacity === 0) return '0%';
+    const percentage = (program.registrations / program.capacity) * 100;
+    return `${percentage.toFixed(0)}%`;
   };
 
   return (
     <Container>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Quản lý chương trình cộng đồng
+          Quản lý chương trình
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Quản lý tất cả chương trình cộng đồng trong hệ thống
+          Quản lý tất cả chương trình trong hệ thống
         </Typography>
       </Box>
 
@@ -377,28 +454,12 @@ const AdminProgramsPage: React.FC = () => {
             }}
           />
 
-          <FormControl variant="outlined" size="small" sx={{ minWidth: '150px' }}>
-            <InputLabel id="status-filter-label">Trạng thái</InputLabel>
-            <Select
-              labelId="status-filter-label"
-              id="status-filter"
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              label="Trạng thái"
-            >
-              <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="upcoming">Sắp diễn ra</MenuItem>
-              <MenuItem value="ongoing">Đang diễn ra</MenuItem>
-              <MenuItem value="completed">Đã hoàn thành</MenuItem>
-              <MenuItem value="cancelled">Đã hủy</MenuItem>
-            </Select>
-          </FormControl>
-
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
             <DatePicker
               label="Lọc theo ngày"
               value={dateFilter}
               onChange={handleDateFilterChange}
+              format="dd/MM/yyyy"
               slotProps={{ textField: { size: 'small' } }}
             />
           </LocalizationProvider>
@@ -413,7 +474,6 @@ const AdminProgramsPage: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleOpenAddDialog}
-            sx={{ ml: 'auto' }}
           >
             Thêm chương trình
           </Button>
@@ -422,72 +482,75 @@ const AdminProgramsPage: React.FC = () => {
 
       {/* Programs Table */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+        <TableContainer>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+                <TableCell>STT</TableCell>
                 <TableCell>Tiêu đề</TableCell>
                 <TableCell>Địa điểm</TableCell>
                 <TableCell>Ngày</TableCell>
                 <TableCell>Thời gian</TableCell>
                 <TableCell>Sức chứa</TableCell>
                 <TableCell>Đã đăng ký</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell align="center">Thao tác</TableCell>
+                <TableCell align="center">Hành động</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredPrograms
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((program) => {
-                  const statusDisplay = getStatusDisplay(program.status);
-                  const programDate = new Date(program.date);
-                  return (
-                    <TableRow hover key={program.id}>
-                      <TableCell>{program.id}</TableCell>
-                      <TableCell>{program.title}</TableCell>
-                      <TableCell>{program.location}</TableCell>
-                      <TableCell>{format(programDate, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>{format(programDate, 'HH:mm')}</TableCell>
-                      <TableCell>{program.capacity}</TableCell>
-                      <TableCell>
-                        {program.registrations} ({getRegistrationPercentage(program)}%)
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={statusDisplay.text}
-                          color={statusDisplay.color as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Xem chi tiết">
-                          <IconButton component={Link} to={`/programs/${program.id}`} color="info">
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Chỉnh sửa">
-                          <IconButton onClick={() => handleOpenEditDialog(program)} color="primary">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Xóa">
-                          <IconButton onClick={() => handleOpenDeleteDialog(program)} color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+              {programs.length > 0 ? (
+                programs.map((program, index) => (
+                  <TableRow hover key={program.id}>
+                    <TableCell>{(page * rowsPerPage) + index + 1}</TableCell>
+                    <TableCell>
+                      <Typography variant="body1" fontWeight="medium">{program.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                        {program.description ? program.description.substring(0, 50) + '...' : 'Không có mô tả'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{program.location}</TableCell>
+                    <TableCell>{format(new Date(program.date), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>{format(new Date(program.date), 'HH:mm')}</TableCell>
+                    <TableCell>{program.capacity}</TableCell>
+                    <TableCell>{program.registrations}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Xem danh sách đăng ký">
+                        <IconButton
+                          component={Link}
+                          to={`/admin/programs/${program.id}/registrations`}
+                          color="info"
+                        >
+                          <PeopleIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Chỉnh sửa">
+                        <IconButton onClick={() => handleOpenEditDialog(program)} color="primary">
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Xóa">
+                        <IconButton onClick={() => handleDeleteProgram(program)} color="error">
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography variant="body2" color="text.secondary">
+                      Không có chương trình nào được tìm thấy.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={filteredPrograms.length}
+          count={totalElements}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -497,163 +560,135 @@ const AdminProgramsPage: React.FC = () => {
         />
       </Paper>
 
-      {/* Add/Edit Program Dialog */}
+      {/* Program Dialog (Add/Edit) */}
       <Dialog open={openProgramDialog} onClose={handleCloseProgramDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {dialogMode === 'add' ? 'Thêm chương trình mới' : 'Chỉnh sửa chương trình'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              name="title"
-              label="Tiêu đề"
-              fullWidth
-              value={formData.title}
-              onChange={handleFormChange}
-            />
-
-            <TextField
-              name="description"
-              label="Mô tả"
-              fullWidth
-              multiline
-              rows={3}
-              value={formData.description}
-              onChange={handleFormChange}
-            />
-
-            <TextField
-              name="location"
-              label="Địa điểm"
-              fullWidth
-              value={formData.location}
-              onChange={handleFormChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LocationIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
+        <DialogTitle>{dialogMode === 'add' ? 'Thêm Chương trình mới' : 'Chỉnh sửa Chương trình'}</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            autoFocus
+            margin="dense"
+            name="title"
+            label="Tiêu đề chương trình"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.title}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+            required
+          />
+          <TextField
+            margin="dense"
+            name="location" // Mapped to address in DTO
+            label="Địa điểm"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.location}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+            required
+          />
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
+            <Box>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
                 <DatePicker
-                  label="Ngày"
+                  label="Ngày diễn ra"
                   value={formData.date}
                   onChange={handleDateChange}
-                  sx={{ width: '50%' }}
+                  format="dd/MM/yyyy"
+                  sx={{ width: '100%' }}
                 />
               </LocalizationProvider>
-
+            </Box>
+            <Box>
               <TextField
+                margin="dense"
                 name="time"
-                label="Thời gian"
+                label="Thời gian (HH:mm)"
                 type="time"
+                fullWidth
+                variant="outlined"
                 value={formData.time}
                 onChange={handleFormChange}
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ step: 300 }}
-                sx={{ width: '50%' }}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                inputProps={{
+                  step: 300, // 5 minute intervals
+                }}
+                required
               />
             </Box>
+          </Box>
+          <TextField
+            margin="dense"
+            name="capacity"
+            label="Sức chứa"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.capacity}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+            required
+            inputProps={{ min: 0 }}
+          />
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                name="duration"
-                label="Thời lượng (phút)"
-                type="number"
-                fullWidth
-                value={formData.duration}
-                onChange={handleFormChange}
-                InputProps={{ inputProps: { min: 30 } }}
-              />
-
-              <TextField
-                name="capacity"
-                label="Sức chứa"
-                type="number"
-                fullWidth
-                value={formData.capacity}
-                onChange={handleFormChange}
-                InputProps={{ inputProps: { min: 1 } }}
-              />
-            </Box>
-
-            <TextField
-              name="registrations"
-              label="Số lượng đã đăng ký"
-              type="number"
-              fullWidth
-              value={formData.registrations}
-              onChange={handleFormChange}
-              InputProps={{ inputProps: { min: 0 } }}
+          <TextField
+            margin="dense"
+            name="description"
+            label="Mô tả chương trình"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            value={formData.description}
+            onChange={handleFormChange}
+            sx={{ mb: 2 }}
+            // Not required for API, but for UI it can be
+          />
+          {/* Image Upload */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Ảnh chương trình
+            </Typography>
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="image-upload"
+              type="file"
+              onChange={handleImageChange}
             />
-
-            <FormControl fullWidth>
-              <InputLabel id="status-label">Trạng thái</InputLabel>
-              <Select
-                labelId="status-label"
-                id="status"
-                value={formData.status}
-                onChange={handleStatusChange}
-                label="Trạng thái"
-              >
-                <MenuItem value="upcoming">Sắp diễn ra</MenuItem>
-                <MenuItem value="ongoing">Đang diễn ra</MenuItem>
-                <MenuItem value="completed">Đã hoàn thành</MenuItem>
-                <MenuItem value="cancelled">Đã hủy</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              name="image"
-              label="URL hình ảnh"
-              fullWidth
-              value={formData.image}
-              onChange={handleFormChange}
-            />
+            <label htmlFor="image-upload">
+              <Button variant="outlined" component="span" sx={{ mb: 1 }}>
+                Chọn ảnh
+              </Button>
+            </label>
+            {imagePreview && (
+              <Box sx={{ mt: 1 }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{
+                    maxWidth: '200px',
+                    maxHeight: '150px',
+                    objectFit: 'cover',
+                    borderRadius: '4px'
+                  }}
+                />
+              </Box>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProgramDialog}>Hủy</Button>
           <Button onClick={handleSaveProgram} variant="contained" color="primary">
-            {dialogMode === 'add' ? 'Thêm' : 'Lưu'}
+            {dialogMode === 'add' ? 'Thêm' : 'Cập nhật'}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Xác nhận xóa</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa chương trình "{programToDelete?.title}" không?
-          </Typography>
-          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            Lưu ý: Hành động này không thể hoàn tác.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
-          <Button onClick={handleDeleteProgram} variant="contained" color="error">
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

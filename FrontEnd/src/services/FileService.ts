@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = process.env.REACT_APP_API_URL;
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 const URL_UPLOAD_FILE = `${BASE_URL}/files/upload`;
 
 export class FileService {
