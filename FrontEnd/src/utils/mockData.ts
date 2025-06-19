@@ -348,7 +348,6 @@ export const mockPrograms: Program[] = [
     duration: 480, // 8 hours
     capacity: 200,
     registrations: 150,
-    status: 'upcoming' as ProgramStatus,
     image: programImages[0],
     createdAt: new Date('2023-05-01'),
     // Client-side properties
@@ -366,7 +365,6 @@ export const mockPrograms: Program[] = [
     duration: 240, // 4 hours
     capacity: 100,
     registrations: 80,
-    status: 'upcoming' as ProgramStatus,
     image: programImages[1],
     createdAt: new Date('2023-05-02'),
     // Client-side properties
@@ -384,7 +382,6 @@ export const mockPrograms: Program[] = [
     duration: 180, // 3 hours
     capacity: 150,
     registrations: 30,
-    status: 'upcoming' as ProgramStatus,
     image: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     createdAt: new Date('2023-05-03'),
     // Client-side properties
@@ -402,7 +399,6 @@ export const mockPrograms: Program[] = [
     duration: 960, // 16 hours (2 days)
     capacity: 50,
     registrations: 50,
-    status: 'completed' as ProgramStatus,
     image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     createdAt: new Date('2023-04-01'),
     // Client-side properties
@@ -420,7 +416,6 @@ export const mockPrograms: Program[] = [
     duration: 300, // 5 hours
     capacity: 80,
     registrations: 75,
-    status: 'ongoing' as ProgramStatus,
     image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     createdAt: new Date('2023-05-10'),
     // Client-side properties

@@ -9,7 +9,6 @@ export interface Program {
   duration: number; // in minutes
   capacity: number;
   registrations: number;
-  status: ProgramStatus;
   image?: string;
   createdAt: Date;
 
