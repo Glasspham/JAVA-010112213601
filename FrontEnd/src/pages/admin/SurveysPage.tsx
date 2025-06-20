@@ -12,113 +12,108 @@ import {
   TableRow,
   TablePagination,
   Button,
-  IconButton,
-  Tooltip,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Grid,
-  InputAdornment,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
   Alert,
-  Snackbar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Divider,
+  CircularProgress,
   SelectChangeEvent
 } from '@mui/material';
+import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 import {
   Add as AddIcon,
+  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
-  Visibility as VisibilityIcon,
-  AddCircle as AddCircleIcon,
-  RemoveCircle as RemoveCircleIcon
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { Survey, SurveyQuestion as Question, SurveyType } from '../../types/survey';
-import { mockSurveys } from '../../utils/mockData';
-import { Link } from 'react-router-dom';
+import { Survey, Question, Answer } from '../../types/survey';
+import { SurveyService } from '../../services/SurveyService';
+
+const SURVEY_TYPES = [
+  { value: 'ASSIST', label: 'ASSIST' },
+  { value: 'CRAFFT', label: 'CRAFFT' }
+];
 
 const AdminSurveysPage: React.FC = () => {
+  const surveyService = new SurveyService();
+
   // State for surveys data
   const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [filteredSurveys, setFilteredSurveys] = useState<Survey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // State for pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
 
   // State for search and filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('');
 
   // State for survey dialog
   const [openSurveyDialog, setOpenSurveyDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [currentSurvey, setCurrentSurvey] = useState<Survey | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    type: 'CUSTOM' as SurveyType,
+    name: '',
+    type: 'ASSIST',
     questions: [] as Question[]
   });
 
   // State for question dialog
   const [openQuestionDialog, setOpenQuestionDialog] = useState(false);
   const [questionFormData, setQuestionFormData] = useState({
-    text: '',
-    options: ['', '', '', '']
+    content: '',
+    answers: [
+      { content: '', correct: false },
+      { content: '', correct: false }
+    ] as Answer[]
   });
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
 
-  // State for delete confirmation dialog
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [surveyToDelete, setSurveyToDelete] = useState<Survey | null>(null);
+  // Load surveys from API
+  const loadSurveys = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [code, data, message] = await surveyService.findAllSurveys({
+        page: page + 1,
+        limit: rowsPerPage,
+        keyword: searchTerm || undefined,
+        type: typeFilter || undefined
+      });
 
-  // State for notifications
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
-  });
-
-  // Load surveys data
-  useEffect(() => {
-    // In a real app, this would be an API call
-    setSurveys(mockSurveys);
-    setFilteredSurveys(mockSurveys);
-  }, []);
-
-  // Filter surveys based on search term and type filter
-  useEffect(() => {
-    let result = [...surveys];
-
-    // Apply search filter
-    if (searchTerm) {
-      result = result.filter(survey =>
-        survey.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        survey.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      if (code === 200) {
+        setSurveys(data.content);
+        setTotalElements(data.totalElements);
+      } else {
+        setError(message || 'Failed to load surveys');
+      }
+    } catch (error) {
+      console.error('Error loading surveys:', error);
+      setError('An error occurred while loading surveys');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Apply type filter
-    if (typeFilter !== 'all') {
-      result = result.filter(survey => survey.type === typeFilter);
-    }
-
-    setFilteredSurveys(result);
-    setPage(0); // Reset to first page when filtering
-  }, [searchTerm, typeFilter, surveys]);
+  useEffect(() => {
+    loadSurveys();
+  }, [page, rowsPerPage, searchTerm, typeFilter]);
 
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -133,37 +128,27 @@ const AdminSurveysPage: React.FC = () => {
   // Handle search and filter changes
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    setPage(0);
   };
 
   const handleTypeFilterChange = (event: SelectChangeEvent) => {
     setTypeFilter(event.target.value);
+    setPage(0);
   };
 
   const handleResetFilters = () => {
     setSearchTerm('');
-    setTypeFilter('all');
+    setTypeFilter('');
+    setPage(0);
   };
 
   // Handle survey dialog
   const handleOpenAddDialog = () => {
     setDialogMode('add');
     setFormData({
-      title: '',
-      description: '',
-      type: 'CUSTOM' as SurveyType,
+      name: '',
+      type: 'ASSIST',
       questions: []
-    });
-    setOpenSurveyDialog(true);
-  };
-
-  const handleOpenEditDialog = (survey: Survey) => {
-    setDialogMode('edit');
-    setCurrentSurvey(survey);
-    setFormData({
-      title: survey.title,
-      description: survey.description,
-      type: survey.type,
-      questions: [...survey.questions]
     });
     setOpenSurveyDialog(true);
   };
@@ -184,27 +169,20 @@ const AdminSurveysPage: React.FC = () => {
   const handleTypeChange = (event: SelectChangeEvent) => {
     setFormData(prev => ({
       ...prev,
-      type: event.target.value as SurveyType
+      type: event.target.value
     }));
   };
 
   // Handle question dialog
   const handleOpenAddQuestionDialog = () => {
     setQuestionFormData({
-      text: '',
-      options: ['', '', '', '']
+      content: '',
+      answers: [
+        { id: null, content: '', correct: false },
+        { id: null, content: '', correct: false }
+      ]
     });
     setEditingQuestionIndex(null);
-    setOpenQuestionDialog(true);
-  };
-
-  const handleOpenEditQuestionDialog = (index: number) => {
-    const question = formData.questions[index];
-    setQuestionFormData({
-      text: question.text,
-      options: [...question.options]
-    });
-    setEditingQuestionIndex(index);
     setOpenQuestionDialog(true);
   };
 
@@ -217,75 +195,74 @@ const AdminSurveysPage: React.FC = () => {
     const { value } = event.target;
     setQuestionFormData(prev => ({
       ...prev,
-      text: value
+      content: value
     }));
   };
 
-  const handleOptionChange = (index: number, value: string) => {
+  const handleAnswerChange = (index: number, field: 'content' | 'correct', value: string | boolean) => {
     setQuestionFormData(prev => {
-      const newOptions = [...prev.options];
-      newOptions[index] = value;
+      const newAnswers = [...prev.answers];
+      newAnswers[index] = { ...newAnswers[index], [field]: value };
       return {
         ...prev,
-        options: newOptions
+        answers: newAnswers
       };
     });
   };
 
-  const handleAddOption = () => {
+  const handleAddAnswer = () => {
     setQuestionFormData(prev => ({
       ...prev,
-      options: [...prev.options, '']
+      answers: [...prev.answers, { id: null, content: '', correct: false }]
     }));
   };
 
-  const handleRemoveOption = (index: number) => {
-    if (questionFormData.options.length <= 2) {
-      setSnackbar({
-        open: true,
-        message: 'Cần ít nhất 2 lựa chọn cho mỗi câu hỏi',
-        severity: 'error'
+  const handleRemoveAnswer = (index: number) => {
+    if (questionFormData.answers.length <= 2) {
+      Swal.fire({
+        icon: "warning",
+        title: "Cảnh báo",
+        text: "Cần ít nhất 2 đáp án cho mỗi câu hỏi",
       });
       return;
     }
 
     setQuestionFormData(prev => {
-      const newOptions = [...prev.options];
-      newOptions.splice(index, 1);
+      const newAnswers = [...prev.answers];
+      newAnswers.splice(index, 1);
       return {
         ...prev,
-        options: newOptions
+        answers: newAnswers
       };
     });
   };
 
   const handleSaveQuestion = () => {
     // Validate question
-    if (!questionFormData.text.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Vui lòng nhập nội dung câu hỏi',
-        severity: 'error'
+    if (!questionFormData.content.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Cảnh báo",
+        text: "Vui lòng nhập nội dung câu hỏi",
       });
       return;
     }
 
-    // Validate options
-    const validOptions = questionFormData.options.filter(opt => opt.trim() !== '');
-    if (validOptions.length < 2) {
-      setSnackbar({
-        open: true,
-        message: 'Cần ít nhất 2 lựa chọn hợp lệ cho mỗi câu hỏi',
-        severity: 'error'
+    // Validate answers
+    const validAnswers = questionFormData.answers.filter(ans => ans.content.trim() !== '');
+    if (validAnswers.length < 2) {
+      Swal.fire({
+        icon: "warning",
+        title: "Cảnh báo",
+        text: "Cần ít nhất 2 đáp án hợp lệ cho mỗi câu hỏi",
       });
       return;
     }
 
     const newQuestion: Question = {
-      id: editingQuestionIndex !== null ? formData.questions[editingQuestionIndex].id : String(Date.now()),
-      text: questionFormData.text,
-      options: validOptions,
-      scores: validOptions.map(() => 0) // Default scores to 0
+      id: null,
+      content: questionFormData.content,
+      answers: validAnswers.map(ans => ({ ...ans, id: null }))
     };
 
     setFormData(prev => {
@@ -304,6 +281,16 @@ const AdminSurveysPage: React.FC = () => {
     handleCloseQuestionDialog();
   };
 
+  const handleEditQuestion = (index: number) => {
+    const question = formData.questions[index];
+    setQuestionFormData({
+      content: question.content,
+      answers: question.answers.map(ans => ({ ...ans }))
+    });
+    setEditingQuestionIndex(index);
+    setOpenQuestionDialog(true);
+  };
+
   const handleRemoveQuestion = (index: number) => {
     setFormData(prev => {
       const newQuestions = [...prev.questions];
@@ -315,85 +302,111 @@ const AdminSurveysPage: React.FC = () => {
     });
   };
 
-  const handleSaveSurvey = () => {
+  const handleEditSurvey = (survey: Survey) => {
+    setDialogMode('edit');
+    setCurrentSurvey(survey);
+
+    // Ensure type is valid, default to ASSIST if not
+    const validType = SURVEY_TYPES.find(t => t.value === survey.type) ? survey.type : 'ASSIST';
+
+    setFormData({
+      name: survey.name,
+      type: validType,
+      questions: survey.questions.map(q => ({ ...q }))
+    });
+    setOpenSurveyDialog(true);
+  };
+
+  const handleDeleteSurvey = async (surveyName: string, surveyId: number | null) => {
+    if (!surveyId) return;
+
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa?',
+      text: `Bạn có chắc muốn xóa khảo sát "${surveyName}" không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const [code, data, message] = await surveyService.deleteSurvey(surveyId);
+
+        if (code === 200) {
+          toast.success(`Xóa khảo sát "${surveyName}" thành công`);
+          loadSurveys();
+        } else {
+          toast.error(message || "Không thể xóa khảo sát. Vui lòng thử lại sau.");
+        }
+      } catch (error) {
+        console.error('Error deleting survey:', error);
+        toast.error("Không thể xóa khảo sát. Vui lòng thử lại sau.");
+      }
+    }
+  };
+
+  const handleSaveSurvey = async () => {
     // Validate survey
-    if (!formData.title.trim() || !formData.description.trim() || formData.questions.length === 0) {
-      setSnackbar({
-        open: true,
-        message: 'Vui lòng điền đầy đủ thông tin và thêm ít nhất một câu hỏi',
-        severity: 'error'
+    if (!formData.name.trim() || formData.questions.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Cảnh báo",
+        text: "Vui lòng điền tên khảo sát và thêm ít nhất một câu hỏi",
       });
       return;
     }
 
-    if (dialogMode === 'add') {
-      // In a real app, this would be an API call to create a new survey
-      const newSurvey: Survey = {
-        id: String(Date.now()),
-        ...formData,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    try {
+      const surveyData: Survey = {
+        id: dialogMode === 'edit' ? currentSurvey?.id || null : null,
+        name: formData.name,
+        type: formData.type,
+        questions: formData.questions
       };
 
-      setSurveys(prev => [...prev, newSurvey]);
-      setSnackbar({
-        open: true,
-        message: 'Khảo sát đã được thêm thành công',
-        severity: 'success'
-      });
-    } else {
-      // In a real app, this would be an API call to update the survey
-      if (currentSurvey) {
-        const updatedSurveys = surveys.map(survey =>
-          survey.id === currentSurvey.id
-            ? { ...survey, ...formData, updatedAt: new Date() }
-            : survey
-        );
-        setSurveys(updatedSurveys);
-        setSnackbar({
-          open: true,
-          message: 'Khảo sát đã được cập nhật thành công',
-          severity: 'success'
-        });
+      let code: number, data: Survey, message: string;
+
+      if (dialogMode === 'edit' && currentSurvey?.id) {
+        [code, data, message] = await surveyService.updateSurvey(currentSurvey.id, surveyData);
+      } else {
+        [code, data, message] = await surveyService.createSurvey(surveyData);
       }
+
+      if (code === 200) {
+        toast.success(dialogMode === 'edit' ? 'Cập nhật khảo sát thành công' : 'Thêm khảo sát thành công');
+        handleCloseSurveyDialog();
+        loadSurveys();
+      } else {
+        toast.error(message || `Có lỗi xảy ra khi ${dialogMode === 'edit' ? 'cập nhật' : 'tạo'} khảo sát`);
+      }
+    } catch (error) {
+      console.error(`Error ${dialogMode === 'edit' ? 'updating' : 'creating'} survey:`, error);
+      toast.error(`Có lỗi xảy ra khi ${dialogMode === 'edit' ? 'cập nhật' : 'tạo'} khảo sát`);
     }
-
-    handleCloseSurveyDialog();
   };
 
-  // Handle delete survey
-  const handleOpenDeleteDialog = (survey: Survey) => {
-    setSurveyToDelete(survey);
-    setOpenDeleteDialog(true);
-  };
+  if (loading && surveys.length === 0) {
+    return (
+      <Container>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-    setSurveyToDelete(null);
-  };
-
-  const handleDeleteSurvey = () => {
-    if (surveyToDelete) {
-      // In a real app, this would be an API call to delete the survey
-      const updatedSurveys = surveys.filter(survey => survey.id !== surveyToDelete.id);
-      setSurveys(updatedSurveys);
-      setSnackbar({
-        open: true,
-        message: 'Khảo sát đã được xóa thành công',
-        severity: 'success'
-      });
-    }
-
-    handleCloseDeleteDialog();
-  };
-
-  // Handle snackbar close
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({
-      ...prev,
-      open: false
-    }));
-  };
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -402,7 +415,7 @@ const AdminSurveysPage: React.FC = () => {
           Quản lý khảo sát
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Quản lý tất cả khảo sát đánh giá nguy cơ trong hệ thống
+          Quản lý tất cả khảo sát trong hệ thống
         </Typography>
       </Box>
 
@@ -434,10 +447,10 @@ const AdminSurveysPage: React.FC = () => {
               onChange={handleTypeFilterChange}
               label="Loại"
             >
-              <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="CUSTOM">Tùy chỉnh</MenuItem>
-              <MenuItem value="ASSIST">ASSIST</MenuItem>
-              <MenuItem value="CRAFFT">CRAFFT</MenuItem>
+              <MenuItem value="">Tất cả</MenuItem>
+              {SURVEY_TYPES.map(type => (
+                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+              ))}
             </Select>
           </FormControl>
 
@@ -464,62 +477,47 @@ const AdminSurveysPage: React.FC = () => {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Tiêu đề</TableCell>
+                <TableCell>STT</TableCell>
+                <TableCell>Tên khảo sát</TableCell>
                 <TableCell>Loại</TableCell>
                 <TableCell>Số câu hỏi</TableCell>
-                <TableCell>Ngày tạo</TableCell>
                 <TableCell align="center">Thao tác</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredSurveys
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((survey) => (
-                  <TableRow hover key={survey.id}>
-                    <TableCell>{survey.id}</TableCell>
-                    <TableCell>{survey.title}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={survey.type}
-                        color="primary"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{survey.questions.length}</TableCell>
-                    <TableCell>
-                      {new Date(survey.createdAt).toLocaleDateString('vi-VN')}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="Xem">
-                        <IconButton
-                          component={Link}
-                          to={`/surveys/${survey.id}`}
-                          color="info"
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Chỉnh sửa">
-                        <IconButton onClick={() => handleOpenEditDialog(survey)} color="primary">
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Xóa">
-                        <IconButton onClick={() => handleOpenDeleteDialog(survey)} color="error">
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {surveys.map((survey, index) => (
+                <TableRow hover key={survey.id}>
+                  <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+                  <TableCell>{survey.name}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={SURVEY_TYPES.find(t => t.value === survey.type)?.label || survey.type}
+                      color="primary"
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{survey.questions.length}</TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="Chỉnh sửa">
+                      <IconButton color="primary" onClick={() => handleEditSurvey(survey)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Xóa">
+                      <IconButton color="error" onClick={() => handleDeleteSurvey(survey.name, survey.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={filteredSurveys.length}
+          count={totalElements}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -537,19 +535,10 @@ const AdminSurveysPage: React.FC = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              name="title"
-              label="Tiêu đề"
+              name="name"
+              label="Tên khảo sát"
               fullWidth
-              value={formData.title}
-              onChange={handleFormChange}
-            />
-            <TextField
-              name="description"
-              label="Mô tả"
-              fullWidth
-              multiline
-              rows={3}
-              value={formData.description}
+              value={formData.name}
               onChange={handleFormChange}
             />
             <FormControl fullWidth>
@@ -561,9 +550,9 @@ const AdminSurveysPage: React.FC = () => {
                 onChange={handleTypeChange}
                 label="Loại"
               >
-                <MenuItem value="CUSTOM">Tùy chỉnh</MenuItem>
-                <MenuItem value="ASSIST">ASSIST</MenuItem>
-                <MenuItem value="CRAFFT">CRAFFT</MenuItem>
+                {SURVEY_TYPES.map(type => (
+                  <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+                ))}
               </Select>
             </FormControl>
             <Box>
@@ -578,30 +567,33 @@ const AdminSurveysPage: React.FC = () => {
                 </Button>
               </Box>
               {formData.questions.length > 0 ? (
-                <List>
+                <Box>
                   {formData.questions.map((question, index) => (
-                    <React.Fragment key={question.id}>
-                      <ListItem>
-                        <ListItemText
-                          primary={`Câu ${index + 1}: ${question.text}`}
-                          secondary={`${question.options.length} lựa chọn`}
-                        />
-                        <ListItemSecondaryAction>
-                          <IconButton edge="end" onClick={() => handleOpenEditQuestionDialog(index)}>
+                    <Paper key={index} sx={{ p: 2, mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Câu {index + 1}: {question.content}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {question.answers.length} đáp án
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <IconButton onClick={() => handleEditQuestion(index)} color="primary" size="small">
                             <EditIcon />
                           </IconButton>
-                          <IconButton edge="end" onClick={() => handleRemoveQuestion(index)}>
+                          <IconButton onClick={() => handleRemoveQuestion(index)} color="error" size="small">
                             <DeleteIcon />
                           </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      {index < formData.questions.length - 1 && <Divider />}
-                    </React.Fragment>
+                        </Box>
+                      </Box>
+                    </Paper>
                   ))}
-                </List>
+                </Box>
               ) : (
                 <Alert severity="info">
-                  Chưa có câu hỏi nào. Vui lòng thêm ít nhất một câu hỏi.
+                  Chưa có câu hỏi nào. Vui lòng thêm câu hỏi cho khảo sát.
                 </Alert>
               )}
             </Box>
@@ -609,13 +601,8 @@ const AdminSurveysPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseSurveyDialog}>Hủy</Button>
-          <Button
-            onClick={handleSaveSurvey}
-            variant="contained"
-            color="primary"
-            disabled={!formData.title || !formData.description || formData.questions.length === 0}
-          >
-            {dialogMode === 'add' ? 'Thêm' : 'Lưu'}
+          <Button onClick={handleSaveSurvey} variant="contained">
+            {dialogMode === 'add' ? 'Tạo khảo sát' : 'Cập nhật'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -630,75 +617,63 @@ const AdminSurveysPage: React.FC = () => {
             <TextField
               label="Nội dung câu hỏi"
               fullWidth
-              value={questionFormData.text}
+              multiline
+              rows={2}
+              value={questionFormData.content}
               onChange={handleQuestionFormChange}
             />
             <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Các lựa chọn
-              </Typography>
-              {questionFormData.options.map((option, index) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="subtitle2">Đáp án</Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddAnswer}
+                >
+                  Thêm đáp án
+                </Button>
+              </Box>
+              {questionFormData.answers.map((answer, index) => (
+                <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
                   <TextField
-                    label={`Lựa chọn ${index + 1}`}
+                    label={`Đáp án ${index + 1}`}
                     fullWidth
-                    value={option}
-                    onChange={(e) => handleOptionChange(index, e.target.value)}
-                    sx={{ mr: 1 }}
+                    size="small"
+                    value={answer.content}
+                    onChange={(e) => handleAnswerChange(index, 'content', e.target.value)}
                   />
-                  <IconButton color="error" onClick={() => handleRemoveOption(index)}>
-                    <RemoveCircleIcon />
+                  <FormControl size="small" sx={{ minWidth: 100 }}>
+                    <InputLabel>Đúng</InputLabel>
+                    <Select
+                      value={answer.correct ? 'true' : 'false'}
+                      onChange={(e) => handleAnswerChange(index, 'correct', e.target.value === 'true')}
+                      label="Đúng"
+                    >
+                      <MenuItem value="false">Sai</MenuItem>
+                      <MenuItem value="true">Đúng</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <IconButton
+                    onClick={() => handleRemoveAnswer(index)}
+                    color="error"
+                    size="small"
+                    disabled={questionFormData.answers.length <= 2}
+                  >
+                    <DeleteIcon />
                   </IconButton>
                 </Box>
               ))}
-              <Button
-                startIcon={<AddCircleIcon />}
-                onClick={handleAddOption}
-                sx={{ mt: 1 }}
-              >
-                Thêm lựa chọn
-              </Button>
             </Box>
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseQuestionDialog}>Hủy</Button>
-          <Button onClick={handleSaveQuestion} variant="contained" color="primary">
-            Lưu
+          <Button onClick={handleSaveQuestion} variant="contained">
+            {editingQuestionIndex !== null ? 'Cập nhật' : 'Thêm'}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Xác nhận xóa</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa khảo sát "{surveyToDelete?.title}" không?
-          </Typography>
-          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            Lưu ý: Hành động này không thể hoàn tác.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
-          <Button onClick={handleDeleteSurvey} variant="contained" color="error">
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };
