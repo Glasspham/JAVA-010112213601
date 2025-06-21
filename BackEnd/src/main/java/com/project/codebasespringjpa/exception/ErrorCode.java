@@ -20,11 +20,19 @@ public enum ErrorCode {
 
     COURSE_NOT_FOUND(404, "Không tìm thấy khoá học này"),
 
+    COURSE_DETAIL_NOT_FOUND(405, "Không tìm thấy bài học này"),
+
     SURVEY_NOT_FOUND(404, "Không tìm thấy khảo sát này"),
 
     APPOINMENT_NOT_FOUND(404, "Không tìm thấy lịch hẹn này"),
 
     PROGRAM_NOT_FOUND(404, "Không tìm thấy chương trình này"),
+
+    QUESTION_NOT_FOUND(404, "Không tìm thấy câu hỏi này"),
+
+    ANSWER_NOT_FOUND(404, "Không tìm thấy câu hỏi này"),
+
+    CAPACITY_FULL(404, "Chương trình đã được đặt đầy")
     ;
 
     private int code;

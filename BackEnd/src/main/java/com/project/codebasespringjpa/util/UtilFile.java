@@ -42,4 +42,9 @@ public class UtilFile {
         Files.write(filePath, file.getBytes());
     }
 
+    public static boolean hasImage(String imagePath){
+        if(imagePath == null || imagePath.isEmpty())
+            return false;
+        return true;
+    }
 }
