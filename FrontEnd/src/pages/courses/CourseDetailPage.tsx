@@ -15,8 +15,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Alert,
-  Snackbar
+  Alert
 } from '@mui/material';
 import {
   AccessTime as AccessTimeIcon,
@@ -25,33 +24,43 @@ import {
   PlayArrow as PlayArrowIcon
 } from '@mui/icons-material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Course, AudienceType } from '../../types/course';
-import { mockCourses } from '../../utils/mockData';
+import { CourseService, CourseDetail } from '../../services/CourseService';
+import { getImageUrl, handleImageError } from '../../utils/imageUtils';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const CourseDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const _courseService = new CourseService();
 
   useEffect(() => {
-    // Trong thực tế, đây sẽ là API call
     const fetchCourse = async () => {
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+      if (!id) {
+        setError('ID khóa học không hợp lệ');
+        setLoading(false);
+        return;
+      }
 
-        const foundCourse = mockCourses.find(c => c.id === id);
-        if (foundCourse) {
-          setCourse(foundCourse);
+      try {
+        console.log('Fetching course with ID:', id);
+        const response = await _courseService.getCourseById(parseInt(id));
+        console.log('Course API response:', response);
+
+        if (response.code === 200 && response.data) {
+          console.log('Course data:', response.data);
+          setCourse(response.data);
         } else {
-          setError('Không tìm thấy khóa học');
+          console.error('API error:', response);
+          setError(response.message || 'Không tìm thấy khóa học');
         }
       } catch (error) {
+        console.error('Error fetching course:', error);
         setError('Đã xảy ra lỗi khi tải khóa học');
       } finally {
         setLoading(false);
@@ -59,7 +68,7 @@ const CourseDetailPage: React.FC = () => {
     };
 
     fetchCourse();
-  }, [id]);
+  }, [id, _courseService]);
 
   const handleEnrollCourse = () => {
     if (!isAuthenticated) {
@@ -68,20 +77,21 @@ const CourseDetailPage: React.FC = () => {
     }
 
     // Trong thực tế, đây sẽ là API call để đăng ký khóa học
-    setOpenSnackbar(true);
+    toast.success('Đăng ký khóa học thành công! Bạn có thể bắt đầu học ngay bây giờ.');
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+  const handleStartLearning = () => {
+    // Navigate to learning page - không cần đăng nhập
+    navigate(`/courses/${id}/learn`);
   };
 
   // Hàm hiển thị nhãn đối tượng
-  const getAudienceLabel = (type: AudienceType) => {
+  const getAudienceLabel = (type: string) => {
     switch(type) {
-      case 'student': return 'Học sinh';
-      case 'parent': return 'Phụ huynh';
-      case 'teacher': return 'Giáo viên';
-      case 'general': return 'Chung';
+      case 'Học sinh': return 'Học sinh';
+      case 'Phụ huynh': return 'Phụ huynh';
+      case 'Giáo viên': return 'Giáo viên';
+      case 'Chung': return 'Chung';
       default: return type;
     }
   };
@@ -131,25 +141,26 @@ const CourseDetailPage: React.FC = () => {
             <CardMedia
               component="img"
               height="300"
-              image={course.thumbnail}
-              alt={course.title}
+              image={getImageUrl(course.image)}
+              alt={course.name}
+              onError={handleImageError}
             />
             <CardContent>
               <Typography gutterBottom variant="h4" component="h1">
-                {course.title}
+                {course.name}
               </Typography>
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                {course.audienceType.map((type) => (
+                {course.objects.map((type, index) => (
                   <Chip
-                    key={type}
+                    key={index}
                     label={getAudienceLabel(type)}
                     color="primary"
                   />
                 ))}
                 <Chip
                   icon={<AccessTimeIcon />}
-                  label={`${course.duration} phút`}
+                  label={`${course.duration || course.courseDetail.reduce((total, detail) => total + detail.duration, 0)} giờ`}
                   variant="outlined"
                 />
               </Box>
@@ -163,48 +174,23 @@ const CourseDetailPage: React.FC = () => {
                 {course.description}
               </Typography>
 
-              <Typography variant="body1" paragraph>
-                Khóa học này được thiết kế để giúp người học hiểu rõ về tác hại của ma túy và cách phòng tránh.
-                Thông qua các bài giảng, video và tài liệu tương tác, người học sẽ được trang bị kiến thức và
-                kỹ năng cần thiết để phòng ngừa sử dụng ma túy.
-              </Typography>
-
               <Divider sx={{ my: 3 }} />
 
               <Typography variant="h5" gutterBottom>
                 Nội dung khóa học
               </Typography>
               <List>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Bài 1: Giới thiệu về ma túy và tác hại" />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Bài 2: Nhận biết các loại ma túy phổ biến" />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Bài 3: Kỹ năng từ chối và phòng tránh" />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Bài 4: Hỗ trợ người thân và bạn bè" />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Bài 5: Tổng kết và bài kiểm tra" />
-                </ListItem>
+                {course.courseDetail.map((lesson, index) => (
+                  <ListItem key={lesson.id || index}>
+                    <ListItemIcon>
+                      <CheckCircleIcon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`${index + 1}. ${lesson.name}`}
+                      secondary={`${lesson.duration} giờ`}
+                    />
+                  </ListItem>
+                ))}
               </List>
             </CardContent>
           </Card>
@@ -223,16 +209,11 @@ const CourseDetailPage: React.FC = () => {
               fullWidth
               size="large"
               startIcon={<PlayArrowIcon />}
-              onClick={handleEnrollCourse}
+              onClick={handleStartLearning}
               sx={{ mb: 2 }}
             >
               Bắt đầu học ngay
             </Button>
-            {!isAuthenticated && (
-              <Typography variant="body2" color="text.secondary" align="center">
-                Bạn cần đăng nhập để đăng ký khóa học
-              </Typography>
-            )}
           </Paper>
 
           <Paper sx={{ p: 3, borderRadius: 2, mt: 3 }}>
@@ -244,7 +225,7 @@ const CourseDetailPage: React.FC = () => {
                 Thời lượng:
               </Typography>
               <Typography variant="body2">
-                {course.duration} phút
+                {course.duration || course.courseDetail.reduce((total, detail) => total + detail.duration, 0)} giờ
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -252,7 +233,7 @@ const CourseDetailPage: React.FC = () => {
                 Đối tượng:
               </Typography>
               <Typography variant="body2">
-                {course.audienceType.map(type => getAudienceLabel(type)).join(', ')}
+                {course.objects.map(type => getAudienceLabel(type)).join(', ')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -260,7 +241,7 @@ const CourseDetailPage: React.FC = () => {
                 Ngày tạo:
               </Typography>
               <Typography variant="body2">
-                {new Date(course.createdAt).toLocaleDateString('vi-VN')}
+                {course.createDate}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -268,23 +249,14 @@ const CourseDetailPage: React.FC = () => {
                 Cập nhật:
               </Typography>
               <Typography variant="body2">
-                {new Date(course.updatedAt).toLocaleDateString('vi-VN')}
+                {course.updateDate}
               </Typography>
             </Box>
           </Paper>
         </Box>
       </Box>
 
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          Đăng ký khóa học thành công! Bạn có thể bắt đầu học ngay bây giờ.
-        </Alert>
-      </Snackbar>
+
     </Container>
   );
 };

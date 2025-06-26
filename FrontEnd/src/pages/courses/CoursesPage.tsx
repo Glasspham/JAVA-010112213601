@@ -26,7 +26,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -36,74 +38,96 @@ import {
   Visibility as ViewIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import { Course, AudienceType } from '../../types/course';
-import { mockCourses } from '../../utils/mockData';
+import { CourseService, CourseResponse, CourseSearch } from '../../services/CourseService';
+import { getImageUrl, handleImageError } from '../../utils/imageUtils';
 
 interface CoursesPageProps {
   isAdmin?: boolean;
 }
 
 const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<CourseResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [audienceFilter, setAudienceFilter] = useState<AudienceType | 'all'>('all');
-  const [page, setPage] = useState(1);
-  const coursesPerPage = 6;
+  const [audienceFilter, setAudienceFilter] = useState<string>('all');
+  const [totalElement, setTotalElement] = useState(0);
+  const [courseSearch, setCourseSearch] = useState<CourseSearch>({
+    page: 1,
+    limit: 6
+  });
 
+  const _courseService = new CourseService();
+
+  // Fetch courses from API
   useEffect(() => {
-    // Trong thực tế, đây sẽ là API call
-    setCourses(mockCourses);
-    setFilteredCourses(mockCourses);
-  }, []);
+    const fetchCourses = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [code, data, message] = await _courseService.findAllCourses(courseSearch);
+        if (code === 200 && data) {
+          setCourses(data.content || []);
+          setTotalElement(data.totalElements || 0);
+        } else {
+          setError(message || 'Không thể tải danh sách khóa học');
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setError('Có lỗi xảy ra khi tải danh sách khóa học');
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCourses();
+  }, [courseSearch]);
+
+  // Handle search with debounce
   useEffect(() => {
-    let result = [...courses];
+    const timeoutId = setTimeout(() => {
+      setCourseSearch(prev => ({
+        ...prev,
+        page: 1,
+        keyword: searchTerm || undefined
+      }));
+    }, 500);
 
-    // Lọc theo từ khóa tìm kiếm
-    if (searchTerm) {
-      result = result.filter(course =>
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
-    // Lọc theo đối tượng
-    if (audienceFilter !== 'all') {
-      result = result.filter(course =>
-        course.audienceType.includes(audienceFilter as AudienceType)
-      );
-    }
-
-    setFilteredCourses(result);
-    setPage(1); // Reset về trang đầu tiên khi lọc
-  }, [searchTerm, audienceFilter, courses]);
+  // Handle audience filter
+  useEffect(() => {
+    setCourseSearch(prev => ({
+      ...prev,
+      page: 1,
+      object: audienceFilter !== 'all' ? audienceFilter : undefined
+    }));
+  }, [audienceFilter]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
-  const handleAudienceFilterChange = (event: SelectChangeEvent<AudienceType | 'all'>) => {
-    setAudienceFilter(event.target.value as AudienceType | 'all');
+  const handleAudienceFilterChange = (event: SelectChangeEvent<string>) => {
+    setAudienceFilter(event.target.value);
   };
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+    setCourseSearch(prev => ({
+      ...prev,
+      page: value
+    }));
   };
 
-  // Tính toán các khóa học hiển thị trên trang hiện tại
-  const indexOfLastCourse = page * coursesPerPage;
-  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
-  const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
-  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+  const totalPages = Math.ceil(totalElement / courseSearch.limit);
 
   // Hàm hiển thị nhãn đối tượng
-  const getAudienceLabel = (type: AudienceType) => {
+  const getAudienceLabel = (type: string) => {
     switch(type) {
-      case 'student': return 'Học sinh';
-      case 'parent': return 'Phụ huynh';
-      case 'teacher': return 'Giáo viên';
-      case 'general': return 'Chung';
+      case 'Học sinh': return 'Học sinh';
+      case 'Giáo viên': return 'Giáo viên';
+      case 'Chung': return 'Chung';
       default: return type;
     }
   };
@@ -111,7 +135,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
   // Render giao diện admin
   const renderAdminView = () => {
     return (
-      <Container>
+      <Container maxWidth={false}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant="h4" component="h1">
             Quản lý khóa học
@@ -154,16 +178,29 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                 label="Đối tượng"
               >
                 <MenuItem value="all">Tất cả</MenuItem>
-                <MenuItem value="student">Học sinh</MenuItem>
-                <MenuItem value="parent">Phụ huynh</MenuItem>
-                <MenuItem value="teacher">Giáo viên</MenuItem>
-                <MenuItem value="general">Chung</MenuItem>
+                <MenuItem value="Học sinh">Học sinh</MenuItem>
+                <MenuItem value="Giáo viên">Giáo viên</MenuItem>
+                <MenuItem value="Chung">Chung</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </Box>
 
+        {/* Loading and Error States */}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         {/* Bảng dữ liệu */}
+        {!loading && !error && (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
           <TableContainer sx={{ maxHeight: 600 }}>
             <Table stickyHeader aria-label="sticky table">
@@ -178,16 +215,16 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {currentCourses.map((course) => (
+                {courses.map((course) => (
                   <TableRow hover key={course.id}>
                     <TableCell>{course.id}</TableCell>
-                    <TableCell>{course.title}</TableCell>
+                    <TableCell>{course.name}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {course.audienceType.map((type) => (
+                        {course.objects.map((obj, index) => (
                           <Chip
-                            key={type}
-                            label={getAudienceLabel(type)}
+                            key={index}
+                            label={getAudienceLabel(obj)}
                             size="small"
                             color="primary"
                             variant="outlined"
@@ -195,8 +232,8 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                         ))}
                       </Box>
                     </TableCell>
-                    <TableCell>{course.duration} phút</TableCell>
-                    <TableCell>{Math.floor(Math.random() * 100)}</TableCell>
+                    <TableCell>{course.duration || 0} giờ</TableCell>
+                    <TableCell>0</TableCell>
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Tooltip title="Xem chi tiết">
@@ -225,7 +262,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
               <Pagination
                 count={totalPages}
-                page={page}
+                page={courseSearch.page}
                 onChange={handlePageChange}
                 color="primary"
                 size="large"
@@ -233,6 +270,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
             </Box>
           )}
         </Paper>
+        )}
       </Container>
     );
   };
@@ -241,7 +279,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
   const renderClientView = () => {
     return (
       <Container>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
           Khóa học trực tuyến
         </Typography>
 
@@ -272,87 +310,105 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                 label="Đối tượng"
               >
                 <MenuItem value="all">Tất cả</MenuItem>
-                <MenuItem value="student">Học sinh</MenuItem>
-                <MenuItem value="parent">Phụ huynh</MenuItem>
-                <MenuItem value="teacher">Giáo viên</MenuItem>
-                <MenuItem value="general">Chung</MenuItem>
+                <MenuItem value="Phụ huynh">Phụ huynh</MenuItem>
+                <MenuItem value="Học sinh">Học sinh</MenuItem>
+                <MenuItem value="Giáo viên">Giáo viên</MenuItem>
+                <MenuItem value="Chung">Chung</MenuItem>
               </Select>
             </FormControl>
           </Box>
         </Box>
 
-        {/* Hiển thị số lượng kết quả */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body1">
-            Hiển thị {filteredCourses.length} khóa học
-          </Typography>
-        </Box>
-
-        {/* Danh sách khóa học */}
-        {currentCourses.length > 0 ? (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 4 }}>
-            {currentCourses.map((course) => (
-              <Card key={course.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image={course.thumbnail}
-                  alt={course.title}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography gutterBottom variant="h5" component="h2">
-                    {course.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {course.description}
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-                    {course.audienceType.map((type) => (
-                      <Chip
-                        key={type}
-                        label={getAudienceLabel(type)}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Thời lượng: {course.duration} phút
-                  </Typography>
-                </CardContent>
-                <Box sx={{ p: 2 }}>
-                  <Button
-                    component={Link}
-                    to={`/courses/${course.id}`}
-                    variant="contained"
-                    fullWidth
-                  >
-                    Xem chi tiết
-                  </Button>
-                </Box>
-              </Card>
-            ))}
-          </Box>
-        ) : (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="h6">
-              Không tìm thấy khóa học nào phù hợp với tiêu chí tìm kiếm.
-            </Typography>
+        {/* Loading and Error States */}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
           </Box>
         )}
 
-        {/* Phân trang */}
-        {totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-              size="large"
-            />
-          </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {!loading && !error && (
+          <>
+            {/* Hiển thị số lượng kết quả */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body1">
+                Hiển thị {totalElement} khóa học
+              </Typography>
+            </Box>
+
+            {/* Danh sách khóa học */}
+            {courses.length > 0 ? (
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 4 }}>
+                {courses.map((course) => (
+                  <Card key={course.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
+                    <CardMedia
+                      component="img"
+                      height="140"
+                      image={getImageUrl(course.image)}
+                      alt={course.name}
+                      onError={handleImageError}
+                    />
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography gutterBottom variant="h5" component="h2">
+                        {course.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        {course.description}
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                        {course.objects.map((obj, index) => (
+                          <Chip
+                            key={index}
+                            label={getAudienceLabel(obj)}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Thời lượng: {course.duration || 0} giờ
+                      </Typography>
+                    </CardContent>
+                    <Box sx={{ p: 2 }}>
+                      <Button
+                        component={Link}
+                        to={`/courses/${course.id}`}
+                        variant="contained"
+                        fullWidth
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </Box>
+                  </Card>
+                ))}
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h6">
+                  Không tìm thấy khóa học nào phù hợp với tiêu chí tìm kiếm.
+                </Typography>
+              </Box>
+            )}
+
+            {/* Phân trang */}
+            {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Pagination
+                  count={totalPages}
+                  page={courseSearch.page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                />
+              </Box>
+            )}
+          </>
         )}
       </Container>
     );

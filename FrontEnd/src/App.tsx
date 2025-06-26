@@ -26,6 +26,7 @@ import SurveysPage from './pages/surveys/SurveysPage';
 import SurveyDetailPage from './pages/surveys/SurveyDetailPage';
 import CoursesPage from './pages/courses/CoursesPage';
 import CourseDetailPage from './pages/courses/CourseDetailPage';
+import CourseLearningPage from './pages/courses/CourseLearningPage';
 
 // Admin Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -128,6 +129,10 @@ function App() {
               <ClientLayout>
                 <CourseDetailPage />
               </ClientLayout>
+            } />
+
+            <Route path="/courses/:id/learn" element={
+              <CourseLearningPage />
             } />
 
             {/* Admin Routes */}
