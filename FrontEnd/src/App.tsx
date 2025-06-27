@@ -191,6 +191,14 @@ function App() {
                 </AdminLayout>
               </AdminRoute>
             } />
+
+            <Route path="/admin/profile" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <ProfilePage />
+                </AdminLayout>
+              </AdminRoute>
+            } />
           </Routes>
         </Router>
       </AuthProvider>

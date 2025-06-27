@@ -2,6 +2,8 @@ import axios from "axios";
 import { LoginDTO } from "../pages/auth/LoginDTO";
 import { AuthenDTO } from "../pages/auth/AuthenDTO";
 import { RegisterDTO } from "../pages/auth/RegisterDTO";
+import { UpdateProfileDTO } from "../dto/UpdateProfileDTO";
+import { UpdatePasswordDTO } from "../dto/UpdatePasswordDTO";
 import * as jwt_decode from 'jwt-decode';
 
 interface MyTokenPayload {
@@ -15,6 +17,9 @@ interface MyTokenPayload {
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const API_LOGIN = `${BASE_URL}/auth/login`;
 const API_REGISTER = `${BASE_URL}/auth/register`;
+const API_FIND_BY_USERNAME = `${BASE_URL}/auth`;
+const API_UPDATE_PROFILE = `${BASE_URL}/auth/update`;
+const API_UPDATE_PASSWORD = `${BASE_URL}/auth/update-password`;
 
 export class AuthService {
     public async login(loginDTO: LoginDTO) {
@@ -33,7 +38,34 @@ export class AuthService {
                 response.data.data,
                 response.data.message
             ];
-        }
+    }
+
+    public async findByUsername(username: string) {
+        const response = await axios.get(`${API_FIND_BY_USERNAME}?username=${username}`);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async updateProfile(username: string, updateProfileDTO: UpdateProfileDTO) {
+        const response = await axios.put(`${API_UPDATE_PROFILE}?username=${username}`, updateProfileDTO);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async updatePassword(username: string, updatePasswordDTO: UpdatePasswordDTO) {
+        const response = await axios.put(`${API_UPDATE_PASSWORD}?username=${username}`, updatePasswordDTO);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
 
     public async writeInfoToLocal(token: any) {
         const { jwtDecode } = jwt_decode;
@@ -52,6 +84,12 @@ export class AuthService {
         authenDTO.userName = userName;
         authenDTO.role = role;
         return authenDTO;
+    }
+
+    public async deleteInfoFromLocal() {
+        localStorage.removeItem("TOKEN");
+        localStorage.removeItem("USERNAME");
+        localStorage.removeItem("ROLE");
     }
 
     public async isAuthen(){
