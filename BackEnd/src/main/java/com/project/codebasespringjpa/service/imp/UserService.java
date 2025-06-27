@@ -1,6 +1,7 @@
 package com.project.codebasespringjpa.service.imp;
 
 import com.project.codebasespringjpa.configuration.security.UserDetailsImpl;
+import com.project.codebasespringjpa.dto.authen.request.PasswordRequest;
 import com.project.codebasespringjpa.dto.user.request.UserRequest;
 import com.project.codebasespringjpa.dto.user.request.UserSearch;
 import com.project.codebasespringjpa.dto.user.response.UserResponse;
@@ -25,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,8 @@ public class UserService implements IUserService {
     IUserRepository userRepository;
     @Autowired
     IRoleRepository roleRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
     @Autowired
     UserMapper userMapper;
     @Autowired
@@ -115,6 +119,16 @@ public class UserService implements IUserService {
     public UserResponse findByUsername(String username) {
         return userRepository.findByUsername(username).map(it -> userMapper.toResponse(it))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public UserResponse changePassword(Long id, PasswordRequest passwordRequest) {
+        UserEntity userFind = this.findEntityById(id);
+        if (passwordEncoder.matches(passwordRequest.getOldpassword(), userFind.getPassword())){
+            userFind.setPassword(passwordEncoder.encode(passwordRequest.getNewpassword()));
+        }else
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+        return userMapper.toResponse(userRepository.save(userFind));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.project.codebasespringjpa.service.interfaces;
 
 import com.project.codebasespringjpa.configuration.security.UserDetailsImpl;
+import com.project.codebasespringjpa.dto.authen.request.PasswordRequest;
 import com.project.codebasespringjpa.dto.user.request.UserRequest;
 import com.project.codebasespringjpa.dto.user.request.UserSearch;
 import com.project.codebasespringjpa.dto.user.response.UserResponse;
@@ -17,6 +18,7 @@ public interface IUserService extends UserDetailsService {
     UserResponse update(Long id, UserRequest request);
     UserResponse findByid(Long id);
     UserResponse findByUsername(String username);
+    UserResponse changePassword(Long id, PasswordRequest passwordRequest);
     Page<UserResponse> findAll(Pageable pageable, UserSearch userSearch);
     void delete(Long id);
 }
