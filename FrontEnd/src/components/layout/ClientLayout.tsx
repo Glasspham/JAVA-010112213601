@@ -32,10 +32,15 @@ import {
   Groups as GroupsIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  MedicalServices,
+  Psychology as PsychologyIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { AuthService } from '../../services/AuthService';
+import { UTIL_AWAIT_TIME } from '../../utils/UtilFunction';
+import { toast } from 'react-toastify';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -49,6 +54,33 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [userFullname, setUserFullname] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('');
+  const [userAvatar, setUserAvatar] = useState<string>('');
+  const _authService = new AuthService();
+
+  // Lấy fullname và avatar từ localStorage khi component mount
+  React.useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const authenDTO = await _authService.readInfoFromLocal();
+        if (authenDTO.userName) {
+          const [code, data] = await _authService.findByUsername(authenDTO.userName);
+          if (code === 200 && data) {
+            setUserFullname(data.fullname || '');
+            setUserRole(data.role || '');
+            setUserAvatar(data.avatar || '');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+      }
+    };
+
+    if (isAuthenticated) {
+      loadUserInfo();
+    }
+  }, [isAuthenticated]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -62,15 +94,23 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    logout();
-    handleProfileMenuClose();
-    navigate('/');
+  const handleLogout = async () => {
+    console.log("Trong hàm logout ");
+
+    // logout();
+    // handleProfileMenuClose();
+    // navigate('/');
+
+    _authService.deleteInfoFromLocal();
+    toast.warning("Đã đăng xuất");
+    await UTIL_AWAIT_TIME(1000);
+    navigate('/login');
   };
 
   const menuItems = [
     { text: 'Trang chủ', icon: <HomeIcon />, path: '/' },
     { text: 'Khóa học', icon: <SchoolIcon />, path: '/courses' },
+    { text: 'Chuyên viên', icon: <PsychologyIcon />, path: '/consultants' },
     { text: 'Đánh giá nguy cơ', icon: <AssessmentIcon />, path: '/surveys' },
     { text: 'Đặt lịch tư vấn', icon: <EventNoteIcon />, path: '/appointments' },
     { text: 'Chương trình cộng đồng', icon: <GroupsIcon />, path: '/programs' },
@@ -136,20 +176,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
               <MenuIcon />
             </IconButton>
           )}
-          <Typography
-            variant="h6"
-            component={Link}
-            to="/"
-            sx={{
-              flexGrow: { xs: 1, md: 0 },
-              mr: 4,
-              color: 'white',
-              textDecoration: 'none',
-              fontWeight: 'bold'
-            }}
-          >
-            Drug Prevention
-          </Typography>
+          <MedicalServices sx={{ fontSize: 32, mr: 1 }} />
 
           {!isMobile && (
             <Tabs
@@ -190,8 +217,11 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
                 onClick={handleProfileMenuOpen}
                 color="inherit"
               >
-                <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}>
-                  {user?.firstName.charAt(0)}
+                <Avatar
+                  src={userAvatar ? `http://localhost:8080/${userAvatar}` : undefined}
+                  sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}
+                >
+                  {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : (user?.firstName?.charAt(0) || 'U'))}
                 </Avatar>
               </IconButton>
               <Menu
@@ -207,7 +237,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
                   </ListItemIcon>
                   Hồ sơ cá nhân
                 </MenuItem>
-                {(user?.role === 'admin' || user?.role === 'manager') && (
+                {(userRole === 'ADMIN' || userRole === 'SPECIALIST') && (
                   <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/admin/dashboard'); }}>
                     <ListItemIcon>
                       <DashboardIcon fontSize="small" />
@@ -259,7 +289,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         {drawer}
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, pt: 8, pb: 4 }}>
+      <Box component="main" sx={{ flexGrow: 1, pt: 12, pb: 4 }}>
         <Container maxWidth="xl">
           {children}
         </Container>

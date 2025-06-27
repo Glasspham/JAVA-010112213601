@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Box, 
-  CssBaseline, 
-  Divider, 
-  Drawer, 
-  IconButton, 
-  List, 
-  ListItem, 
-  ListItemButton, 
-  ListItemIcon, 
-  ListItemText, 
-  Toolbar, 
-  Typography, 
+import {
+  AppBar,
+  Box,
+  CssBaseline,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
   Button,
   Avatar,
   Menu,
@@ -27,10 +27,14 @@ import {
   Groups as GroupsIcon,
   Person as PersonIcon,
   Dashboard as DashboardIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  MedicalServices
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-toastify';
+import { UTIL_AWAIT_TIME } from '../../utils/UtilFunction';
+import { AuthService } from '../../services/AuthService';
 
 const drawerWidth = 240;
 
@@ -44,6 +48,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const _authService = new AuthService();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -57,10 +62,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    logout();
-    handleProfileMenuClose();
-    navigate('/');
+  const handleLogout = async () => {
+    // logout();
+    // handleProfileMenuClose();
+    // navigate('/');
+
+    _authService.deleteInfoFromLocal();
+    toast.warning("Đã đăng xuất");
+    await UTIL_AWAIT_TIME(1000);
+    navigate('/login');
   };
 
   const menuItems = [
@@ -79,23 +89,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const drawer = (
     <div>
-      <Toolbar sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
+      <Toolbar sx={{
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'primary.main',
         color: 'white'
       }}>
-        <Typography variant="h6" noWrap component="div">
-          Drug Prevention
-        </Typography>
+        <MedicalServices sx={{ fontSize: 32, mr: 1 }} />
       </Toolbar>
       <Divider />
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            <ListItemButton 
-              component={Link} 
+            <ListItemButton
+              component={Link}
               to={item.path}
               selected={location.pathname === item.path}
               sx={{
@@ -111,7 +119,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 },
               }}
             >
-              <ListItemIcon sx={{ 
+              <ListItemIcon sx={{
                 color: location.pathname === item.path ? 'white' : 'inherit'
               }}>
                 {item.icon}
@@ -126,8 +134,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <List>
           {adminMenuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
-              <ListItemButton 
-                component={Link} 
+              <ListItemButton
+                component={Link}
                 to={item.path}
                 selected={location.pathname === item.path}
                 sx={{
@@ -143,7 +151,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   },
                 }}
               >
-                <ListItemIcon sx={{ 
+                <ListItemIcon sx={{
                   color: location.pathname === item.path ? 'white' : 'inherit'
                 }}>
                   {item.icon}
@@ -258,7 +266,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
       >
         <Toolbar />
-        {children}
+        <Box sx={{ mt: 3 }}>
+          {children}
+        </Box>
       </Box>
     </Box>
   );

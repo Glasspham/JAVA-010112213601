@@ -30,11 +30,13 @@ import {
   Logout as LogoutIcon,
   People as PeopleIcon,
   Book as BookIcon,
-  Assignment as SurveyIcon,
-  Settings as SettingsIcon
+  Assignment as SurveyIcon
 } from '@mui/icons-material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { AuthService } from '../../services/AuthService';
+import { toast } from 'react-toastify';
+import { UTIL_AWAIT_TIME } from '../../utils/UtilFunction';
 
 const drawerWidth = 260;
 
@@ -48,6 +50,31 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [userFullname, setUserFullname] = useState<string>('');
+  const [userAvatar, setUserAvatar] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('');
+  const _authService = new AuthService();
+
+  // Lấy fullname và avatar từ localStorage khi component mount
+  React.useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const authenDTO = await _authService.readInfoFromLocal();
+        if (authenDTO.userName) {
+          const [code, data] = await _authService.findByUsername(authenDTO.userName);
+          if (code === 200 && data) {
+            setUserFullname(data.fullname || '');
+            setUserAvatar(data.avatar || '');
+            setUserRole(data.role || '');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+      }
+    };
+
+    loadUserInfo();
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -61,23 +88,31 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    logout();
-    handleProfileMenuClose();
+  const handleLogout = async () => {
+    _authService.deleteInfoFromLocal();
+    toast.warning("Đã đăng xuất");
+    await UTIL_AWAIT_TIME(1000);
     navigate('/login');
   };
 
   // Admin menu items
-  const adminMenuItems = [
+  const allAdminMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
-    { text: 'Quản lý người dùng', icon: <PeopleIcon />, path: '/admin/users' },
+    { text: 'Quản lý người dùng', icon: <PeopleIcon />, path: '/admin/users', adminOnly: true },
     { text: 'Quản lý khóa học', icon: <BookIcon />, path: '/admin/courses' },
     { text: 'Quản lý khảo sát', icon: <SurveyIcon />, path: '/admin/surveys' },
     { text: 'Quản lý lịch hẹn', icon: <EventNoteIcon />, path: '/admin/appointments' },
     { text: 'Quản lý chương trình', icon: <GroupsIcon />, path: '/admin/programs' },
-    { text: 'Quản lý chuyên viên', icon: <PersonIcon />, path: '/admin/consultants' },
-    { text: 'Cài đặt hệ thống', icon: <SettingsIcon />, path: '/admin/settings' },
+    { text: 'Quản lý chuyên viên', icon: <PersonIcon />, path: '/admin/consultants', adminOnly: true },
   ];
+
+  // Lọc menu items dựa trên role
+  const adminMenuItems = allAdminMenuItems.filter(item => {
+    if (item.adminOnly && userRole === 'SPECIALIST') {
+      return false;
+    }
+    return true;
+  });
 
   // Client menu items
   const clientMenuItems = [
@@ -101,12 +136,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <Divider />
       <Box sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Avatar sx={{ bgcolor: 'secondary.main', mr: 2 }}>
-            {user?.firstName.charAt(0)}
+          <Avatar
+            src={userAvatar ? `http://localhost:8080/${userAvatar}` : undefined}
+            sx={{ bgcolor: 'secondary.main', mr: 2 }}
+          >
+            {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : (user?.firstName?.charAt(0) || 'U'))}
           </Avatar>
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-              {user?.firstName} {user?.lastName}
+              {userFullname || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
@@ -203,8 +241,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             onClick={handleProfileMenuOpen}
             color="inherit"
           >
-            <Avatar sx={{ bgcolor: 'primary.main' }}>
-              {user?.firstName.charAt(0)}
+            <Avatar
+              src={userAvatar ? `http://localhost:8080/${userAvatar}` : undefined}
+              sx={{ bgcolor: 'primary.main' }}
+            >
+              {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : (user?.firstName?.charAt(0) || 'U'))}
             </Avatar>
           </IconButton>
           <Menu
