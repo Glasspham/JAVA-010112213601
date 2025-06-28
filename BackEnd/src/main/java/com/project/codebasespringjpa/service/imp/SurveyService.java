@@ -3,17 +3,22 @@ package com.project.codebasespringjpa.service.imp;
 import com.project.codebasespringjpa.dto.answer.request.AnswerRequest;
 import com.project.codebasespringjpa.dto.question.request.QuestionRequest;
 import com.project.codebasespringjpa.dto.survey.request.SurveyRequest;
+import com.project.codebasespringjpa.dto.survey.request.SurveyResultRequest;
 import com.project.codebasespringjpa.dto.survey.request.SurveySearch;
 import com.project.codebasespringjpa.dto.survey.response.SurveyResponse;
+import com.project.codebasespringjpa.dto.survey.response.SurveyResultResponse;
 import com.project.codebasespringjpa.entity.AnswerEntity;
 import com.project.codebasespringjpa.entity.QuestionEntity;
 import com.project.codebasespringjpa.entity.SurveyEntity;
+import com.project.codebasespringjpa.entity.SurveyResultEntity;
 import com.project.codebasespringjpa.exception.AppException;
 import com.project.codebasespringjpa.exception.ErrorCode;
 import com.project.codebasespringjpa.mapper.SurveyMapper;
+import com.project.codebasespringjpa.mapper.SurveyResultMapper;
 import com.project.codebasespringjpa.repository.IAnswerRepository;
 import com.project.codebasespringjpa.repository.IQuestionRepository;
 import com.project.codebasespringjpa.repository.ISurveyRepository;
+import com.project.codebasespringjpa.repository.ISurveyResultRepository;
 import com.project.codebasespringjpa.service.interfaces.ISurveyService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -23,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -37,6 +43,10 @@ public class SurveyService implements ISurveyService {
     IQuestionRepository questionRepository;
     @Autowired
     IAnswerRepository answerRepository;
+    @Autowired
+    SurveyResultMapper surveyResultMapper;
+    @Autowired
+    ISurveyResultRepository surveyResultRepository;
 
     @Override
     public SurveyEntity findEntityById(Long id) {
@@ -133,6 +143,18 @@ public class SurveyService implements ISurveyService {
     public Page<SurveyResponse> findAll(Pageable pageable, SurveySearch surveySearch) {
         return surveyRepository.findAll(surveySearch.getKeyword(), surveySearch.getType(),
                 pageable).map(it -> surveyMapper.toResponse(it));
+    }
+
+    @Override
+    public SurveyResultResponse mark(SurveyResultRequest request) {
+        SurveyResultEntity entity = surveyResultMapper.toEntity(request);
+        return surveyResultMapper.toResponse(surveyResultRepository.save(entity));
+    }
+
+    @Override
+    public List<SurveyResultResponse> findResultByUsernameAndSurvey(String username, Long idSurvey) {
+        List<SurveyResultEntity> surveyResult = surveyResultRepository.findAll(username, idSurvey);
+        return surveyResult.stream().map(it -> surveyResultMapper.toResponse(it)).toList();
     }
 
     @Override

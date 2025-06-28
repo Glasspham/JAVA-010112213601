@@ -23,4 +23,7 @@ public class SurveyEntity extends BaseEntity{
 
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
     List<QuestionEntity> questions;
+
+    @OneToMany(mappedBy = "survey")
+    List<SurveyResultEntity> surveyResult;
 }

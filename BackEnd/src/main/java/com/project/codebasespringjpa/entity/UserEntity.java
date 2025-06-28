@@ -49,7 +49,11 @@ public class UserEntity extends BaseEntity {
     )
     List<ProgramEntity> programs;
 
-    public UserEntity(String email, String phone, String username, String fullname, String password, String avatar, String position, RoleEntity roleEntity) {
+    @OneToMany(mappedBy = "user")
+    List<SurveyResultEntity> surveyResult;
+
+    public UserEntity(String email, String phone, String username, String fullname, String password, String avatar,
+            String position, RoleEntity roleEntity, List<MajorEntity> majors) {
         this.email = email;
         this.phone = phone;
         this.username = username;
@@ -58,5 +62,6 @@ public class UserEntity extends BaseEntity {
         this.avatar = avatar;
         this.position = position;
         this.role = roleEntity;
+        this.majors = majors;
     }
 }
