@@ -1,6 +1,5 @@
 import { User, UserRole } from '../types/user';
 import { Course, AudienceType } from '../types/course';
-import { Survey, SurveyType } from '../types/survey';
 import { Appointment, AppointmentStatus } from '../types/appointment';
 import { Program, ProgramStatus, CommunityProgram } from '../types/program';
 import { Consultant, ConsultantSpecialty } from '../types/consultant';
@@ -218,53 +217,8 @@ export const mockCourses: Course[] = [
   },
 ];
 
-// Mock Surveys
-export const mockSurveys: Survey[] = [
-  {
-    id: '1',
-    title: 'Khảo sát ASSIST',
-    description: 'Đánh giá mức độ nguy cơ sử dụng ma túy theo phương pháp ASSIST.',
-    type: 'ASSIST' as SurveyType,
-    questions: [
-      {
-        id: '1',
-        text: 'Bạn đã từng sử dụng ma túy chưa?',
-        options: ['Chưa bao giờ', 'Đã từng thử', 'Thỉnh thoảng', 'Thường xuyên'],
-        scores: [0, 1, 2, 3],
-      },
-      {
-        id: '2',
-        text: 'Bạn có thường xuyên nghĩ đến việc sử dụng ma túy không?',
-        options: ['Không bao giờ', 'Hiếm khi', 'Thỉnh thoảng', 'Thường xuyên'],
-        scores: [0, 1, 2, 3],
-      },
-    ],
-    createdAt: new Date('2023-03-01'),
-    updatedAt: new Date('2023-03-01'),
-  },
-  {
-    id: '2',
-    title: 'Khảo sát CRAFFT',
-    description: 'Đánh giá mức độ nguy cơ sử dụng ma túy theo phương pháp CRAFFT.',
-    type: 'CRAFFT' as SurveyType,
-    questions: [
-      {
-        id: '1',
-        text: 'Bạn đã từng đi xe do người đã sử dụng ma túy lái?',
-        options: ['Không', 'Có'],
-        scores: [0, 1],
-      },
-      {
-        id: '2',
-        text: 'Bạn có sử dụng ma túy để thư giãn không?',
-        options: ['Không', 'Có'],
-        scores: [0, 1],
-      },
-    ],
-    createdAt: new Date('2023-03-02'),
-    updatedAt: new Date('2023-03-02'),
-  },
-];
+// Mock Surveys - Commented out, now using real API
+// Previously contained mockSurveys data, now using SurveyService for real API calls
 
 // Mock Appointments
 export const mockAppointments: Appointment[] = [

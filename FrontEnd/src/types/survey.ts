@@ -1,5 +1,4 @@
-export type SurveyType = 'ASSIST' | 'CRAFFT' | 'CUSTOM';
-export type RiskLevel = 'low' | 'moderate' | 'high';
+export type SurveyType = 'FEEDBACK' | 'ASSESSMENT' | 'POLL' | 'CUSTOM';
 
 export interface Answer {
   id: number | null;
@@ -20,24 +19,52 @@ export interface Survey {
   questions: Question[];
 }
 
-export interface SurveyQuestion {
-  id: string;
-  text: string;
-  options: string[];
-  scores: number[]; // Score for each option
+export interface SurveySearch {
+  page: number;
+  limit: number;
+  keyword?: string;
+  type?: string;
 }
 
-export interface SurveyResponse {
-  id: string;
-  userId: string;
-  surveyId: string;
-  answers: {
-    questionId: string;
-    selectedOption: number;
-    score: number;
-  }[];
-  totalScore: number;
-  riskLevel: RiskLevel;
-  recommendations: string[];
-  completedAt: Date;
+export interface PaginatedSurveyResponse {
+  content: Survey[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      empty: boolean;
+      sorted: boolean;
+      unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  sort: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface ApiResponse<T> {
+  code: number;
+  message: string | null;
+  data: T;
+}
+
+export interface SurveyMark {
+  id: number;
+  fullname: string;
+  surveyName: string | null;
+  mark: number;
+  createDate: string;
 }

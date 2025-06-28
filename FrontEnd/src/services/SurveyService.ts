@@ -61,4 +61,32 @@ export class SurveyService {
       response.data.message || ''
     ];
   }
+
+  // API chấm điểm
+  public async markSurvey(username: string, idSurvey: number, mark: number): Promise<[number, any, string]> {
+    const response = await axios.post<ApiResponse<any>>(`${BASE_URL}/survey/mark`, {
+      username,
+      idSurvey,
+      mark
+    });
+    return [
+      response.data.code,
+      response.data.data,
+      response.data.message || ''
+    ];
+  }
+
+  // API lấy danh sách điểm
+  public async getMarkHistory(username: string, idSurvey?: number): Promise<[number, SurveyMark[], string]> {
+    let url = `${BASE_URL}/survey/list-mark?username=${username}`;
+    if (idSurvey) {
+      url += `&idSurvey=${idSurvey}`;
+    }
+    const response = await axios.get<ApiResponse<SurveyMark[]>>(url);
+    return [
+      response.data.code,
+      response.data.data,
+      response.data.message || ''
+    ];
+  }
 }

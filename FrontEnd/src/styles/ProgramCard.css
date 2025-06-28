@@ -23,7 +23,7 @@
 }
 
 .detail-button {
-    background-color: #2e7d32 !important; /* Green color */
+    background-color: #4ba3c7 !important; /* Nurse blue */
     color: white !important;
     font-weight: bold !important;
     text-transform: none !important;
@@ -38,7 +38,7 @@
 }
 
 .detail-button:hover {
-    background-color: #1b5e20 !important; /* Darker green on hover */
+    background-color: #357ca5 !important; /* Nurse blue dark */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
     transform: translateY(-2px) !important;
 }
@@ -57,7 +57,7 @@
 .program-title {
     font-weight: bold !important;
     margin-bottom: 12px !important;
-    color: #2e7d32 !important;
+    color: #4ba3c7 !important;
 }
 
 .program-info {

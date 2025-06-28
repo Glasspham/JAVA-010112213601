@@ -24,6 +24,7 @@ import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 import SurveysPage from './pages/surveys/SurveysPage';
 import SurveyDetailPage from './pages/surveys/SurveyDetailPage';
+import SurveyHistoryPage from './pages/surveys/SurveyHistoryPage';
 import CoursesPage from './pages/courses/CoursesPage';
 import CourseDetailPage from './pages/courses/CourseDetailPage';
 import CourseLearningPage from './pages/courses/CourseLearningPage';
@@ -107,17 +108,9 @@ function App() {
               </ClientLayout>
             } />
 
-            <Route path="/surveys" element={
-              <ClientLayout>
-                <SurveysPage />
-              </ClientLayout>
-            } />
-
-            <Route path="/surveys/:id" element={
-              <ClientLayout>
-                <SurveyDetailPage />
-              </ClientLayout>
-            } />
+            <Route path="/surveys" element={<SurveysPage />} />
+            <Route path="/surveys/:id" element={<SurveyDetailPage />} />
+            <Route path="/all-survey-history" element={<SurveyHistoryPage />} />
 
             <Route path="/courses" element={
               <ClientLayout>

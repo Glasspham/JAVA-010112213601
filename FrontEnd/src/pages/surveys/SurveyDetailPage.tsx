@@ -7,9 +7,6 @@ import {
   CardContent, 
   Button, 
   Paper,
-  Stepper,
-  Step,
-  StepLabel,
   Radio,
   RadioGroup,
   FormControlLabel,
@@ -18,466 +15,444 @@ import {
   LinearProgress,
   Divider,
   Alert,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
-  DialogActions
+  DialogActions,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  School as SchoolIcon,
-  EventNote as EventNoteIcon,
-  Groups as GroupsIcon
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Survey, SurveyResponse, RiskLevel } from '../../types/survey';
-import { mockSurveys } from '../../utils/mockData';
+import { Survey, Question, Answer, SurveyMark } from '../../types/survey';
+import { SurveyService } from '../../services/SurveyService';
+import { AuthService } from '../../services/AuthService';
 import { useAuth } from '../../contexts/AuthContext';
+import ClientLayout from '../../components/layout/ClientLayout';
 
 const SurveyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const surveyService = new SurveyService();
+  const authService = new AuthService();
+  
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
+  const [answers, setAnswers] = useState<{ [questionId: number]: number }>({});
   const [completed, setCompleted] = useState(false);
-  const [result, setResult] = useState<{
-    totalScore: number;
-    riskLevel: RiskLevel;
-    recommendations: string[];
-  } | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [score, setScore] = useState<number>(0);
+  const [showHistory, setShowHistory] = useState(false);
+  const [markHistory, setMarkHistory] = useState<SurveyMark[]>([]);
   
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
+  // Load survey data
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: `/surveys/${id}` } });
       return;
     }
 
-    // Trong thực tế, đây sẽ là API call
-    const fetchSurvey = async () => {
+    const loadSurvey = async () => {
+      if (!id) {
+        setError('Survey ID not found');
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        setLoading(true);
+        setError(null);
         
-        const foundSurvey = mockSurveys.find(s => s.id === id);
-        if (foundSurvey) {
-          setSurvey(foundSurvey);
-          // Khởi tạo mảng answers với giá trị -1 (chưa chọn)
-          setAnswers(new Array(foundSurvey.questions.length).fill(-1));
+        const [code, data, message] = await surveyService.getSurveyById(parseInt(id));
+        
+        if (code === 200) {
+          setSurvey(data);
+          // Initialize answers object
+          const initialAnswers: { [questionId: number]: number } = {};
+          data.questions.forEach(question => {
+            if (question.id) {
+              initialAnswers[question.id] = -1;
+            }
+          });
+          setAnswers(initialAnswers);
         } else {
-          setError('Không tìm thấy bài khảo sát');
+          setError(message || 'Survey not found');
         }
       } catch (error) {
-        setError('Đã xảy ra lỗi khi tải bài khảo sát');
+        console.error('Error loading survey:', error);
+        setError('An error occurred while loading survey');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSurvey();
+    loadSurvey();
   }, [id, isAuthenticated, navigate]);
 
+  const handleAnswerChange = (questionId: number, answerIndex: number) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answerIndex
+    }));
+  };
+
   const handleNext = () => {
-    if (answers[activeStep] === -1) {
-      setOpenDialog(true);
-      return;
-    }
-    
-    if (activeStep === survey!.questions.length - 1) {
-      // Hoàn thành khảo sát
-      calculateResult();
-    } else {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    if (survey && activeStep < survey.questions.length - 1) {
+      setActiveStep(prev => prev + 1);
     }
   };
 
   const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    if (activeStep > 0) {
+      setActiveStep(prev => prev - 1);
+    }
   };
 
-  const handleAnswerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newAnswers = [...answers];
-    newAnswers[activeStep] = parseInt(event.target.value);
-    setAnswers(newAnswers);
+  const handleSubmit = () => {
+    setOpenDialog(true);
   };
 
-  const handleCloseDialog = () => {
+  const calculateScore = () => {
+    if (!survey) return 0;
+
+    let correctAnswers = 0;
+    const totalQuestions = survey.questions.length;
+
+    survey.questions.forEach(question => {
+      if (question.id && answers[question.id] !== -1) {
+        const selectedAnswerIndex = answers[question.id];
+        const selectedAnswer = question.answers[selectedAnswerIndex];
+        if (selectedAnswer && selectedAnswer.correct) {
+          correctAnswers++;
+        }
+      }
+    });
+
+    return (correctAnswers / totalQuestions) * 100;
+  };
+
+  const handleConfirmSubmit = async () => {
+    const calculatedScore = calculateScore();
+    setScore(calculatedScore);
+
+    // Gọi API chấm điểm
+    try {
+      const authenDTO = await authService.readInfoFromLocal();
+      if (authenDTO.userName && survey?.id) {
+        await surveyService.markSurvey(authenDTO.userName, survey.id, Math.round(calculatedScore));
+      }
+    } catch (error) {
+      console.error('Error saving survey mark:', error);
+      // Không hiển thị lỗi cho user vì điểm số vẫn được tính và hiển thị
+    }
+
+    setCompleted(true);
     setOpenDialog(false);
   };
 
-  const calculateResult = () => {
-    if (!survey) return;
-    
-    // Tính tổng điểm
-    let totalScore = 0;
-    for (let i = 0; i < answers.length; i++) {
-      if (answers[i] !== -1) {
-        totalScore += survey.questions[i].scores[answers[i]];
+  const isCurrentQuestionAnswered = () => {
+    if (!survey) return false;
+    const currentQuestion = survey.questions[activeStep];
+    return currentQuestion.id ? answers[currentQuestion.id] !== -1 : false;
+  };
+
+  const getProgress = () => {
+    if (!survey) return 0;
+    return ((activeStep + 1) / survey.questions.length) * 100;
+  };
+
+  const loadMarkHistory = async () => {
+    try {
+      const authenDTO = await authService.readInfoFromLocal();
+      console.log('Auth data:', authenDTO);
+      if (authenDTO.userName && survey?.id) {
+        console.log('Calling API with:', authenDTO.userName, survey.id);
+        const [code, data, message] = await surveyService.getMarkHistory(authenDTO.userName, survey.id);
+        console.log('API response:', code, data, message);
+        if (code === 200) {
+          setMarkHistory(data || []);
+          setShowHistory(true);
+        } else {
+          console.error('API error:', message);
+          setMarkHistory([]);
+          setShowHistory(true);
+        }
       }
-    }
-    
-    // Xác định mức độ nguy cơ
-    let riskLevel: RiskLevel = 'low';
-    if (totalScore >= 8) {
-      riskLevel = 'high';
-    } else if (totalScore >= 4) {
-      riskLevel = 'moderate';
-    }
-    
-    // Đề xuất dựa trên mức độ nguy cơ
-    const recommendations: string[] = [];
-    if (riskLevel === 'low') {
-      recommendations.push('Tham gia khóa học "Nhận thức về ma túy" để nâng cao kiến thức');
-      recommendations.push('Tiếp tục duy trì lối sống lành mạnh và tránh xa các chất gây nghiện');
-    } else if (riskLevel === 'moderate') {
-      recommendations.push('Tham gia khóa học "Kỹ năng từ chối ma túy" để trang bị kỹ năng phòng tránh');
-      recommendations.push('Đặt lịch tư vấn với chuyên viên để được hỗ trợ cụ thể hơn');
-      recommendations.push('Tham gia các chương trình cộng đồng để nhận được sự hỗ trợ từ cộng đồng');
-    } else {
-      recommendations.push('Đặt lịch tư vấn khẩn cấp với chuyên viên để được hỗ trợ ngay lập tức');
-      recommendations.push('Tham gia khóa học "Phòng ngừa tái nghiện" để được hỗ trợ');
-      recommendations.push('Liên hệ với các dịch vụ hỗ trợ chuyên nghiệp');
-    }
-    
-    setResult({
-      totalScore,
-      riskLevel,
-      recommendations
-    });
-    
-    setCompleted(true);
-  };
-
-  const getRiskLevelText = (level: RiskLevel) => {
-    switch (level) {
-      case 'low':
-        return 'Thấp';
-      case 'moderate':
-        return 'Trung bình';
-      case 'high':
-        return 'Cao';
-      default:
-        return '';
-    }
-  };
-
-  const getRiskLevelColor = (level: RiskLevel) => {
-    switch (level) {
-      case 'low':
-        return 'success.main';
-      case 'moderate':
-        return 'warning.main';
-      case 'high':
-        return 'error.main';
-      default:
-        return '';
+    } catch (error) {
+      console.error('Error loading mark history:', error);
+      setMarkHistory([]);
+      setShowHistory(true);
     }
   };
 
   if (loading) {
     return (
-      <Container>
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <Typography>Đang tải bài khảo sát...</Typography>
-          <LinearProgress sx={{ mt: 2 }} />
-        </Box>
-      </Container>
+      <ClientLayout>
+        <Container>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+            <CircularProgress />
+          </Box>
+        </Container>
+      </ClientLayout>
     );
   }
 
-  if (error || !survey) {
+  if (error) {
     return (
-      <Container>
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <Typography color="error">{error || 'Không tìm thấy bài khảo sát'}</Typography>
-          <Button 
-            component={Link} 
-            to="/surveys" 
-            startIcon={<ArrowBackIcon />}
-            sx={{ mt: 2 }}
-          >
-            Quay lại danh sách khảo sát
-          </Button>
-        </Box>
-      </Container>
+      <ClientLayout>
+        <Container>
+          <Alert severity="error" sx={{ mt: 4 }}>
+            {error}
+          </Alert>
+          <Box sx={{ mt: 2 }}>
+            <Button component={Link} to="/surveys" variant="outlined">
+              Quay lại danh sách khảo sát
+            </Button>
+          </Box>
+        </Container>
+      </ClientLayout>
     );
   }
+
+  if (!survey) {
+    return (
+      <ClientLayout>
+        <Container>
+          <Alert severity="warning" sx={{ mt: 4 }}>
+            Không tìm thấy khảo sát
+          </Alert>
+        </Container>
+      </ClientLayout>
+    );
+  }
+
+  if (completed) {
+    return (
+      <ClientLayout>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Paper sx={{ p: 4, textAlign: 'center' }}>
+            <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+            <Typography variant="h4" gutterBottom>
+              Hoàn thành khảo sát!
+            </Typography>
+            <Typography variant="body1" color="text.secondary" paragraph>
+              Cảm ơn bạn đã tham gia khảo sát "{survey.name}".
+              Phản hồi của bạn rất quan trọng đối với chúng tôi.
+            </Typography>
+
+            {/* Score Display */}
+            <Box sx={{ my: 3, p: 3, bgcolor: 'primary.light', borderRadius: 2 }}>
+              <Typography variant="h5" gutterBottom sx={{ color: 'primary.contrastText' }}>
+                Điểm số của bạn
+              </Typography>
+              <Typography variant="h3" sx={{ color: 'primary.contrastText', fontWeight: 'bold' }}>
+                {score.toFixed(1)}%
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'primary.contrastText', mt: 1 }}>
+                ({survey.questions.filter((q, index) => {
+                  if (q.id && answers[q.id] !== -1) {
+                    const selectedAnswer = q.answers[answers[q.id]];
+                    return selectedAnswer && selectedAnswer.correct;
+                  }
+                  return false;
+                }).length}/{survey.questions.length} câu đúng)
+              </Typography>
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+              <Button
+                component={Link}
+                to="/surveys"
+                variant="contained"
+                sx={{ mr: 2 }}
+              >
+                Khảo sát khác
+              </Button>
+              <Button
+                component={Link}
+                to="/"
+                variant="outlined"
+              >
+                Về trang chủ
+              </Button>
+            </Box>
+          </Paper>
+        </Container>
+      </ClientLayout>
+    );
+  }
+
+  const currentQuestion = survey.questions[activeStep];
 
   return (
-    <Container>
-      <Button 
-        component={Link} 
-        to="/surveys" 
-        startIcon={<ArrowBackIcon />}
-        sx={{ mb: 3 }}
-      >
-        Quay lại danh sách khảo sát
-      </Button>
-      
-      <Paper sx={{ p: 3, borderRadius: 2, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {survey.title}
-        </Typography>
-        <Typography variant="body1" paragraph>
-          {survey.description}
-        </Typography>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            Bài khảo sát gồm {survey.questions.length} câu hỏi. Vui lòng trả lời tất cả các câu hỏi để nhận kết quả chính xác nhất.
+    <ClientLayout>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Button
+              component={Link}
+              to="/surveys"
+              startIcon={<ArrowBackIcon />}
+            >
+              Quay lại
+            </Button>
+            <Button
+              onClick={loadMarkHistory}
+              variant="outlined"
+              size="small"
+            >
+              Lịch sử của bài này
+            </Button>
+          </Box>
+          <Typography variant="h4" gutterBottom>
+            {survey.name}
           </Typography>
-        </Alert>
-      </Paper>
-      
-      {!completed ? (
-        <Card sx={{ borderRadius: 2 }}>
-          <CardContent>
-            <Box sx={{ mb: 3 }}>
-              <LinearProgress 
-                variant="determinate" 
-                value={(activeStep / survey.questions.length) * 100} 
-                sx={{ height: 10, borderRadius: 5 }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Câu hỏi {activeStep + 1}/{survey.questions.length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {Math.round((activeStep / survey.questions.length) * 100)}% hoàn thành
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h5" component="h2" gutterBottom>
-                {survey.questions[activeStep].text}
-              </Typography>
-              <FormControl component="fieldset" sx={{ width: '100%' }}>
-                <RadioGroup
-                  aria-label={`question-${activeStep}`}
-                  name={`question-${activeStep}`}
-                  value={answers[activeStep].toString()}
-                  onChange={handleAnswerChange}
-                >
-                  {survey.questions[activeStep].options.map((option, index) => (
-                    <FormControlLabel
-                      key={index}
-                      value={index.toString()}
-                      control={<Radio />}
-                      label={option}
-                      sx={{ 
-                        mb: 1, 
-                        p: 1, 
-                        borderRadius: 1,
-                        '&:hover': { bgcolor: 'action.hover' }
-                      }}
-                    />
-                  ))}
-                </RadioGroup>
-              </FormControl>
-            </Box>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                startIcon={<ArrowBackIcon />}
+          <Typography variant="body1" color="text.secondary">
+            Câu hỏi {activeStep + 1} / {survey.questions.length}
+          </Typography>
+        </Box>
+
+        {/* Progress */}
+        <Box sx={{ mb: 4 }}>
+          <LinearProgress 
+            variant="determinate" 
+            value={getProgress()} 
+            sx={{ height: 8, borderRadius: 4 }}
+          />
+        </Box>
+
+        {/* Question */}
+        <Card sx={{ mb: 4 }}>
+          <CardContent sx={{ p: 4 }}>
+            <FormControl component="fieldset" fullWidth>
+              <FormLabel component="legend" sx={{ mb: 3, fontSize: '1.2rem', fontWeight: 'medium' }}>
+                {currentQuestion.content}
+              </FormLabel>
+              <RadioGroup
+                value={currentQuestion.id ? answers[currentQuestion.id] : -1}
+                onChange={(e) => currentQuestion.id && handleAnswerChange(currentQuestion.id, parseInt(e.target.value))}
               >
-                Quay lại
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                endIcon={<ArrowForwardIcon />}
-              >
-                {activeStep === survey.questions.length - 1 ? 'Hoàn thành' : 'Tiếp theo'}
-              </Button>
-            </Box>
+                {currentQuestion.answers.map((answer, index) => (
+                  <FormControlLabel
+                    key={index}
+                    value={index}
+                    control={<Radio />}
+                    label={answer.content}
+                    sx={{ 
+                      mb: 1,
+                      '& .MuiFormControlLabel-label': {
+                        fontSize: '1rem'
+                      }
+                    }}
+                  />
+                ))}
+              </RadioGroup>
+            </FormControl>
           </CardContent>
         </Card>
-      ) : (
-        <Box>
-          <Card sx={{ borderRadius: 2, mb: 4 }}>
-            <CardContent>
-              <Typography variant="h5" component="h2" gutterBottom align="center">
-                Kết quả đánh giá
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-                <Box 
-                  sx={{ 
-                    display: 'inline-flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center',
-                    p: 2,
-                    border: 1,
-                    borderColor: getRiskLevelColor(result!.riskLevel),
-                    borderRadius: 2,
-                    bgcolor: `${getRiskLevelColor(result!.riskLevel)}10`
-                  }}
-                >
-                  <Typography variant="body1" gutterBottom>
-                    Mức độ nguy cơ:
-                  </Typography>
-                  <Typography 
-                    variant="h4" 
-                    component="div" 
-                    sx={{ 
-                      fontWeight: 'bold', 
-                      color: getRiskLevelColor(result!.riskLevel)
-                    }}
-                  >
-                    {getRiskLevelText(result!.riskLevel)}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    Điểm số: {result!.totalScore}/{survey.questions.reduce((total, q) => total + Math.max(...q.scores), 0)}
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Divider sx={{ my: 3 }} />
-              
-              <Typography variant="h6" gutterBottom>
-                Đề xuất cho bạn:
-              </Typography>
-              <List>
-                {result!.recommendations.map((rec, index) => (
-                  <ListItem key={index}>
-                    <ListItemIcon>
-                      <CheckCircleIcon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText primary={rec} />
-                  </ListItem>
-                ))}
-              </List>
-              
-              <Alert 
-                severity={result!.riskLevel === 'high' ? 'error' : result!.riskLevel === 'moderate' ? 'warning' : 'info'} 
-                sx={{ mt: 2 }}
-              >
-                <Typography variant="body1">
-                  {result!.riskLevel === 'high' 
-                    ? 'Bạn có nguy cơ cao về sử dụng ma túy. Vui lòng liên hệ với chuyên viên tư vấn ngay lập tức để được hỗ trợ.' 
-                    : result!.riskLevel === 'moderate'
-                    ? 'Bạn có nguy cơ trung bình về sử dụng ma túy. Hãy tham khảo các đề xuất và cân nhắc việc tư vấn với chuyên viên.'
-                    : 'Bạn có nguy cơ thấp về sử dụng ma túy. Hãy tiếp tục duy trì lối sống lành mạnh và nâng cao nhận thức.'}
-                </Typography>
-              </Alert>
-            </CardContent>
-          </Card>
-          
-          <Typography variant="h5" component="h2" gutterBottom>
-            Các bước tiếp theo
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <SchoolIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-                  <Typography variant="h6">
-                    Khóa học trực tuyến
-                  </Typography>
-                </Box>
-                <Typography variant="body2" paragraph>
-                  Tham gia các khóa học trực tuyến để nâng cao nhận thức và kỹ năng phòng tránh ma túy.
-                </Typography>
-              </CardContent>
-              <Box sx={{ p: 2, pt: 0 }}>
-                <Button 
-                  component={Link} 
-                  to="/courses" 
-                  variant="outlined" 
-                  fullWidth
-                >
-                  Xem khóa học
-                </Button>
-              </Box>
-            </Card>
-            
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <EventNoteIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-                  <Typography variant="h6">
-                    Tư vấn trực tuyến
-                  </Typography>
-                </Box>
-                <Typography variant="body2" paragraph>
-                  Đặt lịch hẹn với chuyên viên tư vấn để được hỗ trợ trực tiếp và chuyên sâu hơn.
-                </Typography>
-              </CardContent>
-              <Box sx={{ p: 2, pt: 0 }}>
-                <Button 
-                  component={Link} 
-                  to="/appointments" 
-                  variant="outlined" 
-                  fullWidth
-                >
-                  Đặt lịch hẹn
-                </Button>
-              </Box>
-            </Card>
-            
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <GroupsIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-                  <Typography variant="h6">
-                    Chương trình cộng đồng
-                  </Typography>
-                </Box>
-                <Typography variant="body2" paragraph>
-                  Tham gia các chương trình cộng đồng để kết nối và nhận được sự hỗ trợ từ cộng đồng.
-                </Typography>
-              </CardContent>
-              <Box sx={{ p: 2, pt: 0 }}>
-                <Button 
-                  component={Link} 
-                  to="/programs" 
-                  variant="outlined" 
-                  fullWidth
-                >
-                  Xem chương trình
-                </Button>
-              </Box>
-            </Card>
-          </Box>
-        </Box>
-      )}
-      
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          {"Vui lòng trả lời câu hỏi"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Bạn cần trả lời câu hỏi hiện tại trước khi tiếp tục.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} autoFocus>
-            Đã hiểu
+
+        {/* Navigation */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            onClick={handleBack}
+            disabled={activeStep === 0}
+            startIcon={<ArrowBackIcon />}
+            variant="outlined"
+          >
+            Câu trước
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+
+          {activeStep === survey.questions.length - 1 ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={!isCurrentQuestionAnswered()}
+              variant="contained"
+              endIcon={<CheckCircleIcon />}
+            >
+              Hoàn thành
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              disabled={!isCurrentQuestionAnswered()}
+              variant="contained"
+              endIcon={<ArrowForwardIcon />}
+            >
+              Câu tiếp theo
+            </Button>
+          )}
+        </Box>
+
+        {/* Mark History Dialog */}
+        <Dialog open={showHistory} onClose={() => setShowHistory(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Tất cả các lần làm bài "{survey.name}"</DialogTitle>
+          <DialogContent>
+            {markHistory.length > 0 ? (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>STT</TableCell>
+                      <TableCell>Điểm số</TableCell>
+                      <TableCell>Ngày làm</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {markHistory.map((mark, index) => (
+                      <TableRow key={mark.id}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          <Typography variant="h6" color="primary">
+                            {mark.mark}%
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{new Date(mark.createDate).toLocaleDateString('vi-VN')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Typography>Bạn chưa làm bài khảo sát này lần nào trước đây.</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowHistory(false)}>Đóng</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>Xác nhận nộp bài</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Bạn có chắc chắn muốn nộp bài khảo sát này không?
+              Sau khi nộp bài, bạn sẽ không thể thay đổi câu trả lời.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Hủy</Button>
+            <Button onClick={handleConfirmSubmit} variant="contained">
+              Xác nhận nộp bài
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </ClientLayout>
   );
 };
 
