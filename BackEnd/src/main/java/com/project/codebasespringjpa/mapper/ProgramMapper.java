@@ -60,6 +60,7 @@ public class ProgramMapper {
                 .time(entity.getTime())
                 .status(entity.getStatus())
                 .capacity(entity.getCapacity())
+                .users(userResponses)
                 .description(entity.getDescription())
                 .build();
     }

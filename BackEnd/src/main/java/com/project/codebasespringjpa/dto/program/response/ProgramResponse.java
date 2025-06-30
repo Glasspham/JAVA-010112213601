@@ -4,6 +4,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import com.project.codebasespringjpa.dto.user.response.UserResponse;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -20,4 +22,5 @@ public class ProgramResponse {
     String status;
     Long capacity;
     String description;
+    List<UserResponse>users;
 }

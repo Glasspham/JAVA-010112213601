@@ -1,8 +1,10 @@
 package com.project.codebasespringjpa.controller;
 
+import com.project.codebasespringjpa.dto.program.request.ProgramRegisterRequest;
 import com.project.codebasespringjpa.dto.program.request.ProgramRequest;
 import com.project.codebasespringjpa.dto.program.request.ProgramSearch;
 import com.project.codebasespringjpa.dto.program.response.ProgramResponse;
+import com.project.codebasespringjpa.dto.user.response.UserResponse;
 import com.project.codebasespringjpa.exception.ApiResponse;
 import com.project.codebasespringjpa.service.interfaces.IProgramService;
 import lombok.AccessLevel;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -71,6 +74,39 @@ public class ProgramController {
         programService.delete(id);
         return ApiResponse.<String>builder()
                 .data("Xóa thành công")
+                .build();
+    }
+
+    @PostMapping("/register")
+    ApiResponse<Void> register(@RequestBody ProgramRegisterRequest request){
+        programService.registerProgram(request);
+        return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @GetMapping("/is-register")
+    ApiResponse<Boolean> isRegister(@RequestParam("username") String username, @RequestParam("programId") Long programId){
+        ProgramRegisterRequest request  = ProgramRegisterRequest.builder()
+                .username(username)
+                .programId(programId)
+                .build();
+
+        return ApiResponse.<Boolean>builder()
+                .data(programService.isRegister(request))
+                .build();
+    }
+
+    @GetMapping("/list-program-register")
+    ApiResponse<List<ProgramResponse>> listProgramRegister(@RequestParam(name = "username") String username){
+        return ApiResponse.<List<ProgramResponse>>builder()
+                .data(programService.listProgramRegister(username))
+                .build();
+    }
+
+    @GetMapping("/list-user-register")
+    ApiResponse<List<UserResponse>> listUserRegister(@RequestParam(name = "idProgram") Long idProgram){
+        return ApiResponse.<List<UserResponse>>builder()
+                .data(programService.listUserRegister(idProgram))
                 .build();
     }
 }
