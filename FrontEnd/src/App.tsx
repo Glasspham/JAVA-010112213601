@@ -20,6 +20,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProgramsPage from './pages/programs/ProgramsPage';
 import ProgramDetailPage from './pages/programs/ProgramDetailPage';
+import RegisteredProgramsPage from './pages/programs/RegisteredProgramsPage';
 import ConsultantsPage from './pages/consultants/ConsultantsPage';
 import ConsultantDetailPage from './pages/consultants/ConsultantDetailPage';
 import SurveysPage from './pages/surveys/SurveysPage';
@@ -89,6 +90,8 @@ function App() {
                 <ProgramDetailPage />
               </ClientLayout>
             } />
+
+            <Route path="/my-registered-programs" element={<RegisteredProgramsPage />} />
 
             <Route path="/consultants" element={
               <ClientLayout>

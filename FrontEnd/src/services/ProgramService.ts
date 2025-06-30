@@ -97,4 +97,55 @@ export class ProgramService {
             response.data.message
         ];
     }
+
+    public async isUserRegistered(username: string, programId: number) {
+        const response = await axios.get(`${BASE_URL}/programs/is-register?username=${username}&programId=${programId}`);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async getRegisteredPrograms(username: string) {
+        const response = await axios.get(`${BASE_URL}/programs/list-program-register?username=${username}`);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async getRegisteredUsers(programId: number) {
+        const response = await axios.get(`${BASE_URL}/programs/list-user-register?idProgram=${programId}`);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async registerForProgram(username: string, programId: number) {
+        const response = await axios.post(`${BASE_URL}/programs/register`, {
+            username: username,
+            programId: programId
+        });
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
+
+    public async unregisterFromProgram(username: string, programId: number) {
+        const response = await axios.post(`${BASE_URL}/programs/unregister`, {
+            username: username,
+            programId: programId
+        });
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
+    }
 }

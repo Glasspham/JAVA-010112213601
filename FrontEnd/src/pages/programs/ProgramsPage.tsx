@@ -27,9 +27,12 @@ import {
   LocationOn as LocationOnIcon,
   People as PeopleIcon
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CommunityProgram } from '../../types/program';
-import { mockPrograms } from '../../utils/mockData';
+import { ProgramService } from '../../services/ProgramService';
+import { ProgramSearch } from '../../dto/ProgramSearch';
+import { toast } from 'react-toastify';
+import ClientLayout from '../../components/layout/ClientLayout';
 import '../../styles/ProgramCard.css';
 
 interface ProgramsPageProps {
@@ -43,12 +46,79 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
   const [timeFilter, setTimeFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const programsPerPage = 6;
+  const [loading, setLoading] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<{[key: string]: boolean}>({});
+  const [checkingRegistration, setCheckingRegistration] = useState<{[key: string]: boolean}>({});
+
+  const programService = new ProgramService();
+  const navigate = useNavigate();
+
+  // Helper function to map API response to CommunityProgram
+  const mapApiResponseToCommunityProgram = (apiData: any): CommunityProgram => {
+    let startDate: Date;
+    try {
+      const dateStr = apiData.date || new Date().toISOString().split('T')[0];
+      const timeStr = apiData.time || '00:00:00';
+
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hour, minute] = timeStr.split(':').map(Number);
+
+      startDate = new Date(year, month - 1, day, hour, minute);
+
+      if (isNaN(startDate.getTime())) {
+        startDate = new Date();
+      }
+    } catch (error) {
+      startDate = new Date();
+    }
+
+    return {
+      id: apiData.id.toString(),
+      title: apiData.title,
+      description: apiData.description || '',
+      location: apiData.address,
+      startDate: startDate,
+      endDate: new Date(startDate.getTime() + 2 * 60 * 60 * 1000), // Default 2 hours duration
+      capacity: apiData.capacity,
+      registeredCount: apiData.users ? apiData.users.length : 0,
+      image: apiData.image ? programService.getImageUrl(apiData.image) : programService.getImageUrl(''),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  };
 
   useEffect(() => {
-    // Trong thực tế, đây sẽ là API call
-    setPrograms(mockPrograms as unknown as CommunityProgram[]);
-    setFilteredPrograms(mockPrograms as unknown as CommunityProgram[]);
+    const loadPrograms = async () => {
+      setLoading(true);
+      try {
+        const programSearch = new ProgramSearch();
+        programSearch.page = 1;
+        programSearch.limit = 100; // Load all programs for client
+
+        const [code, data, message] = await programService.findAll(programSearch);
+        if (code === 200 && data && data.content) {
+          const mappedPrograms = data.content.map((apiData: any) => mapApiResponseToCommunityProgram(apiData));
+          setPrograms(mappedPrograms);
+          setFilteredPrograms(mappedPrograms);
+        } else {
+          console.error('Failed to load programs:', message);
+        }
+      } catch (error) {
+        console.error('Error loading programs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPrograms();
   }, []);
+
+  // Kiểm tra trạng thái đăng ký khi programs được load
+  useEffect(() => {
+    if (programs.length > 0) {
+      checkAllRegistrationStatus();
+    }
+  }, [programs]);
 
   useEffect(() => {
     let result = [...programs];
@@ -90,6 +160,87 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
     setPage(value);
   };
 
+  // Kiểm tra trạng thái đăng ký cho một chương trình
+  const checkRegistrationStatus = async (programId: string) => {
+    const username = localStorage.getItem('USERNAME');
+    if (!username) return;
+
+    setCheckingRegistration(prev => ({ ...prev, [programId]: true }));
+
+    try {
+      const response = await fetch(`http://localhost:8080/programs/is-register?username=${username}&programId=${programId}`);
+      const result = await response.json();
+
+      if (result.code === 200) {
+        setRegistrationStatus(prev => ({ ...prev, [programId]: result.data === true }));
+      }
+    } catch (error) {
+      console.error('Error checking registration status:', error);
+    } finally {
+      setCheckingRegistration(prev => ({ ...prev, [programId]: false }));
+    }
+  };
+
+  // Kiểm tra trạng thái đăng ký cho tất cả chương trình
+  const checkAllRegistrationStatus = async () => {
+    const username = localStorage.getItem('USERNAME');
+    if (!username) return;
+
+    for (const program of programs) {
+      await checkRegistrationStatus(program.id);
+    }
+  };
+
+  // Tự động kiểm tra trạng thái đăng ký khi có programs
+  useEffect(() => {
+    const username = localStorage.getItem('USERNAME');
+    console.log('Username from localStorage:', username);
+    console.log('Programs loaded:', programs.length);
+
+    if (username && programs.length > 0) {
+      checkAllRegistrationStatus();
+    }
+  }, [programs]);
+
+  const handleRegister = async (programId: string) => {
+    const username = localStorage.getItem('USERNAME');
+    if (!username) {
+      toast.error('Vui lòng đăng nhập để đăng ký chương trình');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8080/programs/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username,
+          programId: parseInt(programId)
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.code === 200) {
+        toast.success('Đăng ký chương trình thành công!');
+        // Cập nhật trạng thái đăng ký
+        setRegistrationStatus(prev => ({ ...prev, [programId]: true }));
+      } else {
+        toast.error(result.message || 'Có lỗi xảy ra khi đăng ký chương trình');
+      }
+    } catch (error) {
+      console.error('Error registering for program:', error);
+      toast.error('Có lỗi xảy ra khi đăng ký chương trình');
+    }
+  };
+
+  // Handler cho click vào card chương trình
+  const handleCardClick = (programId: string) => {
+    navigate(`/programs/${programId}`);
+  };
+
   // Tính toán các chương trình hiển thị trên trang hiện tại
   const indexOfLastProgram = page * programsPerPage;
   const indexOfFirstProgram = indexOfLastProgram - programsPerPage;
@@ -103,14 +254,30 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
     .slice(0, 1);
 
   return (
-    <Container>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 3 }}>
-        Chương trình cộng đồng
-      </Typography>
-      <Typography variant="body1" paragraph sx={{ mb: 4 }}>
-        Tham gia các chương trình truyền thông và giáo dục cộng đồng về phòng chống ma túy.
-        Các chương trình này giúp nâng cao nhận thức và kết nối cộng đồng trong việc phòng ngừa sử dụng ma túy.
-      </Typography>
+    <ClientLayout>
+      <Container>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, mt:-10 }}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Chương trình cộng đồng
+          </Typography>
+          <Typography variant="body1" paragraph sx={{ mb: 4 }}>
+            Tham gia các chương trình truyền thông và giáo dục cộng đồng về phòng chống ma túy.
+            Các chương trình này giúp nâng cao nhận thức và kết nối cộng đồng trong việc phòng ngừa sử dụng ma túy.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          color="primary"
+          sx={{ mt: 1, minWidth: 200 }}
+          onClick={() => {
+            // Tạo trang mới để hiển thị chương trình đã đăng ký
+            window.location.href = '/my-registered-programs';
+          }}
+        >
+          Xem chương trình đã đăng ký
+        </Button>
+      </Box>
 
       {/* Chương trình nổi bật */}
       {upcomingPrograms.length > 0 && (
@@ -156,14 +323,38 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
                 <Typography variant="body1" paragraph>
                   {upcomingPrograms[0].description}
                 </Typography>
-                <Button
-                  component={Link}
-                  to={`/programs/${upcomingPrograms[0].id}`}
-                  variant="contained"
-                  sx={{ mt: 2 }}
-                >
-                  Đăng ký tham gia
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                  <Button
+                    component={Link}
+                    to={`/programs/${upcomingPrograms[0].id}`}
+                    variant="outlined"
+                  >
+                    Xem chi tiết
+                  </Button>
+                  {checkingRegistration[upcomingPrograms[0].id] ? (
+                    <Button
+                      variant="outlined"
+                      disabled
+                    >
+                      Đang kiểm tra...
+                    </Button>
+                  ) : registrationStatus[upcomingPrograms[0].id] ? (
+                    <Button
+                      variant="outlined"
+                      color="success"
+                      disabled
+                    >
+                      Đã đăng ký
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      onClick={() => handleRegister(upcomingPrograms[0].id)}
+                    >
+                      Đăng ký tham gia
+                    </Button>
+                  )}
+                </Box>
               </CardContent>
             </Box>
           </Card>
@@ -213,11 +404,21 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
       </Box>
 
       {/* Danh sách chương trình */}
-      {currentPrograms.length > 0 ? (
+      {loading ? (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6">
+            Đang tải chương trình...
+          </Typography>
+        </Box>
+      ) : currentPrograms.length > 0 ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4 }}>
           {currentPrograms.map((program) => (
             <Box key={program.id}>
-              <Card className="program-card">
+              <Card
+                className="program-card"
+                onClick={() => handleCardClick(program.id)}
+                sx={{ cursor: 'pointer' }}
+              >
                 <CardMedia
                   component="img"
                   className="program-image"
@@ -254,17 +455,72 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
                   <Typography className="program-description" variant="body2" color="text.secondary" paragraph>
                     {program.description}
                   </Typography>
-                  <Box className="card-actions">
+
+                  {/* Trạng thái đăng ký */}
+                  {localStorage.getItem('USERNAME') && (
+                    <Box sx={{ mb: 2 }}>
+                      {checkingRegistration[program.id] ? (
+                        <Chip
+                          label="Đang kiểm tra..."
+                          size="small"
+                          color="default"
+                          variant="outlined"
+                        />
+                      ) : registrationStatus[program.id] ? (
+                        <Chip
+                          label="Đã đăng ký"
+                          size="small"
+                          color="success"
+                        />
+                      ) : (
+                        <Chip
+                          label="Chưa đăng ký"
+                          size="small"
+                          color="warning"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                  )}
+
+                  <Box className="card-actions" sx={{ display: 'flex', gap: 1 }} onClick={(e) => e.stopPropagation()}>
                     <Button
                       component={Link}
                       to={`/programs/${program.id}`}
-                      variant="contained"
+                      variant="outlined"
                       fullWidth
                       className="detail-button"
-                      color="primary"
                     >
-                      {new Date(program.endDate) < new Date() ? 'Xem chi tiết' : 'Đăng ký tham gia'}
+                      Xem chi tiết
                     </Button>
+                    {/* Luôn hiển thị nút đăng ký để test */}
+                    {checkingRegistration[program.id] ? (
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        disabled
+                      >
+                        Đang kiểm tra...
+                      </Button>
+                    ) : registrationStatus[program.id] ? (
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        color="success"
+                        disabled
+                      >
+                        Đã đăng ký
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        color="primary"
+                        onClick={() => handleRegister(program.id)}
+                      >
+                        Đăng ký
+                      </Button>
+                    )}
                   </Box>
                 </CardContent>
               </Card>
@@ -383,7 +639,8 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
           </Alert>
         </Paper>
       </Box>
-    </Container>
+      </Container>
+    </ClientLayout>
   );
 };
 

@@ -38,7 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { CommunityProgram } from '../../types/program';
-import { mockPrograms } from '../../utils/mockData';
+import { ProgramService } from '../../services/ProgramService';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/ProgramCard.css';
 
@@ -54,24 +54,65 @@ const ProgramDetailPage: React.FC = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [checkingRegistration, setCheckingRegistration] = useState(false);
 
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const programService = new ProgramService();
+
+  // Helper function to map API response to CommunityProgram
+  const mapApiResponseToCommunityProgram = (apiData: any): CommunityProgram => {
+    let startDate: Date;
+    try {
+      const dateStr = apiData.date || new Date().toISOString().split('T')[0];
+      const timeStr = apiData.time || '00:00:00';
+
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hour, minute] = timeStr.split(':').map(Number);
+
+      startDate = new Date(year, month - 1, day, hour, minute);
+
+      if (isNaN(startDate.getTime())) {
+        startDate = new Date();
+      }
+    } catch (error) {
+      startDate = new Date();
+    }
+
+    return {
+      id: apiData.id.toString(),
+      title: apiData.title,
+      description: apiData.description || '',
+      location: apiData.address,
+      startDate: startDate,
+      endDate: new Date(startDate.getTime() + 2 * 60 * 60 * 1000), // Default 2 hours duration
+      capacity: apiData.capacity,
+      registeredCount: apiData.users ? apiData.users.length : 0,
+      image: apiData.image ? programService.getImageUrl(apiData.image) : programService.getImageUrl(''),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  };
 
   useEffect(() => {
-    // Trong thực tế, đây sẽ là API call
     const fetchProgram = async () => {
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+      if (!id) {
+        setError('ID chương trình không hợp lệ');
+        setLoading(false);
+        return;
+      }
 
-        const foundProgram = mockPrograms.find(p => p.id === id);
-        if (foundProgram) {
-          setProgram(foundProgram as unknown as CommunityProgram);
+      try {
+        const [code, data, message] = await programService.findById(parseInt(id));
+        if (code === 200 && data) {
+          const mappedProgram = mapApiResponseToCommunityProgram(data);
+          setProgram(mappedProgram);
         } else {
-          setError('Không tìm thấy chương trình');
+          setError(message || 'Không tìm thấy chương trình');
         }
       } catch (error) {
+        console.error('Error fetching program:', error);
         setError('Đã xảy ra lỗi khi tải thông tin chương trình');
       } finally {
         setLoading(false);
@@ -80,6 +121,30 @@ const ProgramDetailPage: React.FC = () => {
 
     fetchProgram();
   }, [id]);
+
+  // Check if user is registered for this program
+  useEffect(() => {
+    const checkRegistrationStatus = async () => {
+      if (!id || !isAuthenticated) return;
+
+      const username = localStorage.getItem('USERNAME');
+      if (!username) return;
+
+      try {
+        setCheckingRegistration(true);
+        const [code, data] = await programService.isUserRegistered(username, parseInt(id));
+        if (code === 200) {
+          setIsRegistered(data === true);
+        }
+      } catch (error) {
+        console.error('Error checking registration status:', error);
+      } finally {
+        setCheckingRegistration(false);
+      }
+    };
+
+    checkRegistrationStatus();
+  }, [id, isAuthenticated]);
 
   const handleOpenDialog = () => {
     if (!isAuthenticated) {
@@ -161,7 +226,7 @@ const ProgramDetailPage: React.FC = () => {
         component={Link}
         to="/programs"
         startIcon={<ArrowBackIcon />}
-        sx={{ mt: 3 }}
+        sx={{ mb: 3 }}
       >
         Quay lại danh sách chương trình
       </Button>
@@ -219,20 +284,38 @@ const ProgramDetailPage: React.FC = () => {
                 color="success"
               />
             )}
+            {isAuthenticated && (
+              checkingRegistration ? (
+                <Chip
+                  label="Đang kiểm tra..."
+                  color="default"
+                  variant="outlined"
+                />
+              ) : isRegistered ? (
+                <Chip
+                  label="Đã đăng ký"
+                  color="success"
+                />
+              ) : (
+                <Chip
+                  label="Chưa đăng ký"
+                  color="warning"
+                  variant="outlined"
+                />
+              )
+            )}
           </Box>
 
-          <Typography variant="h5" gutterBottom>
-            Mô tả chương trình
-          </Typography>
-          <Typography variant="body1" paragraph>
-            {program.description}
-          </Typography>
-
-          <Typography variant="body1" paragraph>
-            Chương trình này được tổ chức nhằm nâng cao nhận thức về phòng chống ma túy trong cộng đồng.
-            Thông qua các hoạt động tương tác, triển lãm và tư vấn trực tiếp, người tham gia sẽ được trang bị
-            kiến thức và kỹ năng cần thiết để phòng tránh ma túy.
-          </Typography>
+          {program.description && (
+            <>
+              <Typography variant="h5" gutterBottom>
+                Mô tả chương trình
+              </Typography>
+              <Typography variant="body1" paragraph>
+                {program.description}
+              </Typography>
+            </>
+          )}
 
           <Divider sx={{ my: 3 }} />
 
@@ -257,7 +340,10 @@ const ProgramDetailPage: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary="Giờ bắt đầu"
-                    secondary="08:30 - 16:30"
+                    secondary={new Date(program.startDate).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   />
                 </ListItem>
                 <ListItem>
@@ -291,120 +377,63 @@ const ProgramDetailPage: React.FC = () => {
                     secondary={isProgramPast ? "Đã kết thúc" : isProgramFull ? "Đã đủ số lượng" : "Còn nhận đăng ký"}
                   />
                 </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Phí tham gia"
-                    secondary="Miễn phí"
-                  />
-                </ListItem>
+
               </List>
             </Box>
           </Box>
 
           <Divider sx={{ my: 3 }} />
 
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+            {checkingRegistration ? (
+              <Button
+                variant="outlined"
+                size="large"
+                disabled
+                sx={{ px: 4, py: 1.5 }}
+              >
+                Đang kiểm tra...
+              </Button>
+            ) : isRegistered ? (
+              <Button
+                variant="outlined"
+                size="large"
+                color="success"
+                disabled
+                sx={{ px: 4, py: 1.5 }}
+              >
+                Đã đăng ký
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<EventAvailableIcon />}
+                onClick={handleOpenDialog}
+                disabled={isProgramPast || isProgramFull || !isAuthenticated}
+                className="detail-button"
+                sx={{ px: 4, py: 1.5 }}
+              >
+                {!isAuthenticated ? "Đăng nhập để đăng ký" :
+                 isProgramPast ? "Chương trình đã kết thúc" :
+                 isProgramFull ? "Đã đủ số lượng" : "Đăng ký tham gia"}
+              </Button>
+            )}
+
             <Button
-              variant="contained"
+              variant="outlined"
               size="large"
-              startIcon={<EventAvailableIcon />}
-              onClick={handleOpenDialog}
-              disabled={isProgramPast || isProgramFull}
-              className="detail-button"
+              component={Link}
+              to="/my-registered-programs"
               sx={{ px: 4, py: 1.5 }}
             >
-              {isProgramPast ? "Chương trình đã kết thúc" : isProgramFull ? "Đã đủ số lượng" : "Đăng ký tham gia"}
+              Chương trình đã đăng ký
             </Button>
           </Box>
         </CardContent>
       </Card>
 
-      <Paper sx={{ p: 3, borderRadius: 2, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Nội dung chương trình
-        </Typography>
-        <List>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Triển lãm thông tin"
-              secondary="Triển lãm cung cấp thông tin về các loại ma túy phổ biến, tác hại và cách nhận biết."
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Hội thảo chuyên đề"
-              secondary="Các chuyên gia sẽ chia sẻ kiến thức và kinh nghiệm về phòng chống ma túy."
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Hoạt động tương tác"
-              secondary="Các hoạt động nhóm giúp người tham gia rèn luyện kỹ năng từ chối và phòng tránh ma túy."
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Tư vấn trực tiếp"
-              secondary="Các chuyên viên tư vấn sẽ có mặt để hỗ trợ và giải đáp thắc mắc."
-            />
-          </ListItem>
-        </List>
-      </Paper>
 
-      <Paper sx={{ p: 3, borderRadius: 2 }}>
-        <Typography variant="h5" gutterBottom>
-          Lưu ý khi tham gia
-        </Typography>
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body1">
-            Vui lòng đến đúng giờ và mang theo giấy tờ tùy thân để đăng ký tham gia.
-          </Typography>
-        </Alert>
-        <Typography variant="body1" paragraph>
-          Để có trải nghiệm tốt nhất khi tham gia chương trình, vui lòng lưu ý:
-        </Typography>
-        <List>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="Đăng ký trước để đảm bảo có chỗ" />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="Mang theo giấy tờ tùy thân để xác nhận đăng ký" />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="Đến trước 15 phút để hoàn tất thủ tục đăng ký" />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText primary="Chuẩn bị sẵn câu hỏi nếu bạn muốn tư vấn trực tiếp" />
-          </ListItem>
-        </List>
-      </Paper>
 
       {/* Dialog đăng ký tham gia */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -414,7 +443,7 @@ const ProgramDetailPage: React.FC = () => {
         <DialogContent>
           {registrationSuccess ? (
             <Alert severity="success" sx={{ my: 2 }}>
-              Đăng ký tham gia thành công! Chúng tôi sẽ gửi thông tin xác nhận qua email của bạn.
+              Đăng ký tham gia thành công!
             </Alert>
           ) : (
             <Box sx={{ mt: 2 }}>
@@ -479,7 +508,7 @@ const ProgramDetailPage: React.FC = () => {
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        message="Đăng ký tham gia thành công! Chúng tôi sẽ gửi thông tin xác nhận qua email của bạn."
+        message="Đăng ký tham gia thành công!"
       />
     </Container>
   );

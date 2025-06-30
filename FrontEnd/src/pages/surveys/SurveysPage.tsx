@@ -97,8 +97,6 @@ const SurveysPage: React.FC = () => {
     setPage(1);
   };
 
-
-
   const getSurveyIcon = (type: string) => {
     switch (type) {
       case 'ASSESSMENT':
@@ -130,9 +128,9 @@ const SurveysPage: React.FC = () => {
     <ClientLayout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, mt:-5 }}>
             <Box>
-              <Typography variant="h3" component="h1" gutterBottom>
+              <Typography variant="h4" component="h1" gutterBottom>
                 Khảo sát
               </Typography>
               <Typography variant="h6" color="text.secondary">
