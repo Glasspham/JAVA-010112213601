@@ -23,80 +23,128 @@ import { Search as SearchIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { Consultant } from '../../types/consultant';
 import { mockConsultants } from '../../utils/mockData';
+import { UserService } from '../../services/UserService';
+import { UserSearch } from '../../dto/UserSearch';
+import { toast } from 'react-toastify';
 
 interface ConsultantsPageProps {
   isAdmin?: boolean;
 }
 
 const ConsultantsPage: React.FC<ConsultantsPageProps> = ({ isAdmin = false }) => {
-  const [consultants, setConsultants] = useState<Consultant[]>([]);
-  const [filteredConsultants, setFilteredConsultants] = useState<Consultant[]>([]);
+  const [consultants, setConsultants] = useState<any[]>([]);
+  const [filteredConsultants, setFilteredConsultants] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const consultantsPerPage = 8;
 
+  // Services
+  const userService = new UserService();
+  const [userSearch, setUserSearch] = useState<UserSearch>({
+    keyword: undefined,
+    roleName: 'SPECIALIST',
+    majorName: '',
+    page: 1,
+    limit: consultantsPerPage,
+    timer: Date.now()
+  });
+
   // Lấy danh sách tất cả các chuyên môn từ dữ liệu
-  const allSpecializations = React.useMemo(() => {
-    const specializations = new Set<string>();
-    mockConsultants.forEach(consultant => {
-      consultant.specialization?.forEach(spec => {
-        specializations.add(spec);
-      });
-    });
-    return Array.from(specializations);
-  }, []);
+  const allSpecializations = [
+    'Nghiện',
+    'Thanh thiếu niên',
+    'Gia đình',
+    'Giáo dục',
+    'Sức khỏe tâm thần'
+  ];
 
+  // Load consultants data from API
   useEffect(() => {
-    // Trong thực tế, đây sẽ là API call
-    setConsultants(mockConsultants);
-    setFilteredConsultants(mockConsultants);
-  }, []);
+    const loadConsultants = async () => {
+      try {
+        setLoading(true);
+        const [code, pageData, message] = await userService.findAll(userSearch);
 
-  useEffect(() => {
-    let result = [...consultants];
+        if (code === 200 && pageData) {
+          // Map API data to consultant format
+          const consultantsData = pageData.content.map((user: any) => ({
+            id: user.id,
+            firstName: user.fullname.split(' ')[0] || '',
+            lastName: user.fullname.split(' ').slice(1).join(' ') || '',
+            fullname: user.fullname,
+            email: user.email,
+            phoneNumber: user.phone,
+            profilePicture: user.avatar ? `http://localhost:8080/${user.avatar}` : '/default-avatar.png',
+            specialization: user.majors || [],
+            education: user.position || 'Chuyên viên tư vấn',
+            experience: 5, // Default experience
+            bio: `${user.fullname} là một chuyên viên tư vấn có kinh nghiệm trong lĩnh vực ${user.majors?.join(', ') || 'tư vấn tâm lý'}. Với chuyên môn sâu và tâm huyết với nghề, ${user.fullname} luôn sẵn sàng hỗ trợ và đồng hành cùng bạn trong hành trình vượt qua khó khăn.`,
+            rating: 4.8, // Default rating
+            reviewCount: 25, // Default review count
+            createdAt: new Date(user.createDate)
+          }));
 
-    // Lọc theo từ khóa tìm kiếm
-    if (searchTerm) {
-      result = result.filter(consultant =>
-        `${consultant.firstName || ''} ${consultant.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.specialization?.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        consultant.education?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+          setConsultants(consultantsData);
+          setFilteredConsultants(consultantsData);
+          setTotalElements(pageData.totalElements);
+          setTotalPages(pageData.totalPages);
+        } else {
+          toast.error(message || 'Không thể tải danh sách chuyên viên');
+        }
+      } catch (error) {
+        console.error('Error loading consultants:', error);
+        toast.error('Có lỗi xảy ra khi tải danh sách chuyên viên');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Lọc theo chuyên môn
-    if (specializationFilter !== 'all') {
-      result = result.filter(consultant =>
-        consultant.specialization?.includes(specializationFilter)
-      );
-    }
+    loadConsultants();
+  }, [userSearch.timer]);
 
-    setFilteredConsultants(result);
-    setPage(1); // Reset về trang đầu tiên khi lọc
-  }, [searchTerm, specializationFilter, consultants]);
+  // No need for client-side filtering since API handles it
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+    const keyword = event.target.value;
+    setSearchTerm(keyword);
+    setUserSearch(prev => ({
+      ...prev,
+      keyword: keyword || undefined,
+      page: 1,
+      timer: Date.now()
+    }));
   };
 
   const handleSpecializationFilterChange = (event: SelectChangeEvent<string>) => {
-    setSpecializationFilter(event.target.value);
+    const specialty = event.target.value;
+    setSpecializationFilter(specialty);
+    setUserSearch(prev => ({
+      ...prev,
+      majorName: specialty === 'all' ? '' : specialty,
+      page: 1,
+      timer: Date.now()
+    }));
   };
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+    setUserSearch(prev => ({
+      ...prev,
+      page: value,
+      timer: Date.now()
+    }));
   };
 
-  // Tính toán các chuyên viên hiển thị trên trang hiện tại
-  const indexOfLastConsultant = page * consultantsPerPage;
-  const indexOfFirstConsultant = indexOfLastConsultant - consultantsPerPage;
-  const currentConsultants = filteredConsultants.slice(indexOfFirstConsultant, indexOfLastConsultant);
-  const totalPages = Math.ceil(filteredConsultants.length / consultantsPerPage);
+  // Use consultants directly since API handles pagination
+  const currentConsultants = consultants;
 
   return (
     <Container>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 3 }}>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
         Chuyên viên tư vấn
       </Typography>
 
@@ -138,7 +186,7 @@ const ConsultantsPage: React.FC<ConsultantsPageProps> = ({ isAdmin = false }) =>
       {/* Hiển thị số lượng kết quả */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="body1">
-          Hiển thị {filteredConsultants.length} chuyên viên tư vấn
+          {loading ? 'Đang tải...' : `Hiển thị ${totalElements} chuyên viên tư vấn`}
         </Typography>
       </Box>
 
@@ -166,7 +214,7 @@ const ConsultantsPage: React.FC<ConsultantsPageProps> = ({ isAdmin = false }) =>
                   }}
                 >
                   <Typography variant="h6" component="div">
-                    {consultant.firstName} {consultant.lastName}
+                    {consultant.fullname}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Rating value={consultant.rating} precision={0.1} size="small" readOnly />
@@ -223,7 +271,7 @@ const ConsultantsPage: React.FC<ConsultantsPageProps> = ({ isAdmin = false }) =>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <Pagination
             count={totalPages}
-            page={page}
+            page={userSearch.page}
             onChange={handlePageChange}
             color="primary"
             size="large"

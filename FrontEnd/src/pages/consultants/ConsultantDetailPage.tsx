@@ -31,10 +31,11 @@ import {
   CheckCircle as CheckCircleIcon,
   AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Consultant } from '../../types/consultant';
-import { mockConsultants, mockAppointments } from '../../utils/mockData';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { UserService } from '../../services/UserService';
+import { AuthService } from '../../services/AuthService';
+import { toast } from 'react-toastify';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,29 +65,74 @@ function TabPanel(props: TabPanelProps) {
 
 const ConsultantDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [consultant, setConsultant] = useState<Consultant | null>(null);
+  const location = useLocation();
+  const [consultant, setConsultant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const userService = new UserService();
+  const authService = new AuthService();
+
+  // Determine if coming from admin or client
+  const isFromAdmin = location.pathname.includes('/admin/') ||
+                     location.state?.from === 'admin' ||
+                     document.referrer.includes('/admin/consultants');
+
+  const backUrl = isFromAdmin ? '/admin/consultants' : '/consultants';
+  const backText = isFromAdmin ? 'Quay lại quản lý chuyên viên' : 'Quay lại danh sách chuyên viên';
 
   useEffect(() => {
-    // Trong thực tế, đây sẽ là API call
     const fetchConsultant = async () => {
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+      if (!id) {
+        setError('ID chuyên viên không hợp lệ');
+        setLoading(false);
+        return;
+      }
 
-        const foundConsultant = mockConsultants.find(c => c.id === id);
-        if (foundConsultant) {
-          setConsultant(foundConsultant);
+      try {
+        const [code, userData, message] = await userService.getUserById(parseInt(id));
+
+        if (code === 200 && userData) {
+          // Check if user is SPECIALIST
+          if (userData.role !== 'SPECIALIST') {
+            setError('Người dùng này không phải là chuyên viên tư vấn');
+            setLoading(false);
+            return;
+          }
+
+          // Map API data to consultant format
+          const consultantData = {
+            id: userData.id,
+            username: userData.username,
+            firstName: userData.fullname.split(' ')[0] || '',
+            lastName: userData.fullname.split(' ').slice(1).join(' ') || '',
+            fullname: userData.fullname,
+            email: userData.email,
+            phoneNumber: userData.phone,
+            profilePicture: userData.avatar ? `http://localhost:8080/${userData.avatar}` : '',
+            specialization: userData.majors || [],
+            education: userData.position || 'Chuyên viên tư vấn',
+            experience: 5, // Default experience
+            bio: `${userData.fullname} là một chuyên viên tư vấn có kinh nghiệm trong lĩnh vực ${userData.majors?.join(', ') || 'tư vấn tâm lý'}. Với chuyên môn sâu và tâm huyết với nghề, ${userData.fullname} luôn sẵn sàng hỗ trợ và đồng hành cùng bạn trong hành trình vượt qua khó khăn.`,
+            rating: 4.8, // Default rating
+            reviewCount: 25, // Default review count
+            availableDays: [1, 2, 3, 4, 5], // Monday to Friday
+            availableHours: { start: '09:00', end: '17:00' },
+            createdAt: new Date(userData.createDate)
+          };
+
+          setConsultant(consultantData);
         } else {
-          setError('Không tìm thấy chuyên viên tư vấn');
+          setError(message || 'Không tìm thấy chuyên viên tư vấn');
+          toast.error(message || 'Không tìm thấy chuyên viên tư vấn');
         }
-      } catch (error) {
-        setError('Đã xảy ra lỗi khi tải thông tin chuyên viên tư vấn');
+      } catch (error: any) {
+        console.error('Error loading consultant:', error);
+        setError('Có lỗi xảy ra khi tải thông tin chuyên viên tư vấn');
+        toast.error('Có lỗi xảy ra khi tải thông tin chuyên viên tư vấn');
       } finally {
         setLoading(false);
       }
@@ -101,7 +147,7 @@ const ConsultantDetailPage: React.FC = () => {
       return;
     }
 
-    // Trong thực tế, đây sẽ là chuyển hướng đến trang đặt lịch
+    // Hiển thị thông báo tính năng đang phát triển
     setOpenSnackbar(true);
   };
 
@@ -136,11 +182,11 @@ const ConsultantDetailPage: React.FC = () => {
           <Typography color="error">{error || 'Không tìm thấy chuyên viên tư vấn'}</Typography>
           <Button
             component={Link}
-            to="/consultants"
+            to={backUrl}
             startIcon={<ArrowBackIcon />}
             sx={{ mt: 2 }}
           >
-            Quay lại danh sách chuyên viên
+            {backText}
           </Button>
         </Box>
       </Container>
@@ -151,11 +197,11 @@ const ConsultantDetailPage: React.FC = () => {
     <Container>
       <Button
         component={Link}
-        to="/consultants"
+        to={backUrl}
         startIcon={<ArrowBackIcon />}
         sx={{ mb: 3 }}
       >
-        Quay lại danh sách chuyên viên
+        {backText}
       </Button>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 4 }}>
@@ -164,12 +210,12 @@ const ConsultantDetailPage: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', p: 3 }}>
               <Avatar
                 src={consultant.profilePicture}
-                alt={`${consultant.firstName} ${consultant.lastName}`}
+                alt={consultant.fullname}
                 sx={{ width: 120, height: 120, mr: { xs: 0, sm: 3 }, mb: { xs: 2, sm: 0 } }}
               />
               <Box>
                 <Typography variant="h4" component="h1" gutterBottom>
-                  {consultant.firstName} {consultant.lastName}
+                  {consultant.fullname}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Rating value={consultant.rating} precision={0.1} readOnly />
@@ -178,9 +224,9 @@ const ConsultantDetailPage: React.FC = () => {
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  {consultant.specialization?.map((spec) => (
+                  {consultant.specialization?.map((spec: string, index: number) => (
                     <Chip
-                      key={spec}
+                      key={index}
                       label={spec}
                       color="primary"
                       size="small"
@@ -219,8 +265,8 @@ const ConsultantDetailPage: React.FC = () => {
                   Chuyên môn
                 </Typography>
                 <List>
-                  {consultant.specialization?.map((spec) => (
-                    <ListItem key={spec}>
+                  {consultant.specialization?.map((spec: string, index: number) => (
+                    <ListItem key={index}>
                       <ListItemIcon>
                         <CheckCircleIcon color="primary" />
                       </ListItemIcon>
@@ -257,9 +303,9 @@ const ConsultantDetailPage: React.FC = () => {
                     Chuyên viên tư vấn làm việc vào các ngày:
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    {consultant.availableDays?.map((day) => (
+                    {consultant.availableDays?.map((day: number, index: number) => (
                       <Chip
-                        key={day}
+                        key={index}
                         label={getDayName(day)}
                         color="primary"
                         variant="outlined"
@@ -437,8 +483,8 @@ const ConsultantDetailPage: React.FC = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          Chức năng đặt lịch hẹn sẽ được triển khai trong phiên bản tiếp theo!
+        <Alert onClose={handleCloseSnackbar} severity="info" sx={{ width: '100%' }}>
+          Tính năng đặt lịch hẹn đang được phát triển và sẽ ra mắt sớm!
         </Alert>
       </Snackbar>
     </Container>

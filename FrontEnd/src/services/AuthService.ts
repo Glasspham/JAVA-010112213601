@@ -1,7 +1,7 @@
 import axios from "axios";
 import { LoginDTO } from "../pages/auth/LoginDTO";
-import { AuthenDTO } from "../pages/auth/AuthenDTO";
 import { RegisterDTO } from "../pages/auth/RegisterDTO";
+import { AuthenDTO } from "../pages/auth/AuthenDTO";
 import { UpdateProfileDTO } from "../dto/UpdateProfileDTO";
 import { UpdatePasswordDTO } from "../dto/UpdatePasswordDTO";
 import * as jwt_decode from 'jwt-decode';
@@ -32,12 +32,12 @@ export class AuthService {
     }
 
     public async register(registerDTO: RegisterDTO) {
-            const response = await axios.post(API_REGISTER, registerDTO);
-            return [
-                response.data.code,
-                response.data.data,
-                response.data.message
-            ];
+        const response = await axios.post(API_REGISTER, registerDTO);
+        return [
+            response.data.code,
+            response.data.data,
+            response.data.message
+        ];
     }
 
     public async findByUsername(username: string) {

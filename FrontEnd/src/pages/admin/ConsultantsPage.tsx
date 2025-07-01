@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -29,7 +29,8 @@ import {
   Snackbar,
   Avatar,
   Rating,
-  SelectChangeEvent
+  SelectChangeEvent,
+  CircularProgress
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -44,15 +45,34 @@ import {
 import { Consultant, ConsultantSpecialty } from '../../types/consultant';
 import { mockConsultants } from '../../utils/mockData';
 import { Link } from 'react-router-dom';
+import { UserService } from '../../services/UserService';
+import { UserSearch } from '../../dto/UserSearch';
+import { UserDTO } from '../../dto/UserDTO';
+import { FileService } from '../../services/FileService';
+import { toast } from 'react-toastify';
 
 const AdminConsultantsPage: React.FC = () => {
   // State for consultants data
-  const [consultants, setConsultants] = useState<Consultant[]>([]);
-  const [filteredConsultants, setFilteredConsultants] = useState<Consultant[]>([]);
+  const [consultants, setConsultants] = useState<any[]>([]);
+  const [filteredConsultants, setFilteredConsultants] = useState<any[]>([]);
 
   // State for pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  // Services
+  const userService = new UserService();
+  const fileService = new FileService();
+  const [userSearch, setUserSearch] = useState<UserSearch>({
+    keyword: undefined,
+    roleName: 'SPECIALIST',
+    majorName: '',
+    page: 1,
+    limit: 10,
+    timer: Date.now()
+  });
 
   // State for search and filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,22 +81,24 @@ const AdminConsultantsPage: React.FC = () => {
   // State for consultant dialog
   const [openConsultantDialog, setOpenConsultantDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
-  const [currentConsultant, setCurrentConsultant] = useState<Consultant | null>(null);
+  const [currentConsultant, setCurrentConsultant] = useState<any>(null);
   const [formData, setFormData] = useState({
+    username: '',
     name: '',
     title: '',
-    specialty: [] as ConsultantSpecialty[],
+    specialty: [] as string[],
     bio: '',
     email: '',
     phone: '',
     avatar: '',
+    password: '1234',
     rating: 5,
     availability: true
   });
 
   // State for delete confirmation dialog
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [consultantToDelete, setConsultantToDelete] = useState<Consultant | null>(null);
+  const [consultantToDelete, setConsultantToDelete] = useState<any>(null);
 
   // State for notifications
   const [snackbar, setSnackbar] = useState({
@@ -85,67 +107,150 @@ const AdminConsultantsPage: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
 
-  // Load consultants data
+  // State for avatar upload
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  // Ref for search debounce
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load consultants data from API
   useEffect(() => {
-    // In a real app, this would be an API call
-    setConsultants(mockConsultants);
-    setFilteredConsultants(mockConsultants);
+    const loadConsultants = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Loading consultants with search params:', userSearch);
+        const [code, pageData, message] = await userService.findAll(userSearch);
+        console.log('API Response:', { code, pageData, message });
+
+        if (code === 200 && pageData) {
+          // Map API data to consultant format
+          const consultantsData = pageData.content.map((user: any) => ({
+            id: user.id,
+            name: user.fullname,
+            title: user.position || 'Chuyên viên tư vấn',
+            specialty: user.majors || [],
+            bio: '', // API không có bio
+            email: user.email,
+            phone: user.phone,
+            avatar: user.avatar ? `http://localhost:8080/${user.avatar}` : '',
+            rating: 5, // Default rating
+            availability: true, // Default availability
+            createdAt: new Date(user.createDate)
+          }));
+
+          setConsultants(consultantsData);
+          setFilteredConsultants(consultantsData);
+          setTotalElements(pageData.totalElements);
+          setTotalPages(pageData.totalPages);
+        } else {
+          toast.error(message || 'Không thể tải danh sách chuyên viên');
+        }
+      } catch (error) {
+        console.error('Error loading consultants:', error);
+        toast.error('Có lỗi xảy ra khi tải danh sách chuyên viên');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConsultants();
+  }, [userSearch.timer]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, []);
 
-  // Filter consultants based on search term and specialty filter
-  useEffect(() => {
-    let result = [...consultants];
-
-    // Apply search filter
-    if (searchTerm) {
-      result = result.filter(consultant =>
-        consultant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.bio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.phone.includes(searchTerm)
-      );
-    }
-
-    // Apply specialty filter
-    if (specialtyFilter !== 'all') {
-      result = result.filter(consultant =>
-        consultant.specialty.includes(specialtyFilter as ConsultantSpecialty)
-      );
-    }
-
-    setFilteredConsultants(result);
-    setPage(0); // Reset to first page when filtering
-  }, [searchTerm, specialtyFilter, consultants]);
+  // No need for client-side filtering since API handles it
 
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    setUserSearch(prev => ({
+      ...prev,
+      page: newPage + 1, // API page starts from 1
+      timer: Date.now()
+    }));
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setUserSearch(prev => ({
+      ...prev,
+      limit: newRowsPerPage,
+      page: 1, // Reset to first page
+      timer: Date.now()
+    }));
   };
 
-  // Handle search and filter changes
+  // Handle search and filter changes with debounce
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+    const keyword = event.target.value;
+    setSearchTerm(keyword);
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search to avoid too many API calls
+    searchTimeoutRef.current = setTimeout(() => {
+      setUserSearch(prev => ({
+        ...prev,
+        keyword: keyword.trim() || undefined,
+        page: 1,
+        timer: Date.now()
+      }));
+    }, 500);
   };
 
   const handleSpecialtyFilterChange = (event: SelectChangeEvent) => {
-    setSpecialtyFilter(event.target.value);
+    const specialty = event.target.value;
+    setSpecialtyFilter(specialty);
+
+    // Clear search timeout if any
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    setUserSearch(prev => ({
+      ...prev,
+      majorName: specialty === 'all' ? '' : specialty,
+      page: 1,
+      timer: Date.now()
+    }));
   };
 
   const handleResetFilters = () => {
+    // Clear search timeout if any
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
     setSearchTerm('');
     setSpecialtyFilter('all');
+    setUserSearch(prev => ({
+      ...prev,
+      keyword: undefined,
+      majorName: '',
+      page: 1,
+      timer: Date.now()
+    }));
   };
 
   // Handle consultant dialog
   const handleOpenAddDialog = () => {
     setDialogMode('add');
     setFormData({
+      username: '',
       name: '',
       title: '',
       specialty: [],
@@ -153,32 +258,73 @@ const AdminConsultantsPage: React.FC = () => {
       email: '',
       phone: '',
       avatar: '',
+      password: '1234',
       rating: 5,
       availability: true
     });
     setOpenConsultantDialog(true);
   };
 
-  const handleOpenEditDialog = (consultant: Consultant) => {
+  const handleOpenEditDialog = async (consultant: any) => {
     setDialogMode('edit');
     setCurrentConsultant(consultant);
-    setFormData({
-      name: consultant.name,
-      title: consultant.title,
-      specialty: [...consultant.specialty],
-      bio: consultant.bio,
-      email: consultant.email,
-      phone: consultant.phone,
-      avatar: consultant.avatar || '',
-      rating: consultant.rating,
-      availability: consultant.availability
-    });
+
+    try {
+      // Gọi API để lấy thông tin chi tiết user
+      const [code, userData, message] = await userService.getUserById(consultant.id);
+
+      if (code === 200 && userData) {
+        setFormData({
+          username: userData.username || '',
+          name: userData.fullname,
+          title: userData.position || '',
+          specialty: userData.majors || [],
+          bio: `${userData.fullname} là một chuyên viên tư vấn có kinh nghiệm trong lĩnh vực ${userData.majors?.join(', ') || 'tư vấn tâm lý'}.`,
+          email: userData.email,
+          phone: userData.phone,
+          avatar: userData.avatar || '',
+          password: '1234',
+          rating: 4.8, // Default
+          availability: true // Default
+        });
+
+        // Set avatar preview nếu có
+        if (userData.avatar) {
+          setAvatarPreview(`http://localhost:8080/${userData.avatar}`);
+        } else {
+          setAvatarPreview(null);
+        }
+      } else {
+        toast.error(message || 'Không thể tải thông tin chuyên viên');
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading consultant data:', error);
+      toast.error('Có lỗi xảy ra khi tải thông tin chuyên viên');
+      return;
+    }
+
     setOpenConsultantDialog(true);
   };
 
   const handleCloseConsultantDialog = () => {
     setOpenConsultantDialog(false);
     setCurrentConsultant(null);
+    setAvatarPreview(null);
+    setAvatarFile(null);
+  };
+
+  // Handle avatar upload
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,13 +353,13 @@ const AdminConsultantsPage: React.FC = () => {
     const value = event.target.value;
     setFormData(prev => ({
       ...prev,
-      specialty: typeof value === 'string' ? [value as ConsultantSpecialty] : value as ConsultantSpecialty[]
+      specialty: typeof value === 'string' ? [value] : value
     }));
   };
 
-  const handleSaveConsultant = () => {
+  const handleSaveConsultant = async () => {
     // Validate form
-    if (!formData.name || !formData.title || !formData.specialty.length || !formData.bio || !formData.email || !formData.phone) {
+    if (!formData.name || !formData.title || !formData.specialty.length || !formData.email || !formData.phone) {
       setSnackbar({
         open: true,
         message: 'Vui lòng điền đầy đủ thông tin',
@@ -222,53 +368,131 @@ const AdminConsultantsPage: React.FC = () => {
       return;
     }
 
-    if (dialogMode === 'add') {
-      // In a real app, this would be an API call to create a new consultant
-      const newConsultant: Consultant = {
-        id: String(Date.now()),
-        name: formData.name,
-        title: formData.title,
-        specialty: formData.specialty,
-        bio: formData.bio,
-        email: formData.email,
-        phone: formData.phone,
-        avatar: formData.avatar,
-        rating: formData.rating,
-        availability: formData.availability,
-        createdAt: new Date()
-      };
-
-      setConsultants(prev => [...prev, newConsultant]);
+    // Validate username and password for add mode
+    if (dialogMode === 'add' && !formData.username) {
       setSnackbar({
         open: true,
-        message: 'Chuyên viên đã được thêm thành công',
-        severity: 'success'
+        message: 'Vui lòng nhập tên đăng nhập',
+        severity: 'error'
       });
-    } else {
-      // In a real app, this would be an API call to update the consultant
-      if (currentConsultant) {
-        const updatedConsultants = consultants.map(consultant =>
-          consultant.id === currentConsultant.id
-            ? {
-                ...consultant,
-                name: formData.name,
-                title: formData.title,
-                specialty: formData.specialty,
-                bio: formData.bio,
-                email: formData.email,
-                phone: formData.phone,
-                avatar: formData.avatar,
-                rating: formData.rating,
-                availability: formData.availability
-              }
-            : consultant
-        );
-        setConsultants(updatedConsultants);
+      return;
+    }
+
+    if (dialogMode === 'add' && !formData.password) {
+      setSnackbar({
+        open: true,
+        message: 'Vui lòng nhập mật khẩu',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (dialogMode === 'add') {
+      try {
+        // Prepare data for creating consultant
+        const userDTO = new UserDTO();
+        userDTO.username = formData.username;
+        userDTO.fullname = formData.name;
+        userDTO.password = formData.password;
+        userDTO.email = formData.email;
+        userDTO.position = formData.title;
+        userDTO.phone = formData.phone;
+        userDTO.majors = formData.specialty;
+        userDTO.role = 'SPECIALIST';
+
+        // Create consultant using UserService
+        const [code, data, message] = await userService.createUser(userDTO, avatarFile);
+
+        if (code === 200) {
+          setSnackbar({
+            open: true,
+            message: 'Thêm chuyên viên thành công',
+            severity: 'success'
+          });
+          handleCloseConsultantDialog();
+          // Refresh the consultant list
+          setUserSearch(prev => ({
+            ...prev,
+            timer: Date.now()
+          }));
+        } else {
+          setSnackbar({
+            open: true,
+            message: message || 'Có lỗi xảy ra khi thêm chuyên viên',
+            severity: 'error'
+          });
+        }
+      } catch (error: any) {
         setSnackbar({
           open: true,
-          message: 'Chuyên viên đã được cập nhật thành công',
-          severity: 'success'
+          message: 'Lỗi kết nối: ' + (error.message || 'Không thể thêm chuyên viên'),
+          severity: 'error'
         });
+      }
+    } else {
+      // Update consultant using API
+      if (currentConsultant) {
+        try {
+          let avatarFileName = formData.avatar;
+
+          // Upload avatar if file is selected
+          if (avatarFile) {
+            const [uploadCode, uploadData, uploadMessage] = await fileService.uploadFile(avatarFile);
+            if (uploadCode === 200 && uploadData) {
+              avatarFileName = uploadData;
+            } else {
+              toast.error(uploadMessage || 'Không thể upload ảnh đại diện');
+              return;
+            }
+          }
+
+          // Prepare update data as UserDTO
+          const updateData = {
+            id: Number(currentConsultant.id),
+            username: (currentConsultant as any).username || formData.name.toLowerCase().replace(/\s+/g, ''),
+            fullname: formData.name,
+            password: '1234', // Default password
+            email: formData.email,
+            avatar: avatarFileName,
+            position: formData.title,
+            phone: formData.phone,
+            majors: formData.specialty,
+            role: 'SPECIALIST'
+          };
+
+          const [code, userData, message] = await userService.updateUser(Number(currentConsultant.id), updateData);
+
+          if (code === 200) {
+            toast.success('Cập nhật chuyên viên thành công');
+
+            // Refresh data
+            setUserSearch(prev => ({
+              ...prev,
+              timer: Date.now()
+            }));
+
+            setSnackbar({
+              open: true,
+              message: 'Chuyên viên đã được cập nhật thành công',
+              severity: 'success'
+            });
+          } else {
+            toast.error(message || 'Không thể cập nhật chuyên viên');
+            setSnackbar({
+              open: true,
+              message: message || 'Không thể cập nhật chuyên viên',
+              severity: 'error'
+            });
+          }
+        } catch (error: any) {
+          console.error('Error updating consultant:', error);
+          toast.error('Có lỗi xảy ra khi cập nhật chuyên viên');
+          setSnackbar({
+            open: true,
+            message: 'Có lỗi xảy ra khi cập nhật chuyên viên',
+            severity: 'error'
+          });
+        }
       }
     }
 
@@ -276,7 +500,7 @@ const AdminConsultantsPage: React.FC = () => {
   };
 
   // Handle delete consultant
-  const handleOpenDeleteDialog = (consultant: Consultant) => {
+  const handleOpenDeleteDialog = (consultant: any) => {
     setConsultantToDelete(consultant);
     setOpenDeleteDialog(true);
   };
@@ -286,16 +510,42 @@ const AdminConsultantsPage: React.FC = () => {
     setConsultantToDelete(null);
   };
 
-  const handleDeleteConsultant = () => {
+  const handleDeleteConsultant = async () => {
     if (consultantToDelete) {
-      // In a real app, this would be an API call to delete the consultant
-      const updatedConsultants = consultants.filter(consultant => consultant.id !== consultantToDelete.id);
-      setConsultants(updatedConsultants);
-      setSnackbar({
-        open: true,
-        message: 'Chuyên viên đã được xóa thành công',
-        severity: 'success'
-      });
+      try {
+        const [code, data, message] = await userService.deleteUser(consultantToDelete.id);
+
+        if (code === 200) {
+          toast.success('Xóa chuyên viên thành công');
+
+          // Refresh data
+          setUserSearch(prev => ({
+            ...prev,
+            timer: Date.now()
+          }));
+
+          setSnackbar({
+            open: true,
+            message: 'Chuyên viên đã được xóa thành công',
+            severity: 'success'
+          });
+        } else {
+          toast.error(message || 'Không thể xóa chuyên viên');
+          setSnackbar({
+            open: true,
+            message: message || 'Không thể xóa chuyên viên',
+            severity: 'error'
+          });
+        }
+      } catch (error: any) {
+        console.error('Error deleting consultant:', error);
+        toast.error('Có lỗi xảy ra khi xóa chuyên viên');
+        setSnackbar({
+          open: true,
+          message: 'Có lỗi xảy ra khi xóa chuyên viên',
+          severity: 'error'
+        });
+      }
     }
 
     handleCloseDeleteDialog();
@@ -309,13 +559,9 @@ const AdminConsultantsPage: React.FC = () => {
     }));
   };
 
-  // Get specialty display text
-  const getSpecialtyDisplay = (specialty: ConsultantSpecialty) => {
-    if (specialty === 'addiction') return 'Nghiện';
-    if (specialty === 'youth') return 'Thanh thiếu niên';
-    if (specialty === 'family') return 'Gia đình';
-    if (specialty === 'education') return 'Giáo dục';
-    if (specialty === 'mental_health') return 'Sức khỏe tâm thần';
+  // Get specialty display text - now using majors from API
+  const getSpecialtyDisplay = (specialty: string) => {
+    // Return the specialty as is since API returns Vietnamese text
     return specialty;
   };
 
@@ -334,7 +580,7 @@ const AdminConsultantsPage: React.FC = () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
           <TextField
-            label="Tìm kiếm"
+            label="Tìm kiếm theo tên, email, số điện thoại..."
             variant="outlined"
             size="small"
             value={searchTerm}
@@ -346,6 +592,20 @@ const AdminConsultantsPage: React.FC = () => {
                   <SearchIcon />
                 </InputAdornment>
               ),
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                // Trigger immediate search on Enter
+                if (searchTimeoutRef.current) {
+                  clearTimeout(searchTimeoutRef.current);
+                }
+                setUserSearch(prev => ({
+                  ...prev,
+                  keyword: searchTerm.trim() || undefined,
+                  page: 1,
+                  timer: Date.now()
+                }));
+              }
             }}
           />
 
@@ -359,11 +619,11 @@ const AdminConsultantsPage: React.FC = () => {
               label="Chuyên môn"
             >
               <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="addiction">Nghiện</MenuItem>
-              <MenuItem value="youth">Thanh thiếu niên</MenuItem>
-              <MenuItem value="family">Gia đình</MenuItem>
-              <MenuItem value="education">Giáo dục</MenuItem>
-              <MenuItem value="mental_health">Sức khỏe tâm thần</MenuItem>
+              <MenuItem value="Nghiện">Nghiện</MenuItem>
+              <MenuItem value="Thanh thiếu niên">Thanh thiếu niên</MenuItem>
+              <MenuItem value="Gia đình">Gia đình</MenuItem>
+              <MenuItem value="Giáo dục">Giáo dục</MenuItem>
+              <MenuItem value="Sức khỏe tâm thần">Sức khỏe tâm thần</MenuItem>
             </Select>
           </FormControl>
 
@@ -395,15 +655,29 @@ const AdminConsultantsPage: React.FC = () => {
                 <TableCell>Chức danh</TableCell>
                 <TableCell>Chuyên môn</TableCell>
                 <TableCell>Liên hệ</TableCell>
-                <TableCell>Đánh giá</TableCell>
-                <TableCell>Trạng thái</TableCell>
                 <TableCell align="center">Thao tác</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredConsultants
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((consultant) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <CircularProgress />
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                      Đang tải danh sách chuyên viên...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : consultants.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Không tìm thấy chuyên viên nào
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                consultants.map((consultant) => (
                   <TableRow hover key={consultant.id}>
                     <TableCell>{consultant.id}</TableCell>
                     <TableCell>
@@ -419,9 +693,9 @@ const AdminConsultantsPage: React.FC = () => {
                     <TableCell>{consultant.title}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {consultant.specialty.map((spec) => (
+                        {consultant.specialty.map((spec: string, index: number) => (
                           <Chip
-                            key={spec}
+                            key={index}
                             label={getSpecialtyDisplay(spec)}
                             size="small"
                             color="primary"
@@ -442,19 +716,14 @@ const AdminConsultantsPage: React.FC = () => {
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Rating value={consultant.rating} readOnly size="small" />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={consultant.availability ? 'Đang hoạt động' : 'Không hoạt động'}
-                        color={consultant.availability ? 'success' : 'error'}
-                        size="small"
-                      />
-                    </TableCell>
                     <TableCell align="center">
                       <Tooltip title="Xem chi tiết">
-                        <IconButton component={Link} to={`/consultants/${consultant.id}`} color="info">
+                        <IconButton
+                          component={Link}
+                          to={`/consultants/${consultant.id}`}
+                          state={{ from: 'admin' }}
+                          color="info"
+                        >
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
@@ -470,16 +739,17 @@ const AdminConsultantsPage: React.FC = () => {
                       </Tooltip>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={filteredConsultants.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
+          count={totalElements}
+          rowsPerPage={userSearch.limit}
+          page={userSearch.page - 1} // Convert back to 0-based for UI
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Số hàng mỗi trang:"
@@ -502,6 +772,31 @@ const AdminConsultantsPage: React.FC = () => {
               onChange={handleFormChange}
             />
 
+            {/* Username and Password fields - only show in add mode */}
+            {dialogMode === 'add' && (
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  name="username"
+                  label="Tên đăng nhập"
+                  fullWidth
+                  value={formData.username}
+                  onChange={handleFormChange}
+                  required
+                  helperText="Tên đăng nhập duy nhất cho chuyên viên"
+                />
+                <TextField
+                  name="password"
+                  label="Mật khẩu"
+                  type="password"
+                  fullWidth
+                  value={formData.password}
+                  onChange={handleFormChange}
+                  required
+                  helperText="Mật khẩu mặc định: 1234 (có thể thay đổi sau)"
+                />
+              </Box>
+            )}
+
             <TextField
               name="title"
               label="Chức danh"
@@ -521,17 +816,17 @@ const AdminConsultantsPage: React.FC = () => {
                 label="Chuyên môn"
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {(selected as ConsultantSpecialty[]).map((value) => (
-                      <Chip key={value} label={getSpecialtyDisplay(value)} />
+                    {(selected as string[]).map((value, index) => (
+                      <Chip key={index} label={getSpecialtyDisplay(value)} />
                     ))}
                   </Box>
                 )}
               >
-                <MenuItem value="addiction">Nghiện</MenuItem>
-                <MenuItem value="youth">Thanh thiếu niên</MenuItem>
-                <MenuItem value="family">Gia đình</MenuItem>
-                <MenuItem value="education">Giáo dục</MenuItem>
-                <MenuItem value="mental_health">Sức khỏe tâm thần</MenuItem>
+                <MenuItem value="Nghiện">Nghiện</MenuItem>
+                <MenuItem value="Thanh thiếu niên">Thanh thiếu niên</MenuItem>
+                <MenuItem value="Gia đình">Gia đình</MenuItem>
+                <MenuItem value="Giáo dục">Giáo dục</MenuItem>
+                <MenuItem value="Sức khỏe tâm thần">Sức khỏe tâm thần</MenuItem>
               </Select>
             </FormControl>
 
@@ -577,39 +872,37 @@ const AdminConsultantsPage: React.FC = () => {
               />
             </Box>
 
-            <TextField
-              name="avatar"
-              label="URL ảnh đại diện"
-              fullWidth
-              value={formData.avatar}
-              onChange={handleFormChange}
-            />
-
+            {/* Avatar Upload */}
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Đánh giá
+                Ảnh đại diện
               </Typography>
-              <Rating
-                name="rating"
-                value={formData.rating}
-                onChange={handleRatingChange}
-                precision={0.5}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  src={avatarPreview || (formData.avatar ? `http://localhost:8080/${formData.avatar}` : '')}
+                  sx={{ width: 80, height: 80 }}
+                />
+                <Box>
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="avatar-upload"
+                    type="file"
+                    onChange={handleAvatarChange}
+                  />
+                  <label htmlFor="avatar-upload">
+                    <Button variant="outlined" component="span">
+                      Chọn ảnh
+                    </Button>
+                  </label>
+                  {avatarFile && (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      {avatarFile.name}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             </Box>
-
-            <FormControl fullWidth>
-              <InputLabel id="availability-label">Trạng thái</InputLabel>
-              <Select
-                labelId="availability-label"
-                id="availability"
-                value={formData.availability.toString()}
-                onChange={handleAvailabilityChange}
-                label="Trạng thái"
-              >
-                <MenuItem value="true">Đang hoạt động</MenuItem>
-                <MenuItem value="false">Không hoạt động</MenuItem>
-              </Select>
-            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
