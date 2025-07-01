@@ -143,4 +143,17 @@ public class UserService implements IUserService {
         userFind.setIsDelete(true);
         userRepository.save(userFind);
     }
+
+    @Override
+    public List<UserResponse> findAllSpecialist() {
+        List<UserEntity> user = userRepository.findAllSpecialiest();
+        return user.stream().map(it -> userMapper.toResponse(it)).toList();
+    }
+
+    @Override
+    public List<UserResponse> findAllUser() {
+        List<UserEntity> user = userRepository.findAllUser();
+        return user.stream().map(it -> userMapper.toResponse(it)).toList();
+    }
+
 }

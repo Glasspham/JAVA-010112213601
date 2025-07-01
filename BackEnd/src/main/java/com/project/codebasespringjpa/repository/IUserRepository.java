@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface IUserRepository extends JpaRepository<UserEntity, Long> {
@@ -24,4 +25,16 @@ public interface IUserRepository extends JpaRepository<UserEntity, Long> {
             @Param("role") String role,
             @Param("major") String major,
             Pageable pageable);
+
+    @Query("""
+                select us from UserEntity us where us.isDelete = false
+                and us.role.name = 'SPECIALIST'
+            """)
+    List<UserEntity> findAllSpecialiest();
+
+    @Query("""
+                select us from UserEntity us where us.isDelete = false
+                and us.role.name = 'USER'
+            """)
+    List<UserEntity> findAllUser();
 }

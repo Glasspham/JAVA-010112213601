@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -66,5 +67,15 @@ public class UserController {
         return ApiResponse.<String>builder()
                 .data("Xóa thành công")
                 .build();
+    }
+
+    @GetMapping("/list-specialist")
+    public ApiResponse<List<UserResponse>> findAllSpecialist(){
+        return ApiResponse.<List<UserResponse>>builder().data(userService.findAllSpecialist()).build();
+    }
+
+    @GetMapping("/list-user")
+    public ApiResponse<List<UserResponse>> findAllUser(){
+        return ApiResponse.<List<UserResponse>>builder().data(userService.findAllUser()).build();
     }
 }

@@ -9,6 +9,7 @@ import com.project.codebasespringjpa.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import java.util.List;
 
 public interface IUserService extends UserDetailsService {
     long count();
@@ -21,4 +22,6 @@ public interface IUserService extends UserDetailsService {
     UserResponse changePassword(Long id, PasswordRequest passwordRequest);
     Page<UserResponse> findAll(Pageable pageable, UserSearch userSearch);
     void delete(Long id);
+    List<UserResponse> findAllSpecialist();
+    List<UserResponse> findAllUser();
 }
