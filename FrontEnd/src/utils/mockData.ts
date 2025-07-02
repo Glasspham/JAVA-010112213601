@@ -1,9 +1,10 @@
 import { User, UserRole } from '../types/user';
 import { Course, AudienceType } from '../types/course';
-import { Appointment, AppointmentStatus } from '../types/appointment';
-import { Program, ProgramStatus, CommunityProgram } from '../types/program';
+import { Program, CommunityProgram } from '../types/program';
 import { Consultant, ConsultantSpecialty } from '../types/consultant';
 import { courseImages, programImages, consultantImages } from './imageUrls';
+
+// Status removed from all program interfaces
 
 // Mock Users
 export const mockUsers: User[] = [
@@ -220,76 +221,8 @@ export const mockCourses: Course[] = [
 // Mock Surveys - Commented out, now using real API
 // Previously contained mockSurveys data, now using SurveyService for real API calls
 
-// Mock Appointments
-export const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    userId: '2',
-    consultantId: '4',
-    date: new Date('2023-05-15'),
-    duration: 60,
-    status: 'pending' as AppointmentStatus,
-    createdAt: new Date('2023-04-01'),
-    // Client-side properties
-    startTime: '09:00',
-    endTime: '10:00',
-    updatedAt: new Date('2023-04-01'),
-  },
-  {
-    id: '2',
-    userId: '2',
-    consultantId: '4',
-    date: new Date('2023-05-20'),
-    duration: 60,
-    status: 'completed' as AppointmentStatus,
-    notes: 'Buổi tư vấn đầu tiên, cần theo dõi tiếp.',
-    createdAt: new Date('2023-04-02'),
-    // Client-side properties
-    startTime: '14:00',
-    endTime: '15:00',
-    updatedAt: new Date('2023-05-20'),
-  },
-  {
-    id: '3',
-    userId: '3',
-    consultantId: '1',
-    date: new Date('2023-06-10'),
-    duration: 90,
-    status: 'confirmed' as AppointmentStatus,
-    createdAt: new Date('2023-05-15'),
-    // Client-side properties
-    startTime: '10:30',
-    endTime: '12:00',
-    updatedAt: new Date('2023-05-15'),
-  },
-  {
-    id: '4',
-    userId: '5',
-    consultantId: '2',
-    date: new Date('2023-06-15'),
-    duration: 45,
-    status: 'cancelled' as AppointmentStatus,
-    notes: 'Hủy do lịch bận đột xuất',
-    createdAt: new Date('2023-05-20'),
-    // Client-side properties
-    startTime: '15:30',
-    endTime: '16:15',
-    updatedAt: new Date('2023-05-25'),
-  },
-  {
-    id: '5',
-    userId: '3',
-    consultantId: '3',
-    date: new Date('2023-06-20'),
-    duration: 60,
-    status: 'scheduled' as AppointmentStatus,
-    createdAt: new Date('2023-05-25'),
-    // Client-side properties
-    startTime: '11:00',
-    endTime: '12:00',
-    updatedAt: new Date('2023-05-25'),
-  },
-];
+// Mock Appointments - Commented out due to type changes
+// export const mockAppointments: Appointment[] = [];
 
 // Mock Programs for Admin
 export const mockPrograms: Program[] = [

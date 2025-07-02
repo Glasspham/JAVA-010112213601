@@ -39,9 +39,12 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Appointment, AppointmentStatus } from '../../types/appointment';
-import { mockAppointments, mockConsultants } from '../../utils/mockData';
+import { Appointment, AppointmentStatus, Specialist, AppointmentCreateRequest } from '../../types/appointment';
+import { AppointmentService } from '../../services/AppointmentService';
+import { AuthService } from '../../services/AuthService';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-toastify';
+import { format } from 'date-fns';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -74,30 +77,68 @@ interface AppointmentsPageProps {
 }
 
 const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) => {
+  const appointmentService = new AppointmentService();
+  const authService = new AuthService();
+
   const [tabValue, setTabValue] = useState(0);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedConsultant, setSelectedConsultant] = useState('');
+  const [selectedSpecialist, setSelectedSpecialist] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [notes, setNotes] = useState('');
+  const [duration, setDuration] = useState(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+
+  // Load specialists data
+  const loadSpecialists = async () => {
+    try {
+      const [code, data, message] = await appointmentService.getSpecialists();
+      if (code === 200) {
+        setSpecialists(data);
+      } else {
+        console.error('Failed to load specialists:', message);
+      }
+    } catch (error) {
+      console.error('Error loading specialists:', error);
+    }
+  };
+
+  // Load appointments data
+  const loadAppointments = async () => {
+    if (!isAuthenticated || !user) return;
+
+    try {
+      const authenDTO = await authService.readInfoFromLocal();
+      if (!authenDTO.userName) return;
+
+      const [code, data, message] = await appointmentService.findAppointmentsByUsername({
+        page: 1,
+        limit: 100,
+        username: authenDTO.userName
+      });
+
+      if (code === 200) {
+        setAppointments(data.content);
+      } else {
+        console.error('Failed to load appointments:', message);
+      }
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: '/appointments' } });
       return;
     }
-
-    // Trong thực tế, đây sẽ là API call
-    // Lọc các cuộc hẹn của người dùng hiện tại
-    const userAppointments = mockAppointments.filter(appointment =>
-      appointment.userId === user?.id
-    );
-    setAppointments(userAppointments);
+    loadSpecialists();
+    loadAppointments();
   }, [isAuthenticated, navigate, user]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -112,63 +153,106 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
     setOpenDialog(false);
     // Reset form
     setSelectedDate(null);
-    setSelectedConsultant('');
+    setSelectedSpecialist('');
     setSelectedTime('');
-    setNotes('');
+    setDuration(0);
+    setBookingSuccess(false);
   };
 
-  const handleBookAppointment = () => {
-    // Trong thực tế, đây sẽ là API call để đặt lịch hẹn
-    // Giả lập thành công
-    setBookingSuccess(true);
+  const handleBookAppointment = async () => {
+    if (!selectedSpecialist || !selectedDate || !selectedTime) {
+      toast.error('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
 
-    // Đóng dialog sau 2 giây
-    setTimeout(() => {
-      setBookingSuccess(false);
-      handleCloseDialog();
+    // Validate duration
+    if (duration <= 0) {
+      toast.error('Thời lượng phải lớn hơn 0 phút');
+      return;
+    }
 
-      // Thêm cuộc hẹn mới vào danh sách (giả lập)
-      if (selectedDate && selectedConsultant && selectedTime) {
-        const [startHour, startMinute] = selectedTime.split(':').map(Number);
-        const endHour = startHour + 1;
+    // Check if date and time is not in the past
+    const now = new Date();
+    const selectedDateTime = new Date(selectedDate);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    selectedDateTime.setHours(hours, minutes, 0, 0);
 
-        const newAppointment: Appointment = {
-          id: String(Date.now()),
-          userId: user?.id || '',
-          consultantId: selectedConsultant,
-          date: selectedDate,
-          duration: 60, // Default duration is 60 minutes
-          startTime: selectedTime,
-          endTime: `${endHour}:${startMinute < 10 ? '0' + startMinute : startMinute}`,
-          status: 'pending',
-          notes: notes,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+    if (selectedDateTime <= now) {
+      toast.error('Không thể đặt lịch hẹn cho thời gian trong quá khứ hoặc hiện tại');
+      return;
+    }
 
-        setAppointments(prev => [...prev, newAppointment]);
+    try {
+      setLoading(true);
+      const authenDTO = await authService.readInfoFromLocal();
+      if (!authenDTO.userName) {
+        toast.error('Không tìm thấy thông tin người dùng');
+        return;
       }
-    }, 2000);
+
+      const appointmentRequest: AppointmentCreateRequest = {
+        id: 9007199254740991,
+        username: authenDTO.userName,
+        specialistName: selectedSpecialist,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        hours: selectedTime + ':00',
+        duration: duration,
+        status: 'PENDING'
+      };
+
+      const [code, data, message] = await appointmentService.createAppointment(appointmentRequest);
+
+      if (code === 200) {
+        setBookingSuccess(true);
+        toast.success('Đặt lịch hẹn thành công!');
+
+        // Đóng dialog sau 2 giây và reload appointments
+        setTimeout(() => {
+          setBookingSuccess(false);
+          handleCloseDialog();
+          loadAppointments();
+        }, 2000);
+      } else {
+        toast.error(message || 'Có lỗi xảy ra khi đặt lịch hẹn');
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast.error('Có lỗi xảy ra khi đặt lịch hẹn');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getStatusColor = (status: AppointmentStatus) => {
-    if (status === 'scheduled') return 'primary';
-    if (status === 'completed') return 'success';
-    if (status === 'cancelled') return 'error';
-    if (status === 'rescheduled') return 'warning';
-    if (status === 'pending') return 'info';
-    if (status === 'confirmed') return 'secondary';
+  const handleChangeStatus = async (appointmentId: number, newStatus: string) => {
+    try {
+      const [code, data, message] = await appointmentService.changeAppointmentStatus(appointmentId, newStatus);
+
+      if (code === 200) {
+        toast.success('Cập nhật trạng thái thành công');
+        loadAppointments();
+      } else {
+        toast.error(message || 'Có lỗi xảy ra khi cập nhật trạng thái');
+      }
+    } catch (error) {
+      console.error('Error changing appointment status:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật trạng thái');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === 'PENDING') return 'warning';
+    if (status === 'CONFIRM') return 'info';
+    if (status === 'COMPLETE') return 'success';
+    if (status === 'CANCEL') return 'error';
     return 'default';
   };
 
-  const getStatusText = (status: AppointmentStatus) => {
-    if (status === 'scheduled') return 'Đã lên lịch';
-    if (status === 'completed') return 'Đã hoàn thành';
-    if (status === 'cancelled') return 'Đã hủy';
-    if (status === 'rescheduled') return 'Đã đổi lịch';
-    if (status === 'pending') return 'Chờ xác nhận';
-    if (status === 'confirmed') return 'Đã xác nhận';
-    return '';
+  const getStatusText = (status: string) => {
+    if (status === 'PENDING') return 'Chờ xác nhận';
+    if (status === 'CONFIRM') return 'Đã xác nhận';
+    if (status === 'COMPLETE') return 'Đã hoàn thành';
+    if (status === 'CANCEL') return 'Đã hủy';
+    return status;
   };
 
   // Tạo danh sách các khung giờ có sẵn
@@ -178,17 +262,17 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
 
   // Lọc các cuộc hẹn theo trạng thái
   const upcomingAppointments = appointments.filter(
-    appointment => (appointment.status === 'scheduled' || appointment.status === 'pending' || appointment.status === 'confirmed') && new Date(appointment.date) >= new Date()
+    appointment => (appointment.status === 'PENDING' || appointment.status === 'CONFIRM') && new Date(appointment.date) >= new Date()
   );
 
   const pastAppointments = appointments.filter(
-    appointment => appointment.status === 'completed' || appointment.status === 'cancelled' || new Date(appointment.date) < new Date()
+    appointment => appointment.status === 'COMPLETE' || appointment.status === 'CANCEL' || new Date(appointment.date) < new Date()
   );
 
   return (
     <Container>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mt:3 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
           Đặt lịch tư vấn
         </Typography>
         <Typography variant="body1" paragraph>
@@ -216,21 +300,19 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
           {upcomingAppointments.length > 0 ? (
             <List>
               {upcomingAppointments.map((appointment) => {
-                const consultant = mockConsultants.find(c => c.id === appointment.consultantId);
                 return (
                   <React.Fragment key={appointment.id}>
                     <ListItem alignItems="flex-start">
                       <ListItemAvatar>
-                        <Avatar
-                          src={consultant?.profilePicture}
-                          alt={`${consultant?.firstName} ${consultant?.lastName}`}
-                        />
+                        <Avatar>
+                          <PersonIcon />
+                        </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="h6" component="span">
-                              {consultant?.firstName} {consultant?.lastName}
+                              {appointment.specialistFullname}
                             </Typography>
                             <Chip
                               label={getStatusText(appointment.status)}
@@ -244,40 +326,44 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
                             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                               <CalendarMonthIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                               <Typography variant="body2" component="span">
-                                {new Date(appointment.date).toLocaleDateString('vi-VN', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
+                                {appointment.date}
                               </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                               <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                               <Typography variant="body2" component="span">
-                                {appointment.startTime} - {appointment.endTime}
+                                {appointment.hours} (Thời lượng: {appointment.duration} phút)
                               </Typography>
                             </Box>
-                            {appointment.notes && (
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                Ghi chú: {appointment.notes}
-                              </Typography>
-                            )}
                             <Box sx={{ mt: 2 }}>
                               <Button
                                 variant="outlined"
                                 size="small"
                                 sx={{ mr: 1 }}
+                                disabled
                               >
                                 Đổi lịch
                               </Button>
-                              <Button
-                                variant="outlined"
-                                color="error"
-                                size="small"
-                              >
-                                Hủy lịch
-                              </Button>
+                              {appointment.status === 'PENDING' && (
+                                <Button
+                                  variant="outlined"
+                                  color="error"
+                                  size="small"
+                                  onClick={() => handleChangeStatus(appointment.id, 'CANCEL')}
+                                >
+                                  Hủy lịch
+                                </Button>
+                              )}
+                              {appointment.status !== 'PENDING' && (
+                                <Button
+                                  variant="outlined"
+                                  color="error"
+                                  size="small"
+                                  disabled
+                                >
+                                  Hủy lịch
+                                </Button>
+                              )}
                             </Box>
                           </React.Fragment>
                         }
@@ -311,21 +397,19 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
           {pastAppointments.length > 0 ? (
             <List>
               {pastAppointments.map((appointment) => {
-                const consultant = mockConsultants.find(c => c.id === appointment.consultantId);
                 return (
                   <React.Fragment key={appointment.id}>
                     <ListItem alignItems="flex-start">
                       <ListItemAvatar>
-                        <Avatar
-                          src={consultant?.profilePicture}
-                          alt={`${consultant?.firstName} ${consultant?.lastName}`}
-                        />
+                        <Avatar>
+                          <PersonIcon />
+                        </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="h6" component="span">
-                              {consultant?.firstName} {consultant?.lastName}
+                              {appointment.specialistFullname}
                             </Typography>
                             <Chip
                               label={getStatusText(appointment.status)}
@@ -339,25 +423,15 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
                             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                               <CalendarMonthIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                               <Typography variant="body2" component="span">
-                                {new Date(appointment.date).toLocaleDateString('vi-VN', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
+                                {appointment.date}
                               </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                               <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                               <Typography variant="body2" component="span">
-                                {appointment.startTime} - {appointment.endTime}
+                                {appointment.hours} (Thời lượng: {appointment.duration} phút)
                               </Typography>
                             </Box>
-                            {appointment.notes && (
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                Ghi chú: {appointment.notes}
-                              </Typography>
-                            )}
                           </React.Fragment>
                         }
                       />
@@ -393,24 +467,24 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
         <DialogContent>
           {bookingSuccess ? (
             <Alert severity="success" sx={{ my: 2 }}>
-              Đặt lịch hẹn thành công! Chúng tôi sẽ gửi thông tin xác nhận qua email của bạn.
+              Đặt lịch hẹn thành công!
             </Alert>
           ) : (
             <Box sx={{ mt: 2 }}>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                 <Box>
                   <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel id="consultant-select-label">Chuyên viên tư vấn</InputLabel>
+                    <InputLabel id="specialist-select-label">Chuyên gia tư vấn</InputLabel>
                     <Select
-                      labelId="consultant-select-label"
-                      id="consultant-select"
-                      value={selectedConsultant}
-                      label="Chuyên viên tư vấn"
-                      onChange={(e) => setSelectedConsultant(e.target.value)}
+                      labelId="specialist-select-label"
+                      id="specialist-select"
+                      value={selectedSpecialist}
+                      label="Chuyên gia tư vấn"
+                      onChange={(e) => setSelectedSpecialist(e.target.value)}
                     >
-                      {mockConsultants.map((consultant) => (
-                        <MenuItem key={consultant.id} value={consultant.id}>
-                          {consultant.firstName} {consultant.lastName} - {consultant.specialization?.join(', ') || 'N/A'}
+                      {specialists.map((specialist) => (
+                        <MenuItem key={specialist.id} value={specialist.username}>
+                          {specialist.fullname} - {specialist.position}
                         </MenuItem>
                       ))}
                     </Select>
@@ -425,6 +499,7 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
                     InputLabelProps={{
                       shrink: true,
                     }}
+                    inputProps={{ min: new Date().toISOString().split('T')[0] }}
                     fullWidth
                     sx={{ mb: 3 }}
                   />
@@ -449,19 +524,19 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
 
                 <Box>
                   <TextField
-                    label="Ghi chú"
-                    multiline
-                    rows={4}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    label="Thời lượng (phút)"
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(parseFloat(e.target.value))}
                     fullWidth
-                    placeholder="Mô tả ngắn gọn về vấn đề bạn muốn tư vấn"
                     sx={{ mb: 3 }}
+                    InputProps={{ inputProps: { min: 1, step: 15 } }}
+                    helperText="Thời lượng phải lớn hơn 0 phút"
                   />
 
                   <Alert severity="info" sx={{ mb: 3 }}>
                     <Typography variant="body2">
-                      Vui lòng đặt lịch hẹn trước ít nhất 24 giờ để đảm bảo chuyên viên tư vấn có thể sắp xếp thời gian phù hợp.
+                      Vui lòng đặt lịch hẹn trước ít nhất 24 giờ để đảm bảo chuyên gia tư vấn có thể sắp xếp thời gian phù hợp.
                     </Typography>
                   </Alert>
 
@@ -480,9 +555,9 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
           <Button
             variant="contained"
             onClick={handleBookAppointment}
-            disabled={!selectedConsultant || !selectedDate || !selectedTime || bookingSuccess}
+            disabled={!selectedSpecialist || !selectedDate || !selectedTime || duration <= 0 || bookingSuccess || loading}
           >
-            Đặt lịch
+            {loading ? 'Đang đặt lịch...' : 'Đặt lịch'}
           </Button>
         </DialogActions>
       </Dialog>

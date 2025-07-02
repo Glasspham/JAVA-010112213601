@@ -26,7 +26,7 @@ import {
   MenuItem,
   InputAdornment,
   Alert,
-  Snackbar,
+  CircularProgress,
   SelectChangeEvent
 } from '@mui/material';
 import {
@@ -39,27 +39,36 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon
 } from '@mui/icons-material';
-import { Appointment, AppointmentStatus } from '../../types/appointment';
-import { mockAppointments, mockConsultants, mockUsers } from '../../utils/mockData';
-import { Link } from 'react-router-dom';
+import { Appointment, AppointmentStatus, Specialist, AppointmentCreateRequest } from '../../types/appointment';
+import { AppointmentService } from '../../services/AppointmentService';
+import { AuthService } from '../../services/AuthService';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { toast } from 'react-toastify';
 
 const AdminAppointmentsPage: React.FC = () => {
+  const appointmentService = new AppointmentService();
+  const authService = new AuthService();
+
   // State for appointments data
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [users, setUsers] = useState<Specialist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // State for pagination
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // State for search and filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
 
   // State for appointment dialog
@@ -67,137 +76,123 @@ const AdminAppointmentsPage: React.FC = () => {
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
   const [currentAppointment, setCurrentAppointment] = useState<Appointment | null>(null);
   const [formData, setFormData] = useState({
-    userId: '',
-    consultantId: '',
+    username: '',
+    specialistName: '',
     date: new Date(),
-    time: '09:00',
-    duration: 60,
-    status: 'pending' as AppointmentStatus,
-    notes: ''
-  });
-
-  // State for delete confirmation dialog
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
-
-  // State for status change dialog
-  const [openStatusDialog, setOpenStatusDialog] = useState(false);
-  const [appointmentToChangeStatus, setAppointmentToChangeStatus] = useState<Appointment | null>(null);
-  const [newStatus, setNewStatus] = useState<AppointmentStatus>('pending' as AppointmentStatus);
-
-  // State for notifications
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    time: '',
+    duration: 0
   });
 
   // Load appointments data
+  const loadAppointments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const dateParam = dateFilter ? format(dateFilter, 'yyyy-MM-dd') : undefined;
+
+      const [code, data, message] = await appointmentService.findAllAppointments({
+        page: page,
+        limit: rowsPerPage,
+        keyword: searchTerm || undefined,
+        status: statusFilter || undefined,
+        date: dateParam
+      });
+
+      if (code === 200) {
+        setAppointments(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+      } else {
+        setError(message || 'Failed to load appointments');
+      }
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      setError('An error occurred while loading appointments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load specialists data
+  const loadSpecialists = async () => {
+    try {
+      const [code, data, message] = await appointmentService.getSpecialists();
+      if (code === 200) {
+        setSpecialists(data);
+      } else {
+        console.error('Failed to load specialists:', message);
+      }
+    } catch (error) {
+      console.error('Error loading specialists:', error);
+    }
+  };
+
+  // Load users data
+  const loadUsers = async () => {
+    try {
+      const [code, data, message] = await appointmentService.getUsers();
+      if (code === 200) {
+        setUsers(data);
+      } else {
+        console.error('Failed to load users:', message);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
   useEffect(() => {
-    // In a real app, this would be an API call
-    setAppointments(mockAppointments);
-    setFilteredAppointments(mockAppointments);
+    loadSpecialists();
+    loadUsers();
   }, []);
 
-  // Filter appointments based on search term, status filter, and date filter
   useEffect(() => {
-    let result = [...appointments];
-
-    // Apply search filter
-    if (searchTerm) {
-      result = result.filter(appointment => {
-        const user = mockUsers.find(u => u.id === appointment.userId);
-        const consultant = mockConsultants.find(c => c.id === appointment.consultantId);
-        return (
-          user?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          consultant?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          appointment.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      });
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(appointment => appointment.status === statusFilter);
-    }
-
-    // Apply date filter
-    if (dateFilter) {
-      const filterDate = new Date(dateFilter);
-      result = result.filter(appointment => {
-        const appointmentDate = new Date(appointment.date);
-        return (
-          appointmentDate.getDate() === filterDate.getDate() &&
-          appointmentDate.getMonth() === filterDate.getMonth() &&
-          appointmentDate.getFullYear() === filterDate.getFullYear()
-        );
-      });
-    }
-
-    setFilteredAppointments(result);
-    setPage(0); // Reset to first page when filtering
-  }, [searchTerm, statusFilter, dateFilter, appointments]);
+    loadAppointments();
+  }, [page, rowsPerPage, searchTerm, statusFilter, dateFilter]);
 
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    setPage(newPage + 1); // API uses 1-based pagination
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(1);
   };
 
   // Handle search and filter changes
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    setPage(1);
   };
 
   const handleStatusFilterChange = (event: SelectChangeEvent) => {
     setStatusFilter(event.target.value);
+    setPage(1);
   };
 
   const handleDateFilterChange = (date: Date | null) => {
     setDateFilter(date);
+    setPage(1);
   };
 
   const handleResetFilters = () => {
     setSearchTerm('');
-    setStatusFilter('all');
+    setStatusFilter('');
     setDateFilter(null);
+    setPage(1);
   };
 
   // Handle appointment dialog
   const handleOpenAddDialog = () => {
     setDialogMode('add');
     setFormData({
-      userId: '',
-      consultantId: '',
+      username: '',
+      specialistName: '',
       date: new Date(),
-      time: '09:00',
-      duration: 60,
-      status: 'pending' as AppointmentStatus,
-      notes: ''
-    });
-    setOpenAppointmentDialog(true);
-  };
-
-  const handleOpenEditDialog = (appointment: Appointment) => {
-    setDialogMode('edit');
-    setCurrentAppointment(appointment);
-
-    const appointmentDate = new Date(appointment.date);
-    const appointmentTime = format(appointmentDate, 'HH:mm');
-
-    setFormData({
-      userId: appointment.userId,
-      consultantId: appointment.consultantId,
-      date: appointmentDate,
-      time: appointmentTime,
-      duration: appointment.duration || 60,
-      status: appointment.status,
-      notes: appointment.notes || ''
+      time: '',
+      duration: 0
     });
     setOpenAppointmentDialog(true);
   };
@@ -215,10 +210,10 @@ const AdminAppointmentsPage: React.FC = () => {
     }));
   };
 
-  const handleStatusChange = (event: SelectChangeEvent) => {
+  const handleUserChange = (event: SelectChangeEvent) => {
     setFormData(prev => ({
       ...prev,
-      status: event.target.value as AppointmentStatus
+      username: event.target.value
     }));
   };
 
@@ -231,170 +226,86 @@ const AdminAppointmentsPage: React.FC = () => {
     }
   };
 
-  const handleUserChange = (event: SelectChangeEvent) => {
+  const handleSpecialistChange = (event: SelectChangeEvent) => {
     setFormData(prev => ({
       ...prev,
-      userId: event.target.value
+      specialistName: event.target.value
     }));
   };
 
-  const handleConsultantChange = (event: SelectChangeEvent) => {
-    setFormData(prev => ({
-      ...prev,
-      consultantId: event.target.value
-    }));
-  };
-
-  const handleSaveAppointment = () => {
+  const handleSaveAppointment = async () => {
     // Validate form
-    if (!formData.userId || !formData.consultantId || !formData.date || !formData.time) {
-      setSnackbar({
-        open: true,
-        message: 'Vui lòng điền đầy đủ thông tin',
-        severity: 'error'
-      });
+    if (!formData.username || !formData.specialistName || !formData.date || !formData.time) {
+      toast.error('Vui lòng điền đầy đủ thông tin');
       return;
     }
 
-    // Combine date and time
-    const dateTime = new Date(formData.date);
-    const [hours, minutes] = formData.time.split(':').map(Number);
-    dateTime.setHours(hours, minutes);
+    // Validate duration
+    if (formData.duration <= 0) {
+      toast.error('Thời lượng phải lớn hơn 0 phút');
+      return;
+    }
 
-    if (dialogMode === 'add') {
-      // In a real app, this would be an API call to create a new appointment
-      const newAppointment: Appointment = {
-        id: String(Date.now()),
-        userId: formData.userId,
-        consultantId: formData.consultantId,
-        date: dateTime,
+    // Check if date and time is not in the past
+    const now = new Date();
+    const selectedDateTime = new Date(formData.date);
+    const [hours, minutes] = formData.time.split(':').map(Number);
+    selectedDateTime.setHours(hours, minutes, 0, 0);
+
+    if (selectedDateTime <= now) {
+      toast.error('Không thể đặt lịch hẹn cho thời gian trong quá khứ hoặc hiện tại');
+      return;
+    }
+
+    try {
+      const appointmentRequest: AppointmentCreateRequest = {
+        id: 9007199254740991,
+        username: formData.username,
+        specialistName: formData.specialistName,
+        date: format(formData.date, 'yyyy-MM-dd'),
+        hours: formData.time + ':00',
         duration: formData.duration,
-        status: formData.status,
-        notes: formData.notes,
-        createdAt: new Date()
+        status: 'PENDING'
       };
 
-      setAppointments(prev => [...prev, newAppointment]);
-      setSnackbar({
-        open: true,
-        message: 'Lịch hẹn đã được thêm thành công',
-        severity: 'success'
-      });
-    } else {
-      // In a real app, this would be an API call to update the appointment
-      if (currentAppointment) {
-        const updatedAppointments = appointments.map(appointment =>
-          appointment.id === currentAppointment.id
-            ? {
-                ...appointment,
-                userId: formData.userId,
-                consultantId: formData.consultantId,
-                date: dateTime,
-                duration: formData.duration,
-                status: formData.status,
-                notes: formData.notes
-              }
-            : appointment
-        );
-        setAppointments(updatedAppointments);
-        setSnackbar({
-          open: true,
-          message: 'Lịch hẹn đã được cập nhật thành công',
-          severity: 'success'
-        });
+      const [code, data, message] = await appointmentService.createAppointment(appointmentRequest);
+
+      if (code === 200) {
+        toast.success('Lịch hẹn đã được thêm thành công');
+        handleCloseAppointmentDialog();
+        loadAppointments(); // Reload appointments
+      } else {
+        toast.error(message || 'Có lỗi xảy ra khi tạo lịch hẹn');
       }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast.error('Có lỗi xảy ra khi tạo lịch hẹn');
     }
-
-    handleCloseAppointmentDialog();
   };
 
-  // Handle delete appointment
-  const handleOpenDeleteDialog = (appointment: Appointment) => {
-    setAppointmentToDelete(appointment);
-    setOpenDeleteDialog(true);
-  };
+  const handleChangeStatus = async (appointmentId: number, newStatus: string) => {
+    try {
+      const [code, data, message] = await appointmentService.changeAppointmentStatus(appointmentId, newStatus);
 
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-    setAppointmentToDelete(null);
-  };
-
-  const handleDeleteAppointment = () => {
-    if (appointmentToDelete) {
-      // In a real app, this would be an API call to delete the appointment
-      const updatedAppointments = appointments.filter(appointment => appointment.id !== appointmentToDelete.id);
-      setAppointments(updatedAppointments);
-      setSnackbar({
-        open: true,
-        message: 'Lịch hẹn đã được xóa thành công',
-        severity: 'success'
-      });
+      if (code === 200) {
+        toast.success('Cập nhật trạng thái thành công');
+        loadAppointments();
+      } else {
+        toast.error(message || 'Có lỗi xảy ra khi cập nhật trạng thái');
+      }
+    } catch (error) {
+      console.error('Error changing appointment status:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật trạng thái');
     }
-
-    handleCloseDeleteDialog();
-  };
-
-  // Handle status change
-  const handleOpenStatusDialog = (appointment: Appointment) => {
-    setAppointmentToChangeStatus(appointment);
-    setNewStatus(appointment.status);
-    setOpenStatusDialog(true);
-  };
-
-  const handleCloseStatusDialog = () => {
-    setOpenStatusDialog(false);
-    setAppointmentToChangeStatus(null);
-  };
-
-  const handleNewStatusChange = (event: SelectChangeEvent) => {
-    setNewStatus(event.target.value as AppointmentStatus);
-  };
-
-  const handleUpdateStatus = () => {
-    if (appointmentToChangeStatus) {
-      // In a real app, this would be an API call to update the appointment status
-      const updatedAppointments = appointments.map(appointment =>
-        appointment.id === appointmentToChangeStatus.id
-          ? { ...appointment, status: newStatus }
-          : appointment
-      );
-      setAppointments(updatedAppointments);
-      setSnackbar({
-        open: true,
-        message: 'Trạng thái lịch hẹn đã được cập nhật thành công',
-        severity: 'success'
-      });
-    }
-
-    handleCloseStatusDialog();
-  };
-
-  // Handle snackbar close
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({
-      ...prev,
-      open: false
-    }));
   };
 
   // Get status display text and color
-  const getStatusDisplay = (status: AppointmentStatus) => {
-    if (status === 'pending') return { text: 'Chờ xác nhận', color: 'warning' };
-    if (status === 'confirmed') return { text: 'Đã xác nhận', color: 'info' };
-    if (status === 'completed') return { text: 'Đã hoàn thành', color: 'success' };
-    if (status === 'cancelled') return { text: 'Đã hủy', color: 'error' };
+  const getStatusDisplay = (status: string) => {
+    if (status === 'PENDING') return { text: 'Chờ xác nhận', color: 'warning' };
+    if (status === 'CONFIRM') return { text: 'Đã xác nhận', color: 'info' };
+    if (status === 'COMPLETE') return { text: 'Đã hoàn thành', color: 'success' };
+    if (status === 'CANCEL') return { text: 'Đã hủy', color: 'error' };
     return { text: status, color: 'default' };
-  };
-
-  // Get user and consultant names
-  const getUserName = (userId: string) => {
-    const user = mockUsers.find(u => u.id === userId);
-    return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
-  };
-
-  const getConsultantName = (consultantId: string) => {
-    const consultant = mockConsultants.find(c => c.id === consultantId);
-    return consultant ? consultant.name : 'Unknown';
   };
 
   return (
@@ -436,11 +347,11 @@ const AdminAppointmentsPage: React.FC = () => {
               onChange={handleStatusFilterChange}
               label="Trạng thái"
             >
-              <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="pending">Chờ xác nhận</MenuItem>
-              <MenuItem value="confirmed">Đã xác nhận</MenuItem>
-              <MenuItem value="completed">Đã hoàn thành</MenuItem>
-              <MenuItem value="cancelled">Đã hủy</MenuItem>
+              <MenuItem value="">Tất cả</MenuItem>
+              <MenuItem value="PENDING">Chờ xác nhận</MenuItem>
+              <MenuItem value="CONFIRM">Đã xác nhận</MenuItem>
+              <MenuItem value="COMPLETE">Đã hoàn thành</MenuItem>
+              <MenuItem value="CANCEL">Đã hủy</MenuItem>
             </Select>
           </FormControl>
 
@@ -487,19 +398,35 @@ const AdminAppointmentsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredAppointments
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((appointment) => {
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Alert severity="error">{error}</Alert>
+                  </TableCell>
+                </TableRow>
+              ) : appointments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    Không có dữ liệu
+                  </TableCell>
+                </TableRow>
+              ) : (
+                appointments.map((appointment, index) => {
                   const statusDisplay = getStatusDisplay(appointment.status);
-                  const appointmentDate = new Date(appointment.date);
                   return (
                     <TableRow hover key={appointment.id}>
-                      <TableCell>{appointment.id}</TableCell>
-                      <TableCell>{getUserName(appointment.userId)}</TableCell>
-                      <TableCell>{getConsultantName(appointment.consultantId)}</TableCell>
-                      <TableCell>{format(appointmentDate, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>{format(appointmentDate, 'HH:mm')}</TableCell>
-                      <TableCell>{appointment.duration} phút</TableCell>
+                      <TableCell>{index + 1 + (page - 1) * rowsPerPage}</TableCell>
+                      <TableCell>{appointment.userFullName}</TableCell>
+                      <TableCell>{appointment.specialistFullname}</TableCell>
+                      <TableCell>{appointment.date}</TableCell>
+                      <TableCell>{appointment.hours}</TableCell>
+                      <TableCell>{appointment.duration}</TableCell>
                       <TableCell>
                         <Chip
                           label={statusDisplay.text}
@@ -508,34 +435,51 @@ const AdminAppointmentsPage: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title="Thay đổi trạng thái">
-                          <IconButton onClick={() => handleOpenStatusDialog(appointment)} color="info">
-                            <CheckCircleIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Chỉnh sửa">
-                          <IconButton onClick={() => handleOpenEditDialog(appointment)} color="primary">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Xóa">
-                          <IconButton onClick={() => handleOpenDeleteDialog(appointment)} color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
+                        {appointment.status === 'PENDING' && (
+                          <>
+                            <Tooltip title="Xác nhận">
+                              <IconButton
+                                color="success"
+                                onClick={() => handleChangeStatus(appointment.id, 'CONFIRM')}
+                                sx={{ mr: 1 }}
+                              >
+                                <CheckCircleIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Hủy">
+                              <IconButton
+                                color="error"
+                                onClick={() => handleChangeStatus(appointment.id, 'CANCEL')}
+                              >
+                                <CancelIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                        {appointment.status === 'CONFIRM' && (
+                          <Tooltip title="Hoàn thành">
+                            <IconButton
+                              color="primary"
+                              onClick={() => handleChangeStatus(appointment.id, 'COMPLETE')}
+                            >
+                              <CheckCircleIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                })
+              )}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={filteredAppointments.length}
+          count={totalElements}
           rowsPerPage={rowsPerPage}
-          page={page}
+          page={page - 1}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Số hàng mỗi trang:"
@@ -555,30 +499,30 @@ const AdminAppointmentsPage: React.FC = () => {
               <Select
                 labelId="user-label"
                 id="user"
-                value={formData.userId}
+                value={formData.username}
                 onChange={handleUserChange}
                 label="Người dùng"
               >
-                {mockUsers.map(user => (
-                  <MenuItem key={user.id} value={user.id}>
-                    {user.firstName} {user.lastName}
+                {users.map(user => (
+                  <MenuItem key={user.id} value={user.username}>
+                    {user.fullname} - {user.email}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel id="consultant-label">Chuyên viên</InputLabel>
+              <InputLabel id="specialist-label">Chuyên gia</InputLabel>
               <Select
-                labelId="consultant-label"
-                id="consultant"
-                value={formData.consultantId}
-                onChange={handleConsultantChange}
-                label="Chuyên viên"
+                labelId="specialist-label"
+                id="specialist"
+                value={formData.specialistName}
+                onChange={handleSpecialistChange}
+                label="Chuyên gia"
               >
-                {mockConsultants.map(consultant => (
-                  <MenuItem key={consultant.id} value={consultant.id}>
-                    {consultant.name}
+                {specialists.map(specialist => (
+                  <MenuItem key={specialist.id} value={specialist.username}>
+                    {specialist.fullname} - {specialist.position}
                   </MenuItem>
                 ))}
               </Select>
@@ -591,6 +535,7 @@ const AdminAppointmentsPage: React.FC = () => {
                   value={formData.date}
                   onChange={handleDateChange}
                   sx={{ width: '50%' }}
+                  minDate={new Date()}
                 />
               </LocalizationProvider>
 
@@ -613,34 +558,13 @@ const AdminAppointmentsPage: React.FC = () => {
               fullWidth
               value={formData.duration}
               onChange={handleFormChange}
-              InputProps={{ inputProps: { min: 15, step: 15 } }}
+              InputProps={{ inputProps: { min: 1, step: 15 } }}
+              helperText="Thời lượng phải lớn hơn 0 phút"
             />
 
-            <FormControl fullWidth>
-              <InputLabel id="status-label">Trạng thái</InputLabel>
-              <Select
-                labelId="status-label"
-                id="status"
-                value={formData.status}
-                onChange={handleStatusChange}
-                label="Trạng thái"
-              >
-                <MenuItem value="pending">Chờ xác nhận</MenuItem>
-                <MenuItem value="confirmed">Đã xác nhận</MenuItem>
-                <MenuItem value="completed">Đã hoàn thành</MenuItem>
-                <MenuItem value="cancelled">Đã hủy</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              name="notes"
-              label="Ghi chú"
-              fullWidth
-              multiline
-              rows={3}
-              value={formData.notes}
-              onChange={handleFormChange}
-            />
+            <Alert severity="info">
+              Trạng thái mặc định sẽ là "Chờ xác nhận" khi tạo lịch hẹn mới.
+            </Alert>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -651,66 +575,7 @@ const AdminAppointmentsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Status Change Dialog */}
-      <Dialog open={openStatusDialog} onClose={handleCloseStatusDialog}>
-        <DialogTitle>Thay đổi trạng thái lịch hẹn</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel id="new-status-label">Trạng thái mới</InputLabel>
-              <Select
-                labelId="new-status-label"
-                id="new-status"
-                value={newStatus}
-                onChange={handleNewStatusChange}
-                label="Trạng thái mới"
-              >
-                <MenuItem value="pending">Chờ xác nhận</MenuItem>
-                <MenuItem value="confirmed">Đã xác nhận</MenuItem>
-                <MenuItem value="completed">Đã hoàn thành</MenuItem>
-                <MenuItem value="cancelled">Đã hủy</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseStatusDialog}>Hủy</Button>
-          <Button onClick={handleUpdateStatus} variant="contained" color="primary">
-            Cập nhật
-          </Button>
-        </DialogActions>
-      </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Xác nhận xóa</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa lịch hẹn này không?
-          </Typography>
-          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            Lưu ý: Hành động này không thể hoàn tác.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Hủy</Button>
-          <Button onClick={handleDeleteAppointment} variant="contained" color="error">
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };
