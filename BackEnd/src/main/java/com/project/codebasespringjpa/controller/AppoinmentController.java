@@ -2,6 +2,7 @@ package com.project.codebasespringjpa.controller;
 
 import com.project.codebasespringjpa.dto.appointment.request.AppointmentRequest;
 import com.project.codebasespringjpa.dto.appointment.request.AppointmentSearch;
+import com.project.codebasespringjpa.dto.appointment.request.StatusRequest;
 import com.project.codebasespringjpa.dto.appointment.response.AppointmentResponse;
 import com.project.codebasespringjpa.exception.ApiResponse;
 import com.project.codebasespringjpa.service.interfaces.IAppointmentService;
@@ -70,6 +71,13 @@ public class AppoinmentController {
         appointmentService.delete(id);
         return ApiResponse.<String>builder()
                 .data("Xóa thành công")
+                .build();
+    }
+
+    @PutMapping("/change-status/{id}")
+    ApiResponse<AppointmentResponse> changeStatus(@PathVariable Long id, @RequestBody StatusRequest request){
+        return ApiResponse.<AppointmentResponse>builder()
+                .data(appointmentService.changeStatus(id, request))
                 .build();
     }
 }

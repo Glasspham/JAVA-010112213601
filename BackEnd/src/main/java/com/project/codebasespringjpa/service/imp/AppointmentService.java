@@ -2,6 +2,7 @@ package com.project.codebasespringjpa.service.imp;
 
 import com.project.codebasespringjpa.dto.appointment.request.AppointmentRequest;
 import com.project.codebasespringjpa.dto.appointment.request.AppointmentSearch;
+import com.project.codebasespringjpa.dto.appointment.request.StatusRequest;
 import com.project.codebasespringjpa.dto.appointment.response.AppointmentResponse;
 import com.project.codebasespringjpa.dto.user.response.UserResponse;
 import com.project.codebasespringjpa.entity.AppointmentEntity;
@@ -73,5 +74,12 @@ public class AppointmentService implements IAppointmentService {
         AppointmentEntity appointmentFind = this.findEntityById(id);
         appointmentFind.setIsDelete(true);
         appointmentRepository.save(appointmentFind);
+    }
+
+    @Override
+    public AppointmentResponse changeStatus(Long id, StatusRequest request) {
+        AppointmentEntity appUpdate = this.findEntityById(id);
+        appUpdate.setStatus(request.getStatus());
+        return appointmentMapper.toResponse(appointmentRepository.save(appUpdate));
     }
 }

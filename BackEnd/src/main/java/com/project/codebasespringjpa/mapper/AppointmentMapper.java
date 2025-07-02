@@ -16,11 +16,11 @@ public class AppointmentMapper {
     @Autowired
     IUserService userService;
 
-    public AppointmentEntity toEntity(AppointmentRequest request){
+    public AppointmentEntity toEntity(AppointmentRequest request) {
         UserResponse userResponse = userService.findByUsername(request.getUsername());
         UserResponse specialResponse = userService.findByUsername(request.getSpecialistName());
 
-        return  AppointmentEntity.builder()
+        return AppointmentEntity.builder()
                 .userId(userResponse.getId())
                 .username(request.getUsername())
                 .specialistId(specialResponse.getId())
@@ -32,7 +32,7 @@ public class AppointmentMapper {
                 .build();
     }
 
-    public AppointmentResponse toResponse(AppointmentEntity entity){
+    public AppointmentResponse toResponse(AppointmentEntity entity) {
         UserResponse userAcc = userService.findByUsername(entity.getUsername());
         UserResponse specialAcc = userService.findByUsername(entity.getSpecialistName());
 
