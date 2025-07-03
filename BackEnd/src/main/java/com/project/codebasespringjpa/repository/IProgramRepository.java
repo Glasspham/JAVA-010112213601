@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface IProgramRepository extends JpaRepository<ProgramEntity, Long> {
@@ -22,4 +23,20 @@ public interface IProgramRepository extends JpaRepository<ProgramEntity, Long> {
             @Param("status") String status,
             @Param("date") LocalDate date,
             Pageable pageable);
+
+    @Query("select count (pq) from ProgramEntity pq where pq.isDelete = false ")
+    Long countProgramActive();
+
+    @Query("""
+            select pq from ProgramEntity pq where pq.isDelete = false
+            and year (pq.date) = :year and month (pq.date) = :month
+            """)
+    List<ProgramEntity> findByMonthAndYear(@Param("month") Integer month,
+            @Param("year") Integer year);
+
+    @Query("""
+            select pq from ProgramEntity pq where pq.isDelete = false
+            and year (pq.date) = :year
+            """)
+    List<ProgramEntity> findByYear(@Param("year") Integer year);
 }

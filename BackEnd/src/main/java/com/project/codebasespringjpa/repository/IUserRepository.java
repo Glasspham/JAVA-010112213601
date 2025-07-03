@@ -37,4 +37,10 @@ public interface IUserRepository extends JpaRepository<UserEntity, Long> {
                 and us.role.name = 'USER'
             """)
     List<UserEntity> findAllUser();
+
+    @Query("select count (us) from UserEntity us where us.isDelete = false ")
+    Long cntUserActice();
+
+    @Query("select count (us) from UserEntity us where us.isDelete = false and us.role.name = 'SPECIALIST'")
+    Long cntSpecialistActive();
 }
