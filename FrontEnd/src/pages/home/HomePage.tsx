@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -9,39 +9,87 @@ import {
   Button,
   Paper,
   Divider,
-  Avatar,
-  Rating
+  CircularProgress
 } from '@mui/material';
 import {
   School as SchoolIcon,
   AssessmentOutlined as AssessmentIcon,
   EventNote as EventNoteIcon,
-  Groups as GroupsIcon,
-  CheckCircle as CheckCircleIcon
+  Groups as GroupsIcon
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { mockCourses, mockPrograms, mockConsultants } from '../../utils/mockData';
 import { heroImage, aboutUsImage } from '../../utils/imageUrls';
 import '../../styles/ProgramCard.css';
+import { AuthService } from '../../services/AuthService';
+import { CourseService, CourseResponse } from '../../services/CourseService';
+import { ProgramService } from '../../services/ProgramService';
+import { ProgramSearch } from '../../dto/ProgramSearch';
 
 const HomePage: React.FC = () => {
+  const _authService = new AuthService();
+  const courseService = new CourseService();
+  const programService = new ProgramService();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  // Lấy 3 khóa học mới nhất
-  const latestCourses = [...mockCourses].sort((a, b) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  ).slice(0, 3);
+  const [latestCourses, setLatestCourses] = useState<CourseResponse[]>([]);
+  const [upcomingPrograms, setUpcomingPrograms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Lấy 2 chương trình cộng đồng sắp diễn ra
-  const upcomingPrograms = [...mockPrograms].sort((a, b) => {
-    const dateA = a.startDate || a.date;
-    const dateB = b.startDate || b.date;
-    return new Date(dateA).getTime() - new Date(dateB).getTime();
-  }).filter(program => {
-    const startDate = program.startDate || program.date;
-    return new Date(startDate) > new Date();
-  }).slice(0, 2);
+  useEffect(() => {
+    const checkAuth = async () => {
+      var isAuthenStatus = await _authService.isAuthen();
+      if (!isAuthenStatus)
+        navigate('/login');
+    }
+
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+
+        // Load latest courses
+        const [courseCode, courseData] = await courseService.findAllCourses({
+          page: 1,
+          limit: 3,
+          keyword: ''
+        });
+
+        if (courseCode === 200) {
+          setLatestCourses(courseData.content || []);
+        }
+
+        // Load upcoming programs
+        const programSearch: ProgramSearch = {
+          page: 1,
+          limit: 10,
+          keyword: '',
+          timer: 0
+        };
+
+        const [programCode, programData] = await programService.findAll(programSearch);
+
+        if (programCode === 200) {
+          // Filter upcoming programs (future dates)
+          const upcoming = (programData.content || []).filter((program: any) => {
+            const programDate = new Date(program.date);
+            return programDate > new Date();
+          }).slice(0, 2);
+          setUpcomingPrograms(upcoming);
+        }
+      } catch (error) {
+        console.error('Error loading homepage data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <Box>
@@ -242,50 +290,64 @@ const HomePage: React.FC = () => {
         <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
           Khóa học mới nhất
         </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 4 }}>
-          {latestCourses.map((course) => (
-            <Card key={course.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-              <CardMedia
-                component="img"
-                height="140"
-                image={course.thumbnail}
-                alt={course.title}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h5" component="h3">
-                  {course.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {course.description}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Thời lượng: {course.duration} phút
-                </Typography>
-              </CardContent>
-              <Box sx={{ p: 2 }}>
-                <Button
-                  component={Link}
-                  to={`/courses/${course.id}`}
-                  variant="contained"
-                  fullWidth
-                  className="detail-button"
-                >
-                  Xem chi tiết
-                </Button>
-              </Box>
-            </Card>
-          ))}
-        </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Button
-            component={Link}
-            to="/courses"
-            variant="outlined"
-            size="large"
-          >
-            Xem tất cả khóa học
-          </Button>
-        </Box>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : latestCourses.length > 0 ? (
+          <>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 4 }}>
+              {latestCourses.map((course) => (
+                <Card key={course.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={courseService.getImageUrl(course.image)}
+                    alt={course.name}
+                  />
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography gutterBottom variant="h5" component="h3">
+                      {course.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {course.description}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Thời lượng: {course.duration || 0} phút
+                    </Typography>
+                  </CardContent>
+                  <Box sx={{ p: 2 }}>
+                    <Button
+                      component={Link}
+                      to={`/courses/${course.id}`}
+                      variant="contained"
+                      fullWidth
+                      className="detail-button"
+                    >
+                      Xem chi tiết
+                    </Button>
+                  </Box>
+                </Card>
+              ))}
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Button
+                component={Link}
+                to="/courses"
+                variant="outlined"
+                size="large"
+              >
+                Xem tất cả khóa học
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" color="text.secondary">
+              Chưa có khóa học nào
+            </Typography>
+          </Box>
+        )}
       </Container>
 
       {/* Chương trình sắp diễn ra */}
@@ -294,130 +356,72 @@ const HomePage: React.FC = () => {
           <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
             Chương trình sắp diễn ra
           </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4 }}>
-            {upcomingPrograms.map((program) => (
-              <Card key={program.id} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, borderRadius: 2 }}>
-                <CardMedia
-                  component="img"
-                  sx={{ width: { sm: 200 }, height: { xs: 200, sm: 'auto' } }}
-                  image={program.image}
-                  alt={program.title}
-                />
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                  <CardContent sx={{ flex: '1 0 auto' }}>
-                    <Typography component="h3" variant="h5">
-                      {program.title}
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary" component="div" sx={{ mb: 1 }}>
-                      {new Date(program.startDate || program.date).toLocaleDateString('vi-VN')}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {program.description}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Địa điểm: {program.location}
-                    </Typography>
-                  </CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', pl: 2, pb: 2 }}>
-                    <Button
-                      component={Link}
-                      to={`/programs/${program.id}`}
-                      variant="contained"
-                      className="detail-button"
-                    >
-                      Đăng ký tham gia
-                    </Button>
-                  </Box>
-                </Box>
-              </Card>
-            ))}
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Button
-              component={Link}
-              to="/programs"
-              variant="outlined"
-              size="large"
-            >
-              Xem tất cả chương trình
-            </Button>
-          </Box>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : upcomingPrograms.length > 0 ? (
+            <>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4 }}>
+                {upcomingPrograms.map((program) => (
+                  <Card key={program.id} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, borderRadius: 2 }}>
+                    <CardMedia
+                      component="img"
+                      sx={{ width: { sm: 200 }, height: { xs: 200, sm: 'auto' } }}
+                      image={programService.getImageUrl(program.image)}
+                      alt={program.title}
+                    />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                      <CardContent sx={{ flex: '1 0 auto' }}>
+                        <Typography component="h3" variant="h5">
+                          {program.title}
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" component="div" sx={{ mb: 1 }}>
+                          {new Date(program.date).toLocaleDateString('vi-VN')} - {program.time}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {program.description}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Địa điểm: {program.address}
+                        </Typography>
+                      </CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', pl: 2, pb: 2 }}>
+                        <Button
+                          component={Link}
+                          to={`/programs/${program.id}`}
+                          variant="contained"
+                          className="detail-button"
+                        >
+                          Đăng ký tham gia
+                        </Button>
+                      </Box>
+                    </Box>
+                  </Card>
+                ))}
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Button
+                  component={Link}
+                  to="/programs"
+                  variant="outlined"
+                  size="large"
+                >
+                  Xem tất cả chương trình
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary">
+                Hiện tại chưa có chương trình nào sắp diễn ra
+              </Typography>
+            </Box>
+          )}
         </Container>
       </Box>
 
-      {/* Chuyên viên tư vấn nổi bật */}
-      <Container sx={{ my: 6 }}>
-        <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mb: 4 }}>
-          Chuyên viên tư vấn nổi bật
-        </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 4 }}>
-          {mockConsultants.map((consultant) => (
-            <Card key={consultant.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2, overflow: 'hidden' }}>
-              <Box sx={{ position: 'relative' }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={consultant.profilePicture}
-                  alt={`${consultant.firstName} ${consultant.lastName}`}
-                />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    bgcolor: 'rgba(0,0,0,0.6)',
-                    color: 'white',
-                    p: 1
-                  }}
-                >
-                  <Typography variant="h6" component="div">
-                    {consultant.firstName} {consultant.lastName}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Rating value={consultant.rating} precision={0.1} size="small" readOnly />
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      ({consultant.reviewCount})
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  <strong>Chuyên môn:</strong> {consultant.specialization?.join(', ') || 'N/A'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  <strong>Học vấn:</strong> {consultant.education || 'N/A'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  <strong>Kinh nghiệm:</strong> {consultant.experience || 0} năm
-                </Typography>
-              </CardContent>
-              <Box sx={{ p: 2, pt: 0 }}>
-                <Button
-                  component={Link}
-                  to={`/consultants/${consultant.id}`}
-                  variant="contained"
-                  fullWidth
-                  className="detail-button"
-                >
-                  Xem chi tiết
-                </Button>
-              </Box>
-            </Card>
-          ))}
-        </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Button
-            component={Link}
-            to="/consultants"
-            variant="outlined"
-            size="large"
-          >
-            Xem tất cả chuyên viên
-          </Button>
-        </Box>
-      </Container>
+
 
       {/* Footer */}
       <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 6, mt: 6 }}>
