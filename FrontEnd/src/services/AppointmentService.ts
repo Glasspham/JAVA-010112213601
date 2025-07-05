@@ -8,7 +8,7 @@ import {
   ApiResponse 
 } from '../types/appointment';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL;
 const URL_FIND_ALL_APPOINTMENTS = `${BASE_URL}/appoinments/find-all`;
 const URL_CREATE_APPOINTMENT = `${BASE_URL}/appoinments/create`;
 const URL_LIST_SPECIALISTS = `${BASE_URL}/users/list-specialist`;

@@ -51,7 +51,7 @@ const RegisteredProgramsPage: React.FC = () => {
           location: item.address,
           capacity: item.capacity,
           registeredCount: item.users ? item.users.length : 0,
-          image: item.image ? `http://localhost:8080${item.image}` : 'http://localhost:8080/default_no_image.png'
+          image: item.image ? `${process.env.REACT_APP_API_URL}/${item.image}` : `${process.env.REACT_APP_API_URL}/default_no_image.png`
         }));
         setPrograms(mappedPrograms);
       }

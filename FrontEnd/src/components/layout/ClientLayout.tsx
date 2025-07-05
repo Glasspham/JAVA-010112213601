@@ -218,7 +218,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
                 color="inherit"
               >
                 <Avatar
-                  src={userAvatar ? `http://localhost:8080/${userAvatar}` : undefined}
+                  src={userAvatar ? `${process.env.REACT_APP_API_URL}/${userAvatar}` : undefined}
                   sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}
                 >
                   {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : (user?.firstName?.charAt(0) || 'U'))}

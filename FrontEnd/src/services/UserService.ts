@@ -3,7 +3,7 @@ import { UserSearch } from "../dto/UserSearch";
 import { UserDTO } from "../dto/UserDTO";
 import { FileService } from "./FileService";
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL;
 const URL_FIND_ALL_USER = `${BASE_URL}/users/find-all`;
 const URL_CREATE_USER = `${BASE_URL}/users/create`;
 const URL_DELETE_USER = `${BASE_URL}/users/delete`;

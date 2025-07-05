@@ -2,7 +2,7 @@
  * Utility functions for handling images and media
  */
 
-const DEFAULT_IMAGE_URL = 'http://localhost:8080/default_no_image.png';
+const DEFAULT_IMAGE_URL = `${process.env.REACT_APP_API_URL}/default_no_image.png`;
 
 /**
  * Get image URL with fallback to default image
@@ -18,7 +18,7 @@ export const getImageUrl = (imagePath?: string): string => {
     return imagePath;
   }
   
-  return `http://localhost:8080/${imagePath}`;
+  return `${process.env.REACT_APP_API_URL}/${imagePath}`;
 };
 
 /**
@@ -33,7 +33,7 @@ export const getAvatarUrl = (avatar?: string): string => {
   if (avatar.startsWith('http')) {
     return avatar;
   }
-  return `http://localhost:8080/${avatar}`;
+  return `${process.env.REACT_APP_API_URL}/${avatar}`;
 };
 
 /**

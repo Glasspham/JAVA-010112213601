@@ -167,7 +167,7 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
     setCheckingRegistration(prev => ({ ...prev, [programId]: true }));
 
     try {
-      const response = await fetch(`http://localhost:8080/programs/is-register?username=${username}&programId=${programId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/programs/is-register?username=${username}&programId=${programId}`);
       const result = await response.json();
 
       if (result.code === 200) {
@@ -209,7 +209,7 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/programs/register', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/programs/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

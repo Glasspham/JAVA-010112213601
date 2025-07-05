@@ -303,7 +303,7 @@ const UsersPage: React.FC = () => {
 
         // Set avatar preview nếu có
         if (userData.avatar) {
-          setAvatarPreview(`http://localhost:8080/${userData.avatar}`);
+          setAvatarPreview(`${process.env.REACT_APP_API_URL}/${userData.avatar}`);
         } else {
           setAvatarPreview(null);
         }

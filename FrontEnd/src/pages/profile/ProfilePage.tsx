@@ -334,7 +334,7 @@ const ProfilePage: React.FC = () => {
             }}
           >
             <Avatar
-              src={`http://localhost:8080/${userProfile.avatar}`}
+              src={`${process.env.REACT_APP_API_URL}/${userProfile.avatar}`}
               alt={userProfile.fullname}
               sx={{
                 width: 100,
@@ -435,7 +435,7 @@ const ProfilePage: React.FC = () => {
             {/* Upload Avatar */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
               <Avatar
-                src={previewImage || `http://localhost:8080/${userProfile?.avatar}`}
+                src={previewImage || `${process.env.REACT_APP_API_URL}/${userProfile?.avatar}`}
                 alt="Preview"
                 sx={{ width: 100, height: 100, mb: 2 }}
               />

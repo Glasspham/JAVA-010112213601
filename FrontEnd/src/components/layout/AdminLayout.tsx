@@ -137,7 +137,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <Box sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           <Avatar
-            src={userAvatar ? `http://localhost:8080/${userAvatar}` : undefined}
+            src={userAvatar ? `${process.env.REACT_APP_API_URL}/${userAvatar}` : undefined}
             sx={{ bgcolor: 'secondary.main', mr: 2 }}
           >
             {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : (user?.firstName?.charAt(0) || 'U'))}
@@ -242,7 +242,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             color="inherit"
           >
             <Avatar
-              src={userAvatar ? `http://localhost:8080/${userAvatar}` : undefined}
+              src={userAvatar ? `${process.env.REACT_APP_API_URL}/${userAvatar}` : undefined}
               sx={{ bgcolor: 'primary.main' }}
             >
               {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : (user?.firstName?.charAt(0) || 'U'))}

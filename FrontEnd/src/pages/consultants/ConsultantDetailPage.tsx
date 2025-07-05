@@ -112,7 +112,7 @@ const ConsultantDetailPage: React.FC = () => {
             fullname: userData.fullname,
             email: userData.email,
             phoneNumber: userData.phone,
-            profilePicture: userData.avatar ? `http://localhost:8080/${userData.avatar}` : '',
+            profilePicture: userData.avatar ? `${process.env.REACT_APP_API_URL}/${userData.avatar}` : '',
             specialization: userData.majors || [],
             education: userData.position || 'Chuyên viên tư vấn',
             experience: 5, // Default experience

@@ -3,7 +3,7 @@ import { ProgramDTO } from "../dto/ProgramDTO";
 import { ProgramSearch } from "../dto/ProgramSearch";
 import { FileService } from "./FileService";
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL;
 
 const URL_CREATE_PROGRAM = `${BASE_URL}/programs/create`;
 const URL_UPDATE_PROGRAM = `${BASE_URL}/programs/update`;

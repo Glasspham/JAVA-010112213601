@@ -134,7 +134,7 @@ const AdminConsultantsPage: React.FC = () => {
             bio: '', // API không có bio
             email: user.email,
             phone: user.phone,
-            avatar: user.avatar ? `http://localhost:8080/${user.avatar}` : '',
+            avatar: user.avatar ? `${process.env.REACT_APP_API_URL}/${user.avatar}` : '',
             rating: 5, // Default rating
             availability: true, // Default availability
             createdAt: new Date(user.createDate)
@@ -288,7 +288,7 @@ const AdminConsultantsPage: React.FC = () => {
 
         // Set avatar preview nếu có
         if (userData.avatar) {
-          setAvatarPreview(`http://localhost:8080/${userData.avatar}`);
+          setAvatarPreview(`${process.env.REACT_APP_API_URL}/${userData.avatar}`);
         } else {
           setAvatarPreview(null);
         }
@@ -684,7 +684,9 @@ const AdminConsultantsPage: React.FC = () => {
                           src={consultant.avatar}
                           alt={consultant.name}
                           sx={{ mr: 2, width: 40, height: 40 }}
-                        />
+                        >
+                          {consultant.name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
                         {consultant.name}
                       </Box>
                     </TableCell>
@@ -877,7 +879,7 @@ const AdminConsultantsPage: React.FC = () => {
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
-                  src={avatarPreview || (formData.avatar ? `http://localhost:8080/${formData.avatar}` : '')}
+                  src={avatarPreview || (formData.avatar ? `${process.env.REACT_APP_API_URL}/${formData.avatar}` : '')}
                   sx={{ width: 80, height: 80 }}
                 />
                 <Box>

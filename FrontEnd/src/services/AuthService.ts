@@ -14,7 +14,7 @@ interface MyTokenPayload {
     iat?: number;
 }
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL;
 const API_LOGIN = `${BASE_URL}/auth/login`;
 const API_REGISTER = `${BASE_URL}/auth/register`;
 const API_FIND_BY_USERNAME = `${BASE_URL}/auth`;

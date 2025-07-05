@@ -76,7 +76,7 @@ const ConsultantsPage: React.FC<ConsultantsPageProps> = ({ isAdmin = false }) =>
             fullname: user.fullname,
             email: user.email,
             phoneNumber: user.phone,
-            profilePicture: user.avatar ? `http://localhost:8080/${user.avatar}` : '/default-avatar.png',
+            profilePicture: user.avatar ? `${process.env.REACT_APP_API_URL}/${user.avatar}` : `${process.env.REACT_APP_API_URL}/default-avatar.png`,
             specialization: user.majors || [],
             education: user.position || 'Chuyên viên tư vấn',
             experience: 5, // Default experience

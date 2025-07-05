@@ -1,7 +1,7 @@
 import axios from "axios";
 import { FileService } from "./FileService";
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL;
 const URL_FIND_ALL_COURSES = `${BASE_URL}/courses/find-all`;
 const URL_CREATE_COURSE = `${BASE_URL}/courses/create`;
 

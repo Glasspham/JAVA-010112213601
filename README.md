@@ -80,7 +80,22 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 
 ## Hướng dẫn chạy Project
 
-### Hướng dẫn chạy Backend (BE)
+> **Lưu ý: Chỉnh sửa file `UtilFile.java` cho phù hợp trước khi chạy chương trình**
+   - Mở file `BackEnd/src/main/java/com/project/codebasespringjpa/util/UtilFile.java`
+   - Tìm dòng: /* !Cấu hình thư mục lưu trữ ảnh */
+      - Nếu chạy bằng `Local` thì để dòng này:
+      ```java
+      private static final String RESOURCE_DIR  = System.getProperty("user.dir") + "/src/main/resources/static/";
+      ```
+      - Nếu chạy bằng `Docker` thì để dòng này:
+      ```java
+      private static final String RESOURCE_DIR = System.getProperty("user.dir") + "/static/";
+      ```
+   - Comment lại dòng còn lại!
+
+## Chạy với môi trường local (Chạy trên máy tính cá nhân)
+
+### Chạy Backend (BE)
 
 1. **Yêu cầu môi trường:**
    - Java 17 trở lên
@@ -111,12 +126,12 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
    - Ứng dụng sẽ chạy tại `http://localhost:8080` (mặc định).
 
 5. **Test API**
-   - Trong file `.\BackEnd\pom.xml` có gọi `SpringDoc OpenAPI Starter WebMVC UI` để có thể test API.
+   - Trong file `./BackEnd/pom.xml` có gọi `SpringDoc OpenAPI Starter WebMVC UI` để có thể test API.
    - Ứng dụng sẽ chạy tại `http://localhost:8080/swagger-ui/index.html`.
 
 ---
 
-### Hướng dẫn chạy Frontend (FE)
+### Chạy Frontend (FE)
 
 1. **Yêu cầu môi trường:**
    - Node.js >= 16
@@ -138,5 +153,26 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 4. **Lưu ý:**
    - FE sẽ gọi API BE tại địa chỉ cấu hình trong file `.env.development` (mặc định là `http://localhost:8080`).
    - Đảm bảo BE đã chạy trước khi truy cập các chức năng cần backend.
+
+---
+
+## Hướng dẫn chạy bằng Docker (BE + FE)
+
+1. **Yêu cầu môi trường:**
+   - Docker Desktop
+
+2. **Chạy Docker Compose:**
+   - Ở thư mục gốc project, chạy lệnh:
+     ```pwsh
+     docker-compose up --build
+     ```
+   - Docker sẽ tự động build và chạy cả Backend và Frontend.
+   - Backend mặc định chạy ở `http://localhost:8080`, Frontend ở `http://localhost:3000`.
+
+3. **Dừng các container:**
+   - Nhấn `Ctrl+C` trong terminal hoặc chạy:
+     ```pwsh
+     docker-compose down
+     ```
 
 ---

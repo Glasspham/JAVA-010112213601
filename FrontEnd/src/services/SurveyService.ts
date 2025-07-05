@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Survey, SurveySearch, PaginatedSurveyResponse, ApiResponse, SurveyMark } from '../types/survey';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL;
 const URL_FIND_ALL_SURVEYS = `${BASE_URL}/survey/find-all`;
 const URL_CREATE_SURVEY = `${BASE_URL}/survey/create`;
 const URL_GET_SURVEY = `${BASE_URL}/survey`;
