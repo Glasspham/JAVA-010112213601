@@ -21,8 +21,6 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import { Consultant } from '../../types/consultant';
-import { mockConsultants } from '../../utils/mockData';
 import { UserService } from '../../services/UserService';
 import { UserSearch } from '../../dto/UserSearch';
 import { toast } from 'react-toastify';

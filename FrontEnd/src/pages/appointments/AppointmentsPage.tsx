@@ -45,6 +45,7 @@ import { AuthService } from '../../services/AuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
+import { getAvatarUrl } from '../../utils/imageUtils';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -140,6 +141,12 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
     loadSpecialists();
     loadAppointments();
   }, [isAuthenticated, navigate, user]);
+
+  // Get specialist avatar by name
+  const getSpecialistAvatar = (specialistName: string): string => {
+    const specialist = specialists.find(s => s.fullname === specialistName);
+    return getAvatarUrl(specialist?.avatar);
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -304,7 +311,10 @@ const AppointmentsPage: React.FC<AppointmentsPageProps> = ({ isAdmin = false }) 
                   <React.Fragment key={appointment.id}>
                     <ListItem alignItems="flex-start">
                       <ListItemAvatar>
-                        <Avatar>
+                        <Avatar
+                          src={getSpecialistAvatar(appointment.specialistFullname)}
+                          alt={appointment.specialistFullname}
+                        >
                           <PersonIcon />
                         </Avatar>
                       </ListItemAvatar>

@@ -22,6 +22,21 @@ export const getImageUrl = (imagePath?: string): string => {
 };
 
 /**
+ * Get avatar URL with fallback to default image (consistent with other pages)
+ * @param avatar - The avatar path from API
+ * @returns Full avatar URL with fallback
+ */
+export const getAvatarUrl = (avatar?: string): string => {
+  if (!avatar || avatar === 'default_no_image.png') {
+    return DEFAULT_IMAGE_URL;
+  }
+  if (avatar.startsWith('http')) {
+    return avatar;
+  }
+  return `http://localhost:8080/${avatar}`;
+};
+
+/**
  * Handle image load error by setting fallback image
  * @param event - The error event
  */
@@ -54,6 +69,7 @@ export const handleVideoError = (event: React.SyntheticEvent<HTMLVideoElement>) 
 
 const imageUtils = {
   getImageUrl,
+  getAvatarUrl,
   handleImageError,
   handleVideoError,
   DEFAULT_IMAGE_URL

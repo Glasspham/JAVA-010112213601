@@ -126,7 +126,7 @@ const SurveysPage: React.FC = () => {
 
   return (
     <ClientLayout>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 5 }}>
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, mt:-5 }}>
             <Box>

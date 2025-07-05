@@ -32,7 +32,6 @@ import { CommunityProgram } from '../../types/program';
 import { ProgramService } from '../../services/ProgramService';
 import { ProgramSearch } from '../../dto/ProgramSearch';
 import { toast } from 'react-toastify';
-import ClientLayout from '../../components/layout/ClientLayout';
 import '../../styles/ProgramCard.css';
 
 interface ProgramsPageProps {
@@ -254,53 +253,184 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
     .slice(0, 1);
 
   return (
-    <ClientLayout>
-      <Container>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, mt:-10 }}>
-        <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Chương trình cộng đồng
-          </Typography>
-          <Typography variant="body1" paragraph sx={{ mb: 4 }}>
-            Tham gia các chương trình truyền thông và giáo dục cộng đồng về phòng chống ma túy.
-            Các chương trình này giúp nâng cao nhận thức và kết nối cộng đồng trong việc phòng ngừa sử dụng ma túy.
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          color="primary"
-          sx={{ mt: 1, minWidth: 200 }}
-          onClick={() => {
-            // Tạo trang mới để hiển thị chương trình đã đăng ký
-            window.location.href = '/my-registered-programs';
-          }}
-        >
-          Xem chương trình đã đăng ký
-        </Button>
+    <Container>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, mt:-10 }}>
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 10 }}>
+          Chương trình cộng đồng
+        </Typography>
+        <Typography variant="body1" paragraph sx={{ mb: 4 }}>
+          Tham gia các chương trình truyền thông và giáo dục cộng đồng về phòng chống ma túy.
+          Các chương trình này giúp nâng cao nhận thức và kết nối cộng đồng trong việc phòng ngừa sử dụng ma túy.
+        </Typography>
       </Box>
+      <Button
+        variant="outlined"
+        color="primary"
+        sx={{ mt: 10, minWidth: 200 }}
+        onClick={() => {
+          // Tạo trang mới để hiển thị chương trình đã đăng ký
+          window.location.href = '/my-registered-programs';
+        }}
+      >
+        Xem chương trình đã đăng ký
+      </Button>
+    </Box>
 
-      {/* Chương trình nổi bật */}
-      {upcomingPrograms.length > 0 && (
-        <Box sx={{ mb: 5 }}>
-          <Typography variant="h5" component="h2" gutterBottom>
-            Chương trình sắp diễn ra
-          </Typography>
-          <Card sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, borderRadius: 2, overflow: 'hidden' }}>
-            <CardMedia
-              component="img"
-              sx={{ width: { xs: '100%', md: 300 }, height: { xs: 200, md: 'auto' } }}
-              image={upcomingPrograms[0].image}
-              alt={upcomingPrograms[0].title}
-            />
-            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-              <CardContent sx={{ flex: '1 0 auto' }}>
-                <Typography component="h3" variant="h5" gutterBottom>
-                  {upcomingPrograms[0].title}
+    {/* Chương trình nổi bật */}
+    {upcomingPrograms.length > 0 && (
+      <Box sx={{ mb: 5 }}>
+        <Typography variant="h5" component="h2" gutterBottom>
+          Chương trình sắp diễn ra
+        </Typography>
+        <Card sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, borderRadius: 2, overflow: 'hidden' }}>
+          <CardMedia
+            component="img"
+            sx={{ width: { xs: '100%', md: 300 }, height: { xs: 200, md: 'auto' } }}
+            image={upcomingPrograms[0].image}
+            alt={upcomingPrograms[0].title}
+          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <CardContent sx={{ flex: '1 0 auto' }}>
+              <Typography component="h3" variant="h5" gutterBottom>
+                {upcomingPrograms[0].title}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <CalendarMonthIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  {new Date(upcomingPrograms[0].startDate).toLocaleDateString('vi-VN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <CalendarMonthIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  {upcomingPrograms[0].location}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <PeopleIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  {upcomingPrograms[0].registeredCount}/{upcomingPrograms[0].capacity} người đã đăng ký
+                </Typography>
+              </Box>
+              <Typography variant="body1" paragraph>
+                {upcomingPrograms[0].description}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                <Button
+                  component={Link}
+                  to={`/programs/${upcomingPrograms[0].id}`}
+                  variant="outlined"
+                >
+                  Xem chi tiết
+                </Button>
+                {checkingRegistration[upcomingPrograms[0].id] ? (
+                  <Button
+                    variant="outlined"
+                    disabled
+                  >
+                    Đang kiểm tra...
+                  </Button>
+                ) : registrationStatus[upcomingPrograms[0].id] ? (
+                  <Button
+                    variant="outlined"
+                    color="success"
+                    disabled
+                  >
+                    Đã đăng ký
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={() => handleRegister(upcomingPrograms[0].id)}
+                  >
+                    Đăng ký tham gia
+                  </Button>
+                )}
+              </Box>
+            </CardContent>
+          </Box>
+        </Card>
+      </Box>
+    )}
+
+    {/* Bộ lọc và tìm kiếm */}
+    <Box sx={{ mb: 4 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+        <TextField
+          fullWidth
+          label="Tìm kiếm chương trình"
+          variant="outlined"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <FormControl fullWidth variant="outlined">
+          <InputLabel id="time-filter-label">Thời gian</InputLabel>
+          <Select
+            labelId="time-filter-label"
+            id="time-filter"
+            value={timeFilter}
+            onChange={handleTimeFilterChange}
+            label="Thời gian"
+          >
+            <MenuItem value="all">Tất cả</MenuItem>
+            <MenuItem value="upcoming">Sắp diễn ra</MenuItem>
+            <MenuItem value="current">Đang diễn ra</MenuItem>
+            <MenuItem value="past">Đã kết thúc</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+    </Box>
+
+    {/* Hiển thị số lượng kết quả */}
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="body1">
+        Hiển thị {filteredPrograms.length} chương trình
+      </Typography>
+    </Box>
+
+    {/* Danh sách chương trình */}
+    {loading ? (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography variant="h6">
+          Đang tải chương trình...
+        </Typography>
+      </Box>
+    ) : currentPrograms.length > 0 ? (
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4 }}>
+        {currentPrograms.map((program) => (
+          <Box key={program.id}>
+            <Card
+              className="program-card"
+              onClick={() => handleCardClick(program.id)}
+              sx={{ cursor: 'pointer' }}
+            >
+              <CardMedia
+                component="img"
+                className="program-image"
+                image={program.image}
+                alt={program.title}
+              />
+              <CardContent className="card-content">
+                <Typography className="program-title" variant="h5" component="h3">
+                  {program.title}
+                </Typography>
+                <Box className="program-info">
+                  <CalendarMonthIcon className="program-info-icon" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {new Date(upcomingPrograms[0].startDate).toLocaleDateString('vi-VN', {
+                    {new Date(program.startDate).toLocaleDateString('vi-VN', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -308,39 +438,72 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
                     })}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Box className="program-info">
+                  <LocationOnIcon className="program-info-icon" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {upcomingPrograms[0].location}
+                    {program.location}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <PeopleIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                <Box className="program-info">
+                  <PeopleIcon className="program-info-icon" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {upcomingPrograms[0].registeredCount}/{upcomingPrograms[0].capacity} người đã đăng ký
+                    {program.registeredCount}/{program.capacity} người đã đăng ký
                   </Typography>
                 </Box>
-                <Typography variant="body1" paragraph>
-                  {upcomingPrograms[0].description}
+                <Typography className="program-description" variant="body2" color="text.secondary" paragraph>
+                  {program.description}
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+
+                {/* Trạng thái đăng ký */}
+                {localStorage.getItem('USERNAME') && (
+                  <Box sx={{ mb: 2 }}>
+                    {checkingRegistration[program.id] ? (
+                      <Chip
+                        label="Đang kiểm tra..."
+                        size="small"
+                        color="default"
+                        variant="outlined"
+                      />
+                    ) : registrationStatus[program.id] ? (
+                      <Chip
+                        label="Đã đăng ký"
+                        size="small"
+                        color="success"
+                      />
+                    ) : (
+                      <Chip
+                        label="Chưa đăng ký"
+                        size="small"
+                        color="warning"
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
+                )}
+
+                <Box className="card-actions" sx={{ display: 'flex', gap: 1 }} onClick={(e) => e.stopPropagation()}>
                   <Button
                     component={Link}
-                    to={`/programs/${upcomingPrograms[0].id}`}
+                    to={`/programs/${program.id}`}
                     variant="outlined"
+                    fullWidth
+                    className="detail-button"
                   >
                     Xem chi tiết
                   </Button>
-                  {checkingRegistration[upcomingPrograms[0].id] ? (
+                  {/* Luôn hiển thị nút đăng ký để test */}
+                  {checkingRegistration[program.id] ? (
                     <Button
                       variant="outlined"
+                      fullWidth
                       disabled
                     >
                       Đang kiểm tra...
                     </Button>
-                  ) : registrationStatus[upcomingPrograms[0].id] ? (
+                  ) : registrationStatus[program.id] ? (
                     <Button
                       variant="outlined"
+                      fullWidth
                       color="success"
                       disabled
                     >
@@ -349,298 +512,132 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
                   ) : (
                     <Button
                       variant="contained"
-                      onClick={() => handleRegister(upcomingPrograms[0].id)}
+                      fullWidth
+                      color="primary"
+                      onClick={() => handleRegister(program.id)}
                     >
-                      Đăng ký tham gia
+                      Đăng ký
                     </Button>
                   )}
                 </Box>
               </CardContent>
-            </Box>
-          </Card>
-        </Box>
-      )}
-
-      {/* Bộ lọc và tìm kiếm */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          <TextField
-            fullWidth
-            label="Tìm kiếm chương trình"
-            variant="outlined"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <FormControl fullWidth variant="outlined">
-            <InputLabel id="time-filter-label">Thời gian</InputLabel>
-            <Select
-              labelId="time-filter-label"
-              id="time-filter"
-              value={timeFilter}
-              onChange={handleTimeFilterChange}
-              label="Thời gian"
-            >
-              <MenuItem value="all">Tất cả</MenuItem>
-              <MenuItem value="upcoming">Sắp diễn ra</MenuItem>
-              <MenuItem value="current">Đang diễn ra</MenuItem>
-              <MenuItem value="past">Đã kết thúc</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+            </Card>
+          </Box>
+        ))}
       </Box>
-
-      {/* Hiển thị số lượng kết quả */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="body1">
-          Hiển thị {filteredPrograms.length} chương trình
+    ) : (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography variant="h6">
+          Không tìm thấy chương trình nào phù hợp với tiêu chí tìm kiếm.
         </Typography>
       </Box>
+    )}
 
-      {/* Danh sách chương trình */}
-      {loading ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6">
-            Đang tải chương trình...
-          </Typography>
-        </Box>
-      ) : currentPrograms.length > 0 ? (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4 }}>
-          {currentPrograms.map((program) => (
-            <Box key={program.id}>
-              <Card
-                className="program-card"
-                onClick={() => handleCardClick(program.id)}
-                sx={{ cursor: 'pointer' }}
-              >
-                <CardMedia
-                  component="img"
-                  className="program-image"
-                  image={program.image}
-                  alt={program.title}
-                />
-                <CardContent className="card-content">
-                  <Typography className="program-title" variant="h5" component="h3">
-                    {program.title}
-                  </Typography>
-                  <Box className="program-info">
-                    <CalendarMonthIcon className="program-info-icon" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {new Date(program.startDate).toLocaleDateString('vi-VN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </Typography>
-                  </Box>
-                  <Box className="program-info">
-                    <LocationOnIcon className="program-info-icon" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {program.location}
-                    </Typography>
-                  </Box>
-                  <Box className="program-info">
-                    <PeopleIcon className="program-info-icon" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {program.registeredCount}/{program.capacity} người đã đăng ký
-                    </Typography>
-                  </Box>
-                  <Typography className="program-description" variant="body2" color="text.secondary" paragraph>
-                    {program.description}
-                  </Typography>
+    {/* Phân trang */}
+    {totalPages > 1 && (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+          size="large"
+        />
+      </Box>
+    )}
 
-                  {/* Trạng thái đăng ký */}
-                  {localStorage.getItem('USERNAME') && (
-                    <Box sx={{ mb: 2 }}>
-                      {checkingRegistration[program.id] ? (
-                        <Chip
-                          label="Đang kiểm tra..."
-                          size="small"
-                          color="default"
-                          variant="outlined"
-                        />
-                      ) : registrationStatus[program.id] ? (
-                        <Chip
-                          label="Đã đăng ký"
-                          size="small"
-                          color="success"
-                        />
-                      ) : (
-                        <Chip
-                          label="Chưa đăng ký"
-                          size="small"
-                          color="warning"
-                          variant="outlined"
-                        />
-                      )}
-                    </Box>
-                  )}
-
-                  <Box className="card-actions" sx={{ display: 'flex', gap: 1 }} onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      component={Link}
-                      to={`/programs/${program.id}`}
-                      variant="outlined"
-                      fullWidth
-                      className="detail-button"
-                    >
-                      Xem chi tiết
-                    </Button>
-                    {/* Luôn hiển thị nút đăng ký để test */}
-                    {checkingRegistration[program.id] ? (
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        disabled
-                      >
-                        Đang kiểm tra...
-                      </Button>
-                    ) : registrationStatus[program.id] ? (
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        color="success"
-                        disabled
-                      >
-                        Đã đăng ký
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        color="primary"
-                        onClick={() => handleRegister(program.id)}
-                      >
-                        Đăng ký
-                      </Button>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
-          ))}
-        </Box>
-      ) : (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6">
-            Không tìm thấy chương trình nào phù hợp với tiêu chí tìm kiếm.
-          </Typography>
-        </Box>
-      )}
-
-      {/* Phân trang */}
-      {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            size="large"
-          />
-        </Box>
-      )}
-
-      {/* Thông tin bổ sung */}
-      <Box sx={{ mt: 6, mb: 4 }}>
-        <Paper sx={{ p: 3, borderRadius: 2 }}>
-          <Typography variant="h5" gutterBottom>
-            Tại sao nên tham gia chương trình cộng đồng?
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-            <Box>
-              <Box sx={{ textAlign: 'center', p: 2 }}>
-                <Box sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  margin: '0 auto 16px'
-                }}>
-                  1
-                </Box>
-                <Typography variant="h6" gutterBottom>
-                  Nâng cao nhận thức
-                </Typography>
-                <Typography variant="body2">
-                  Các chương trình cộng đồng giúp nâng cao nhận thức về tác hại của ma túy và cách phòng tránh.
-                </Typography>
+    {/* Thông tin bổ sung */}
+    <Box sx={{ mt: 6, mb: 4 }}>
+      <Paper sx={{ p: 3, borderRadius: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          Tại sao nên tham gia chương trình cộng đồng?
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+          <Box>
+            <Box sx={{ textAlign: 'center', p: 2 }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                margin: '0 auto 16px'
+              }}>
+                1
               </Box>
-            </Box>
-            <Box>
-              <Box sx={{ textAlign: 'center', p: 2 }}>
-                <Box sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  margin: '0 auto 16px'
-                }}>
-                  2
-                </Box>
-                <Typography variant="h6" gutterBottom>
-                  Kết nối cộng đồng
-                </Typography>
-                <Typography variant="body2">
-                  Tham gia các chương trình giúp kết nối với những người có cùng mối quan tâm và xây dựng mạng lưới hỗ trợ.
-                </Typography>
-              </Box>
-            </Box>
-            <Box>
-              <Box sx={{ textAlign: 'center', p: 2 }}>
-                <Box sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  margin: '0 auto 16px'
-                }}>
-                  3
-                </Box>
-                <Typography variant="h6" gutterBottom>
-                  Học hỏi từ chuyên gia
-                </Typography>
-                <Typography variant="body2">
-                  Các chương trình thường có sự tham gia của các chuyên gia trong lĩnh vực, giúp bạn học hỏi kiến thức và kỹ năng mới.
-                </Typography>
-              </Box>
+              <Typography variant="h6" gutterBottom>
+                Nâng cao nhận thức
+              </Typography>
+              <Typography variant="body2">
+                Các chương trình cộng đồng giúp nâng cao nhận thức về tác hại của ma túy và cách phòng tránh.
+              </Typography>
             </Box>
           </Box>
-          <Alert severity="info" sx={{ mt: 3 }}>
-            <Typography variant="body2">
-              Đăng ký tham gia các chương trình cộng đồng là miễn phí. Tuy nhiên, số lượng người tham gia có giới hạn, vì vậy hãy đăng ký sớm để đảm bảo có chỗ.
-            </Typography>
-          </Alert>
-        </Paper>
-      </Box>
-      </Container>
-    </ClientLayout>
+          <Box>
+            <Box sx={{ textAlign: 'center', p: 2 }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                margin: '0 auto 16px'
+              }}>
+                2
+              </Box>
+              <Typography variant="h6" gutterBottom>
+                Kết nối cộng đồng
+              </Typography>
+              <Typography variant="body2">
+                Tham gia các chương trình giúp kết nối với những người có cùng mối quan tâm và xây dựng mạng lưới hỗ trợ.
+              </Typography>
+            </Box>
+          </Box>
+          <Box>
+            <Box sx={{ textAlign: 'center', p: 2 }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                margin: '0 auto 16px'
+              }}>
+                3
+              </Box>
+              <Typography variant="h6" gutterBottom>
+                Học hỏi từ chuyên gia
+              </Typography>
+              <Typography variant="body2">
+                Các chương trình thường có sự tham gia của các chuyên gia trong lĩnh vực, giúp bạn học hỏi kiến thức và kỹ năng mới.
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+        <Alert severity="info" sx={{ mt: 3 }}>
+          <Typography variant="body2">
+            Đăng ký tham gia các chương trình cộng đồng là miễn phí. Tuy nhiên, số lượng người tham gia có giới hạn, vì vậy hãy đăng ký sớm để đảm bảo có chỗ.
+          </Typography>
+        </Alert>
+      </Paper>
+    </Box>
+    </Container>
   );
 };
 

@@ -42,8 +42,6 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon
 } from '@mui/icons-material';
-import { Consultant, ConsultantSpecialty } from '../../types/consultant';
-import { mockConsultants } from '../../utils/mockData';
 import { Link } from 'react-router-dom';
 import { UserService } from '../../services/UserService';
 import { UserSearch } from '../../dto/UserSearch';
