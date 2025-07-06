@@ -124,7 +124,7 @@ const AdminProgramsPage: React.FC = () => {
       date: programDate,
       duration: 120, // Default duration
       capacity: apiData.capacity,
-      registrations: apiData.countParticipant || 0,
+      registrations: apiData.users ? apiData.users.length : 0,
       image: apiData.image || '',
       createdAt: new Date(),
       updatedAt: new Date(),

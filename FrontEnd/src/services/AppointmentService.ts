@@ -9,11 +9,11 @@ import {
 } from '../types/appointment';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
-const URL_FIND_ALL_APPOINTMENTS = `${BASE_URL}/appoinments/find-all`;
-const URL_CREATE_APPOINTMENT = `${BASE_URL}/appoinments/create`;
+const URL_FIND_ALL_APPOINTMENTS = `${BASE_URL}/appointments/find-all`;
+const URL_CREATE_APPOINTMENT = `${BASE_URL}/appointments/create`;
 const URL_LIST_SPECIALISTS = `${BASE_URL}/users/list-specialist`;
 const URL_LIST_USERS = `${BASE_URL}/users/list-user`;
-const URL_CHANGE_STATUS = `${BASE_URL}/appoinments/change-status`;
+const URL_CHANGE_STATUS = `${BASE_URL}/appointments/change-status`;
 
 export class AppointmentService {
   public async findAllAppointments(searchParams: AppointmentSearchParams): Promise<[number, PaginatedAppointmentResponse, string]> {

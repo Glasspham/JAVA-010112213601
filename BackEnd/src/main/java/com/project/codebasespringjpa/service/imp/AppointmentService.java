@@ -34,7 +34,7 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public AppointmentEntity findEntityById(Long id) {
-        return appointmentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.APPOINMENT_NOT_FOUND));
+        return appointmentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.APPOINTMENT_NOT_FOUND));
     }
 
     @Override

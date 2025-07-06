@@ -24,7 +24,7 @@ public enum ErrorCode {
 
     SURVEY_NOT_FOUND(404, "Không tìm thấy khảo sát này"),
 
-    APPOINMENT_NOT_FOUND(404, "Không tìm thấy lịch hẹn này"),
+    APPOINTMENT_NOT_FOUND(404, "Không tìm thấy lịch hẹn này"),
 
     PROGRAM_NOT_FOUND(404, "Không tìm thấy chương trình này"),
 

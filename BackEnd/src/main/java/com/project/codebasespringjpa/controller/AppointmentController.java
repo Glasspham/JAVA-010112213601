@@ -17,8 +17,8 @@ import java.time.LocalDate;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@RequestMapping("/appoinments")
-public class AppoinmentController {
+@RequestMapping("/appointments")
+public class AppointmentController {
     @Autowired
     IAppointmentService appointmentService;
 
