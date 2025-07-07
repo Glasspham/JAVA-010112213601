@@ -1,4 +1,4 @@
-import axios from "axios";
+import httpClient from "../utils/httpClient";
 import { LoginDTO } from "../pages/auth/LoginDTO";
 import { RegisterDTO } from "../pages/auth/RegisterDTO";
 import { AuthenDTO } from "../pages/auth/AuthenDTO";
@@ -15,56 +15,71 @@ interface MyTokenPayload {
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL;
-const API_LOGIN = `${BASE_URL}/auth/login`;
-const API_REGISTER = `${BASE_URL}/auth/register`;
-const API_FIND_BY_USERNAME = `${BASE_URL}/auth`;
-const API_UPDATE_PROFILE = `${BASE_URL}/auth/update`;
-const API_UPDATE_PASSWORD = `${BASE_URL}/auth/update-password`;
 
 export class AuthService {
     public async login(loginDTO: LoginDTO) {
-        const response = await axios.post(API_LOGIN, loginDTO);
-        return [
-            response.data.code,
-            response.data.data,
-            response.data.message
-        ];
+        try {
+            const response = await httpClient.post('/auth/login', loginDTO);
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        } catch (error: any) {
+            return [500, null, error.message || 'Login failed'];
+        }
     }
 
     public async register(registerDTO: RegisterDTO) {
-        const response = await axios.post(API_REGISTER, registerDTO);
-        return [
-            response.data.code,
-            response.data.data,
-            response.data.message
-        ];
+        try {
+            const response = await httpClient.post('/auth/register', registerDTO);
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        } catch (error: any) {
+            return [500, null, error.message || 'Registration failed'];
+        }
     }
 
     public async findByUsername(username: string) {
-        const response = await axios.get(`${API_FIND_BY_USERNAME}?username=${username}`);
-        return [
-            response.data.code,
-            response.data.data,
-            response.data.message
-        ];
+        try {
+            const response = await httpClient.get(`/auth?username=${username}`);
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        } catch (error: any) {
+            return [500, null, error.message || 'Failed to find user'];
+        }
     }
 
     public async updateProfile(username: string, updateProfileDTO: UpdateProfileDTO) {
-        const response = await axios.put(`${API_UPDATE_PROFILE}?username=${username}`, updateProfileDTO);
-        return [
-            response.data.code,
-            response.data.data,
-            response.data.message
-        ];
+        try {
+            const response = await httpClient.put(`/auth/update?username=${username}`, updateProfileDTO);
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        } catch (error: any) {
+            return [500, null, error.message || 'Failed to update profile'];
+        }
     }
 
     public async updatePassword(username: string, updatePasswordDTO: UpdatePasswordDTO) {
-        const response = await axios.put(`${API_UPDATE_PASSWORD}?username=${username}`, updatePasswordDTO);
-        return [
-            response.data.code,
-            response.data.data,
-            response.data.message
-        ];
+        try {
+            const response = await httpClient.put(`/auth/update-password?username=${username}`, updatePasswordDTO);
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        } catch (error: any) {
+            return [500, null, error.message || 'Failed to update password'];
+        }
     }
 
     public async writeInfoToLocal(token: any) {

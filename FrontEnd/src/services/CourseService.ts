@@ -1,9 +1,7 @@
-import axios from "axios";
+import httpClient from "../utils/httpClient";
 import { FileService } from "./FileService";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
-const URL_FIND_ALL_COURSES = `${BASE_URL}/courses/find-all`;
-const URL_CREATE_COURSE = `${BASE_URL}/courses/create`;
 
 export interface ApiResponse<T> {
   code: number;
@@ -95,7 +93,7 @@ export class CourseService {
   private fileService = new FileService();
 
   public async findAllCourses(searchParams: CourseSearch) {
-    let url = `${URL_FIND_ALL_COURSES}?page=${searchParams.page}&limit=${searchParams.limit}`;
+    let url = `/courses/find-all?page=${searchParams.page}&limit=${searchParams.limit}`;
     
     if (searchParams.keyword) {
       url += `&keyword=${encodeURIComponent(searchParams.keyword)}`;
@@ -105,7 +103,7 @@ export class CourseService {
       url += `&object=${encodeURIComponent(searchParams.object)}`;
     }
 
-    const response = await axios.get(url);
+    const response = await httpClient.get(url);
     return [
       response.data.code,
       response.data.data as PaginatedCourseResponse,
@@ -136,7 +134,7 @@ export class CourseService {
         }
       }
 
-      const response = await axios.post(URL_CREATE_COURSE, courseDTO);
+      const response = await httpClient.post('/courses/create', courseDTO);
       return [
         response.data.code,
         response.data.data as CourseResponse,
@@ -178,7 +176,7 @@ export class CourseService {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post(`${BASE_URL}/files/upload`, formData, {
+      const response = await httpClient.post('/files/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -198,7 +196,7 @@ export class CourseService {
   // Lấy khóa học theo ID
   public async getCourseById(id: number): Promise<ApiResponse<CourseDetail>> {
     try {
-      const response = await axios.get(`${BASE_URL}/courses?id=${id}`);
+      const response = await httpClient.get(`/courses?id=${id}`);
       return {
         code: response.data.code,
         message: response.data.message,
@@ -213,7 +211,7 @@ export class CourseService {
   // Cập nhật khóa học
   public async updateCourse(id: number, courseData: CourseDetail): Promise<ApiResponse<string>> {
     try {
-      const response = await axios.put(`${BASE_URL}/courses/update/${id}`, courseData);
+      const response = await httpClient.put(`/courses/update/${id}`, courseData);
       return {
         code: response.data.code,
         message: response.data.message,
@@ -228,7 +226,7 @@ export class CourseService {
   // Xóa khóa học
   public async deleteCourse(id: number): Promise<ApiResponse<string>> {
     try {
-      const response = await axios.delete(`${BASE_URL}/courses/delete/${id}`);
+      const response = await httpClient.delete(`/courses/delete/${id}`);
       return {
         code: response.data.code,
         message: response.data.message,

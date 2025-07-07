@@ -8,6 +8,7 @@ import com.project.codebasespringjpa.service.interfaces.IStaticService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +23,7 @@ public class StaticController {
     IStaticService staticService;
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<DashboardResponse> getDashboard(){
         return ApiResponse.<DashboardResponse>builder()
                 .data(staticService.getDashboard())
@@ -29,6 +31,7 @@ public class StaticController {
     }
 
     @GetMapping("/static-year")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<List<StaticProgramResponse>> getProgramByYear(@RequestParam(name = "year") Integer year){
         return ApiResponse.<List<StaticProgramResponse>>builder()
                 .data(staticService.getStaticProgram(year))
@@ -36,6 +39,7 @@ public class StaticController {
     }
 
     @GetMapping("/static-location-year")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<List<ProgramLocationResponse>> getLocationByYear(@RequestParam(name = "year") Integer year){
         return ApiResponse.<List<ProgramLocationResponse>>builder()
                 .data(staticService.getCountLocation(year))

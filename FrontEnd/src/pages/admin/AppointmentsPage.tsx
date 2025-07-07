@@ -148,7 +148,10 @@ const AdminAppointmentsPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadAppointments();
+    const fetchData = async () => {
+      await loadAppointments();
+    };
+    fetchData();
   }, [page, rowsPerPage, searchTerm, statusFilter, dateFilter]);
 
   // Handle pagination changes
@@ -177,11 +180,24 @@ const AdminAppointmentsPage: React.FC = () => {
     setPage(1);
   };
 
-  const handleResetFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('');
-    setDateFilter(null);
-    setPage(1);
+  const handleResetFilters = async () => {
+    try {
+      // Đặt tất cả state về giá trị mặc định
+      await Promise.all([
+        setSearchTerm(''),
+        setStatusFilter(''),
+        setDateFilter(null),
+        setPage(1)
+      ]);
+      
+      // Force reload data
+      await loadAppointments();
+      
+      toast.success('Đã đặt lại bộ lọc');
+    } catch (error) {
+      console.error('Error resetting filters:', error);
+      toast.error('Có lỗi khi đặt lại bộ lọc');
+    }
   };
 
   // Handle appointment dialog
@@ -365,9 +381,19 @@ const AdminAppointmentsPage: React.FC = () => {
           </LocalizationProvider>
 
           <Tooltip title="Đặt lại bộ lọc">
-            <IconButton onClick={handleResetFilters}>
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton 
+                onClick={handleResetFilters}
+                disabled={loading}
+                color={searchTerm || statusFilter || dateFilter ? "primary" : "default"}
+              >
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  <RefreshIcon />
+                )}
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Button

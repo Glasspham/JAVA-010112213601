@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class SurveyController {
         }
 
         @PostMapping("/create")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
         ApiResponse<SurveyResponse> create(@RequestBody SurveyRequest request) {
                 return ApiResponse.<SurveyResponse>builder()
                                 .data(surveyService.create(request))
@@ -55,6 +57,7 @@ public class SurveyController {
         }
 
         @PutMapping("/update/{id}")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
         ApiResponse<SurveyResponse> update(@PathVariable Long id, @RequestBody SurveyRequest request) {
                 return ApiResponse.<SurveyResponse>builder()
                                 .data(surveyService.update(id, request))
@@ -62,6 +65,7 @@ public class SurveyController {
         }
 
         @DeleteMapping("/delete/{id}")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
         ApiResponse<String> delete(@PathVariable Long id) {
                 surveyService.delete(id);
                 return ApiResponse.<String>builder()

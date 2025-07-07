@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -53,6 +54,7 @@ public class ProgramController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<ProgramResponse> create(@RequestBody ProgramRequest request) {
         log.error("create program controller ...");
         return ApiResponse.<ProgramResponse>builder()
@@ -61,6 +63,7 @@ public class ProgramController {
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<ProgramResponse> update(
             @PathVariable Long id,
             @RequestBody ProgramRequest request) {
@@ -70,6 +73,7 @@ public class ProgramController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<String> delete(@PathVariable Long id) {
         programService.delete(id);
         return ApiResponse.<String>builder()
@@ -104,6 +108,7 @@ public class ProgramController {
     }
 
     @GetMapping("/list-user-register")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<List<UserResponse>> listUserRegister(@RequestParam(name = "idProgram") Long idProgram){
         return ApiResponse.<List<UserResponse>>builder()
                 .data(programService.listUserRegister(idProgram))

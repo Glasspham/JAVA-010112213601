@@ -18,7 +18,14 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> roles = new HashSet<>();
-        roles.add(new SimpleGrantedAuthority(userEntity.getRole().getName()));
+        String roleName = userEntity.getRole().getName();
+        
+        // Thêm prefix ROLE_ nếu chưa có
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+        
+        roles.add(new SimpleGrantedAuthority(roleName));
         return roles;
     }
 

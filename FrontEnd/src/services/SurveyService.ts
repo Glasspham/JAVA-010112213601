@@ -1,92 +1,119 @@
-import axios from 'axios';
+import httpClient from "../utils/httpClient";
 import { Survey, SurveySearch, PaginatedSurveyResponse, ApiResponse, SurveyMark } from '../types/survey';
-
-const BASE_URL = process.env.REACT_APP_API_URL;
-const URL_FIND_ALL_SURVEYS = `${BASE_URL}/survey/find-all`;
-const URL_CREATE_SURVEY = `${BASE_URL}/survey/create`;
-const URL_GET_SURVEY = `${BASE_URL}/survey`;
 
 export class SurveyService {
   public async findAllSurveys(searchParams: SurveySearch): Promise<[number, PaginatedSurveyResponse, string]> {
-    let url = `${URL_FIND_ALL_SURVEYS}?page=${searchParams.page}&limit=${searchParams.limit}`;
-    
-    if (searchParams.keyword) {
-      url += `&keyword=${encodeURIComponent(searchParams.keyword)}`;
-    }
-    
-    if (searchParams.type) {
-      url += `&type=${encodeURIComponent(searchParams.type)}`;
-    }
+    try {
+      const params = new URLSearchParams({
+        page: searchParams.page.toString(),
+        limit: searchParams.limit.toString()
+      });
+      
+      if (searchParams.keyword) {
+        params.append('keyword', searchParams.keyword);
+      }
+      
+      if (searchParams.type) {
+        params.append('type', searchParams.type);
+      }
 
-    const response = await axios.get<ApiResponse<PaginatedSurveyResponse>>(url);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+      const response = await httpClient.get<ApiResponse<PaginatedSurveyResponse>>(`/survey/find-all?${params.toString()}`);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as PaginatedSurveyResponse, error.message || 'Failed to fetch surveys'];
+    }
   }
 
   public async createSurvey(survey: Survey): Promise<[number, Survey, string]> {
-    const response = await axios.post<ApiResponse<Survey>>(URL_CREATE_SURVEY, survey);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.post<ApiResponse<Survey>>('/survey/create', survey);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as Survey, error.message || 'Failed to create survey'];
+    }
   }
 
   public async getSurveyById(id: number): Promise<[number, Survey, string]> {
-    const response = await axios.get<ApiResponse<Survey>>(`${URL_GET_SURVEY}?id=${id}`);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.get<ApiResponse<Survey>>(`/survey?id=${id}`);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as Survey, error.message || 'Failed to fetch survey'];
+    }
   }
 
   public async updateSurvey(id: number, survey: Survey): Promise<[number, Survey, string]> {
-    const response = await axios.put<ApiResponse<Survey>>(`${BASE_URL}/survey/update/${id}`, survey);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.put<ApiResponse<Survey>>(`/survey/update/${id}`, survey);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as Survey, error.message || 'Failed to update survey'];
+    }
   }
 
   public async deleteSurvey(id: number): Promise<[number, string, string]> {
-    const response = await axios.delete<ApiResponse<string>>(`${BASE_URL}/survey/delete/${id}`);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.delete<ApiResponse<string>>(`/survey/delete/${id}`);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, '', error.message || 'Failed to delete survey'];
+    }
   }
 
   // API chấm điểm
   public async markSurvey(username: string, idSurvey: number, mark: number): Promise<[number, any, string]> {
-    const response = await axios.post<ApiResponse<any>>(`${BASE_URL}/survey/mark`, {
-      username,
-      idSurvey,
-      mark
-    });
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.post<ApiResponse<any>>('/survey/mark', {
+        username,
+        idSurvey,
+        mark
+      });
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, null, error.message || 'Failed to mark survey'];
+    }
   }
 
   // API lấy danh sách điểm
   public async getMarkHistory(username: string, idSurvey?: number): Promise<[number, SurveyMark[], string]> {
-    let url = `${BASE_URL}/survey/list-mark?username=${username}`;
-    if (idSurvey) {
-      url += `&idSurvey=${idSurvey}`;
+    try {
+      const params = new URLSearchParams({ username });
+      if (idSurvey) {
+        params.append('idSurvey', idSurvey.toString());
+      }
+      
+      const response = await httpClient.get<ApiResponse<SurveyMark[]>>(`/survey/list-mark?${params.toString()}`);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, [], error.message || 'Failed to fetch mark history'];
     }
-    const response = await axios.get<ApiResponse<SurveyMark[]>>(url);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
   }
 }

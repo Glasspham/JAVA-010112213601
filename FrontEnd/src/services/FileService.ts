@@ -1,21 +1,22 @@
-import axios from "axios";
-
-const BASE_URL = process.env.REACT_APP_API_URL;
-const URL_UPLOAD_FILE = `${BASE_URL}/files/upload`;
+import httpClient from "../utils/httpClient";
 
 export class FileService {
     public async uploadFile(file: any) {
-        const formData = new FormData();
-        formData.append("file", file);
-        const response = await axios.post(URL_UPLOAD_FILE, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
-        return [
-            response.data.code,
-            response.data.data,
-            response.data.message
-        ];
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await httpClient.post('/files/upload', formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return [
+                response.data.code,
+                response.data.data,
+                response.data.message
+            ];
+        } catch (error: any) {
+            return [500, null, error.message || 'Failed to upload file'];
+        }
     }
 }

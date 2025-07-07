@@ -203,8 +203,11 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
 
   const handleRegister = async (programId: string) => {
     const username = localStorage.getItem('USERNAME');
-    if (!username) {
+    const token = localStorage.getItem('TOKEN');
+    
+    if (!username || !token) {
       toast.error('Vui lòng đăng nhập để đăng ký chương trình');
+      navigate('/login');
       return;
     }
 
@@ -213,6 +216,7 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           username: username,
@@ -226,12 +230,29 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
         toast.success('Đăng ký chương trình thành công!');
         // Cập nhật trạng thái đăng ký
         setRegistrationStatus(prev => ({ ...prev, [programId]: true }));
+        
+        // Refresh lại danh sách để cập nhật số lượng đăng ký
+        const program = programs.find(p => p.id === programId);
+        if (program) {
+          const updatedProgram = {
+            ...program,
+            registeredCount: program.registeredCount + 1
+          };
+          setPrograms(prev => prev.map(p => p.id === programId ? updatedProgram : p));
+        }
       } else {
-        toast.error(result.message || 'Có lỗi xảy ra khi đăng ký chương trình');
+        if (result.code === 401) {
+          toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+          navigate('/login');
+        } else if (result.code === 400 && result.message.includes('full')) {
+          toast.error('Chương trình đã đủ số lượng đăng ký');
+        } else {
+          toast.error(result.message || 'Có lỗi xảy ra khi đăng ký chương trình');
+        }
       }
     } catch (error) {
       console.error('Error registering for program:', error);
-      toast.error('Có lỗi xảy ra khi đăng ký chương trình');
+      toast.error('Có lỗi xảy ra khi đăng ký chương trình. Vui lòng thử lại sau');
     }
   };
 

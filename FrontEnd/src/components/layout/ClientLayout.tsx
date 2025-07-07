@@ -65,10 +65,15 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       try {
         const authenDTO = await _authService.readInfoFromLocal();
         if (authenDTO.userName) {
+          // Lấy role trực tiếp từ localStorage (từ JWT token)
+          const roleFromToken = authenDTO.role || '';
+          // Loại bỏ prefix ROLE_ nếu có để so sánh
+          const cleanRole = roleFromToken.replace('ROLE_', '');
+          setUserRole(cleanRole);
+          // Gọi API để lấy thông tin chi tiết khác
           const [code, data] = await _authService.findByUsername(authenDTO.userName);
           if (code === 200 && data) {
             setUserFullname(data.fullname || '');
-            setUserRole(data.role || '');
             setUserAvatar(data.avatar || '');
           }
         }

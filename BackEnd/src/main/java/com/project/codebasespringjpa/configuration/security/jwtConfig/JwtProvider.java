@@ -28,10 +28,17 @@ public class JwtProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + JWT_EXPIRATION);
         UserEntity userEntity = userRepository.findByUsername(username).get();
+        
+        String roleName = userEntity.getRole().getName();
+        // Thêm prefix ROLE_ nếu chưa có
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+        
         return Jwts.builder()
                 .setSubject(Long.toString(userEntity.getId()))
                 .claim("username", userEntity.getUsername())
-                .claim("role", userEntity.getRole().getName())
+                .claim("role", roleName)  // Lưu "ROLE_ADMIN" thay vì "ADMIN"
                 .setExpiration(expiryDate)
                 .setIssuedAt(new Date())
                 .signWith(SignatureAlgorithm.HS512, JWT_SECRET)

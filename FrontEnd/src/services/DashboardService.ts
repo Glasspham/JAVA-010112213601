@@ -1,4 +1,4 @@
-import axios from 'axios';
+import httpClient from "../utils/httpClient";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -40,7 +40,7 @@ export interface LocationStatsResponse {
 class DashboardService {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
-      const response = await axios.get<DashboardResponse>(`${API_BASE_URL}/static/dashboard`);
+      const response = await httpClient.get<DashboardResponse>('/static/dashboard');
 
       if (response.data.code === 200) {
         return response.data.data;
@@ -55,7 +55,7 @@ class DashboardService {
 
   async getYearlyStats(year: number): Promise<MonthlyStats[]> {
     try {
-      const response = await axios.get<YearlyStatsResponse>(`${API_BASE_URL}/static/static-year?year=${year}`);
+      const response = await httpClient.get<YearlyStatsResponse>(`/static/static-year?year=${year}`);
 
       if (response.data.code === 200) {
         return response.data.data;
@@ -70,7 +70,7 @@ class DashboardService {
 
   async getLocationStats(year: number): Promise<LocationStats[]> {
     try {
-      const response = await axios.get<LocationStatsResponse>(`${API_BASE_URL}/static/static-location-year?year=${year}`);
+      const response = await httpClient.get<LocationStatsResponse>(`/static/static-location-year?year=${year}`);
 
       if (response.data.code === 200) {
         return response.data.data;

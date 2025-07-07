@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -45,6 +46,7 @@ public class CourseController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<CourseResponse> create(@RequestBody CourseRequest request) {
         return ApiResponse.<CourseResponse>builder()
                 .data(courseService.create(request))
@@ -52,6 +54,7 @@ public class CourseController {
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<CourseResponse> update(@PathVariable Long id, @RequestBody CourseRequest request) {
         return ApiResponse.<CourseResponse>builder()
                 .data(courseService.update(id, request))
@@ -59,6 +62,7 @@ public class CourseController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<String> delete(@PathVariable Long id) {
         courseService.delete(id);
         return ApiResponse.<String>builder()

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import httpClient from "../utils/httpClient";
 import { 
   Appointment, 
   AppointmentCreateRequest, 
@@ -8,62 +8,74 @@ import {
   ApiResponse 
 } from '../types/appointment';
 
-const BASE_URL = process.env.REACT_APP_API_URL;
-const URL_FIND_ALL_APPOINTMENTS = `${BASE_URL}/appointments/find-all`;
-const URL_CREATE_APPOINTMENT = `${BASE_URL}/appointments/create`;
-const URL_LIST_SPECIALISTS = `${BASE_URL}/users/list-specialist`;
-const URL_LIST_USERS = `${BASE_URL}/users/list-user`;
-const URL_CHANGE_STATUS = `${BASE_URL}/appointments/change-status`;
-
 export class AppointmentService {
   public async findAllAppointments(searchParams: AppointmentSearchParams): Promise<[number, PaginatedAppointmentResponse, string]> {
-    let url = `${URL_FIND_ALL_APPOINTMENTS}?page=${searchParams.page}&limit=${searchParams.limit}`;
-    
-    if (searchParams.keyword) {
-      url += `&keyword=${encodeURIComponent(searchParams.keyword)}`;
-    }
-    
-    if (searchParams.status) {
-      url += `&status=${encodeURIComponent(searchParams.status)}`;
-    }
-    
-    if (searchParams.date) {
-      url += `&date=${encodeURIComponent(searchParams.date)}`;
-    }
+    try {
+      const params = new URLSearchParams({
+        page: searchParams.page.toString(),
+        limit: searchParams.limit.toString()
+      });
+      
+      if (searchParams.keyword) {
+        params.append('keyword', searchParams.keyword);
+      }
+      
+      if (searchParams.status) {
+        params.append('status', searchParams.status);
+      }
+      
+      if (searchParams.date) {
+        params.append('date', searchParams.date);
+      }
 
-    const response = await axios.get<ApiResponse<PaginatedAppointmentResponse>>(url);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+      const response = await httpClient.get<ApiResponse<PaginatedAppointmentResponse>>(`/appointments/find-all?${params.toString()}`);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as PaginatedAppointmentResponse, error.message || 'Failed to fetch appointments'];
+    }
   }
 
   public async createAppointment(appointment: AppointmentCreateRequest): Promise<[number, Appointment, string]> {
-    const response = await axios.post<ApiResponse<Appointment>>(URL_CREATE_APPOINTMENT, appointment);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.post<ApiResponse<Appointment>>('/appointments/create', appointment);
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as Appointment, error.message || 'Failed to create appointment'];
+    }
   }
 
   public async getSpecialists(): Promise<[number, Specialist[], string]> {
-    const response = await axios.get<ApiResponse<Specialist[]>>(URL_LIST_SPECIALISTS);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.get<ApiResponse<Specialist[]>>('/users/list-specialist');
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, [], error.message || 'Failed to fetch specialists'];
+    }
   }
 
   public async getUsers(): Promise<[number, Specialist[], string]> {
-    const response = await axios.get<ApiResponse<Specialist[]>>(URL_LIST_USERS);
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.get<ApiResponse<Specialist[]>>('/users/list-user');
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, [], error.message || 'Failed to fetch users'];
+    }
   }
 
   public async findAppointmentsByUsername(params: {
@@ -73,38 +85,46 @@ export class AppointmentService {
     status?: string;
     date?: string;
   }): Promise<[number, PaginatedAppointmentResponse, string]> {
-    const queryParams = new URLSearchParams({
-      page: params.page.toString(),
-      limit: params.limit.toString(),
-      username: params.username
-    });
+    try {
+      const queryParams = new URLSearchParams({
+        page: params.page.toString(),
+        limit: params.limit.toString(),
+        username: params.username
+      });
 
-    if (params.status) {
-      queryParams.append('status', params.status);
-    }
-    if (params.date) {
-      queryParams.append('date', params.date);
-    }
+      if (params.status) {
+        queryParams.append('status', params.status);
+      }
+      if (params.date) {
+        queryParams.append('date', params.date);
+      }
 
-    const response = await axios.get<ApiResponse<PaginatedAppointmentResponse>>(
-      `${URL_FIND_ALL_APPOINTMENTS}?${queryParams.toString()}`
-    );
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+      const response = await httpClient.get<ApiResponse<PaginatedAppointmentResponse>>(
+        `/appointments/find-all?${queryParams.toString()}`
+      );
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as PaginatedAppointmentResponse, error.message || 'Failed to fetch appointments'];
+    }
   }
 
   public async changeAppointmentStatus(appointmentId: number, status: string): Promise<[number, Appointment, string]> {
-    const response = await axios.put<ApiResponse<Appointment>>(
-      `${URL_CHANGE_STATUS}/${appointmentId}`,
-      { status }
-    );
-    return [
-      response.data.code,
-      response.data.data,
-      response.data.message || ''
-    ];
+    try {
+      const response = await httpClient.put<ApiResponse<Appointment>>(
+        `/appointments/change-status/${appointmentId}`,
+        { status }
+      );
+      return [
+        response.data.code,
+        response.data.data,
+        response.data.message || ''
+      ];
+    } catch (error: any) {
+      return [500, {} as Appointment, error.message || 'Failed to change appointment status'];
+    }
   }
 }

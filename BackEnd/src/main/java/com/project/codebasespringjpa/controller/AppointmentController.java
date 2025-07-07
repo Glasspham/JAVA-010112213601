@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
@@ -60,6 +61,7 @@ public class AppointmentController {
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<AppointmentResponse> update(@PathVariable Long id, @RequestBody AppointmentRequest request) {
         return ApiResponse.<AppointmentResponse>builder()
                 .data(appointmentService.update(id, request))
@@ -75,6 +77,7 @@ public class AppointmentController {
     }
 
     @PutMapping("/change-status/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<AppointmentResponse> changeStatus(@PathVariable Long id, @RequestBody StatusRequest request){
         return ApiResponse.<AppointmentResponse>builder()
                 .data(appointmentService.changeStatus(id, request))

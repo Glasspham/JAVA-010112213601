@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class UserController {
     IUserService userService;
 
     @GetMapping("")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<UserResponse> findById(@RequestParam(name = "id") Long id) {
         return ApiResponse.<UserResponse>builder()
                 .data(userService.findByid(id))
@@ -29,6 +31,7 @@ public class UserController {
     }
 
     @GetMapping("/find-all")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Page<UserResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
                                             @RequestParam(name = "limit", defaultValue = "5") Integer limit,
                                             @RequestParam(name = "keyword", required = false) String keyword,
@@ -48,6 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<UserResponse> create(@RequestBody UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .data(userService.create(request))
@@ -55,6 +59,7 @@ public class UserController {
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<UserResponse> update(@PathVariable Long id, @RequestBody UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .data(userService.update(id, request))
@@ -62,6 +67,7 @@ public class UserController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> delete(@PathVariable Long id) {
         userService.delete(id);
         return ApiResponse.<String>builder()
@@ -75,6 +81,7 @@ public class UserController {
     }
 
     @GetMapping("/list-user")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<UserResponse>> findAllUser(){
         return ApiResponse.<List<UserResponse>>builder().data(userService.findAllUser()).build();
     }
