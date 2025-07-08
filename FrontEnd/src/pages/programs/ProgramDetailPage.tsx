@@ -41,21 +41,19 @@ import { CommunityProgram } from '../../types/program';
 import { ProgramService } from '../../services/ProgramService';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/ProgramCard.css';
+import { toast } from 'react-toastify';
 
 const ProgramDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [program, setProgram] = useState<CommunityProgram | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingProgram, setLoadingProgram] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [agreeTerms, setAgreeTerms] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [checkingRegistration, setCheckingRegistration] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
 
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -99,7 +97,7 @@ const ProgramDetailPage: React.FC = () => {
     const fetchProgram = async () => {
       if (!id) {
         setError('ID chương trình không hợp lệ');
-        setLoading(false);
+        setLoadingProgram(false);
         return;
       }
 
@@ -115,7 +113,7 @@ const ProgramDetailPage: React.FC = () => {
         console.error('Error fetching program:', error);
         setError('Đã xảy ra lỗi khi tải thông tin chương trình');
       } finally {
-        setLoading(false);
+        setLoadingProgram(false);
       }
     };
 
@@ -153,45 +151,81 @@ const ProgramDetailPage: React.FC = () => {
     }
 
     setOpenDialog(true);
-
-    // Nếu đã đăng nhập, điền sẵn thông tin từ user
-    if (user) {
-      setName(`${user.firstName} ${user.lastName}`);
-      setEmail(user.email);
-    }
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
 
-  const handleRegister = () => {
-    // Trong thực tế, đây sẽ là API call để đăng ký tham gia
-    // Giả lập thành công
-    setRegistrationSuccess(true);
+  const handleRegister = async () => {
+    if (!id) return;
 
-    // Đóng dialog sau 2 giây
-    setTimeout(() => {
-      setOpenDialog(false);
-      setRegistrationSuccess(false);
-      setOpenSnackbar(true);
+    const username = localStorage.getItem('USERNAME');
+    const token = localStorage.getItem('TOKEN');
+    
+    if (!username || !token) {
+      toast.error('Vui lòng đăng nhập để đăng ký chương trình');
+      navigate('/login');
+      return;
+    }
 
-      // Reset form
-      setName('');
-      setEmail('');
-      setPhone('');
-      setAgreeTerms(false);
-    }, 2000);
-  };
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/programs/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: username,
+          programId: parseInt(id)
+        })
+      });
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+      const result = await response.json();
+
+      if (result.code === 200) {
+        setRegistrationSuccess(true);
+        toast.success('Đăng ký chương trình thành công!');
+        
+        // Cập nhật UI
+        setIsRegistered(true);
+        if (program) {
+          setProgram({
+            ...program,
+            registeredCount: program.registeredCount + 1
+          });
+        }
+
+        // Đóng dialog sau 2 giây
+        setTimeout(() => {
+          setOpenDialog(false);
+          setRegistrationSuccess(false);
+        }, 2000);
+      } else {
+        if (result.code === 401) {
+          toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+          navigate('/login');
+        } else if (result.code === 400 && result.message.includes('full')) {
+          toast.error('Chương trình đã đủ số lượng đăng ký');
+        } else {
+          toast.error(result.message || 'Có lỗi xảy ra khi đăng ký chương trình');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error registering for program:', error);
+      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký chương trình';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isProgramPast = program ? new Date(program.endDate) < new Date() : false;
   const isProgramFull = program ? program.registeredCount >= program.capacity : false;
 
-  if (loading) {
+  if (loadingProgram) {
     return (
       <Container>
         <Box sx={{ py: 4, textAlign: 'center' }}>
@@ -435,10 +469,10 @@ const ProgramDetailPage: React.FC = () => {
 
 
 
-      {/* Dialog đăng ký tham gia */}
+      {/* Dialog xác nhận đăng ký */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Đăng ký tham gia chương trình
+          Xác nhận đăng ký tham gia chương trình
         </DialogTitle>
         <DialogContent>
           {registrationSuccess ? (
@@ -447,69 +481,49 @@ const ProgramDetailPage: React.FC = () => {
             </Alert>
           ) : (
             <Box sx={{ mt: 2 }}>
-              <TextField
-                label="Họ và tên"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                fullWidth
-                margin="normal"
-                required
-              />
-              <TextField
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                fullWidth
-                margin="normal"
-                required
-              />
-              <TextField
-                label="Số điện thoại"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                fullWidth
-                margin="normal"
-                required
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={agreeTerms}
-                    onChange={(e) => setAgreeTerms(e.target.checked)}
-                    color="primary"
-                  />
-                }
-                label="Tôi đồng ý với điều khoản và điều kiện tham gia chương trình"
-                sx={{ mt: 2 }}
-              />
+              <Typography variant="h6" gutterBottom>
+                {program.title}
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1" gutterBottom>
+                  <CalendarMonthIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {new Date(program.startDate).toLocaleDateString('vi-VN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                  <LocationOnIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {program.location}
+                </Typography>
+                <Typography variant="body1">
+                  <PeopleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {program.registeredCount}/{program.capacity} người đã đăng ký
+                </Typography>
+              </Box>
+              
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2">
-                  Thông tin của bạn sẽ chỉ được sử dụng cho mục đích đăng ký tham gia chương trình này.
+                  Bạn sẽ đăng ký tham gia với tài khoản: <strong>{user?.email}</strong>
                 </Typography>
               </Alert>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Hủy</Button>
+          <Button onClick={handleCloseDialog} disabled={loading}>Hủy</Button>
           <Button
             variant="contained"
             onClick={handleRegister}
-            disabled={!name || !email || !phone || !agreeTerms || registrationSuccess}
+            disabled={loading || registrationSuccess}
             className="detail-button"
           >
-            Đăng ký
+            {loading ? 'Đang đăng ký...' : 'Xác nhận đăng ký'}
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        message="Đăng ký tham gia thành công!"
-      />
     </Container>
   );
 };
