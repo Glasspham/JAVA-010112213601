@@ -94,21 +94,17 @@ export class CourseService {
 
   public async findAllCourses(searchParams: CourseSearch) {
     let url = `/courses/find-all?page=${searchParams.page}&limit=${searchParams.limit}`;
-    
+
     if (searchParams.keyword) {
       url += `&keyword=${encodeURIComponent(searchParams.keyword)}`;
     }
-    
+
     if (searchParams.object) {
       url += `&object=${encodeURIComponent(searchParams.object)}`;
     }
 
     const response = await httpClient.get(url);
-    return [
-      response.data.code,
-      response.data.data as PaginatedCourseResponse,
-      response.data.message
-    ];
+    return [response.data.code, response.data.data as PaginatedCourseResponse, response.data.message];
   }
 
   public async createCourse(courseDTO: CourseDTO, imageFile?: File, videoFiles?: { [key: number]: File }) {
@@ -134,36 +130,40 @@ export class CourseService {
         }
       }
 
-      const response = await httpClient.post('/courses/create', courseDTO);
-      return [
-        response.data.code,
-        response.data.data as CourseResponse,
-        response.data.message
-      ];
+      const response = await httpClient.post("/courses/create", courseDTO);
+      return [response.data.code, response.data.data as CourseResponse, response.data.message];
     } catch (error) {
-      console.error('Error creating course:', error);
+      console.error("Error creating course:", error);
       throw error;
     }
   }
 
-  public getImageUrl(imagePath: string): string {
-    if (!imagePath || imagePath === 'default_no_image.png') {
+  public getImageUrl(imagePath: string, cacheBust: boolean = false): string {
+    if (!imagePath || imagePath === "default_no_image.png") {
       return `${BASE_URL}/default_no_image.png`;
     }
 
-    if (imagePath.startsWith('http')) {
+    if (imagePath.startsWith("http")) {
       return imagePath;
     }
 
-    return `${BASE_URL}/${imagePath}`;
-  }
+    const baseUrl = `${BASE_URL}/${imagePath}`;
 
-  public getVideoUrl(videoPath: string): string {
-    if (!videoPath) {
-      return `${BASE_URL}/default_no_image.png`;
+    // Add cache busting parameter for fresh images
+    if (cacheBust) {
+      const timestamp = new Date().getTime();
+      return `${baseUrl}?v=${timestamp}`;
     }
 
-    if (videoPath.startsWith('http')) {
+    return baseUrl;
+  }
+
+  public getVideoUrl(videoPath: string, addCacheBusting: boolean = false): string {
+    if (!videoPath) {
+      return `${BASE_URL}/default_no_video.mp4`;
+    }
+
+    if (videoPath.startsWith("http")) {
       return videoPath;
     }
 
@@ -174,21 +174,21 @@ export class CourseService {
   public async uploadFile(file: File): Promise<ApiResponse<string>> {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await httpClient.post('/files/upload', formData, {
+      const response = await httpClient.post("/files/upload", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
       return {
         code: response.data.code,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
       };
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       throw error;
     }
   }
@@ -200,10 +200,10 @@ export class CourseService {
       return {
         code: response.data.code,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
       };
     } catch (error) {
-      console.error('Error fetching course by ID:', error);
+      console.error("Error fetching course by ID:", error);
       throw error;
     }
   }
@@ -215,10 +215,10 @@ export class CourseService {
       return {
         code: response.data.code,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
       };
     } catch (error) {
-      console.error('Error updating course:', error);
+      console.error("Error updating course:", error);
       throw error;
     }
   }
@@ -230,10 +230,10 @@ export class CourseService {
       return {
         code: response.data.code,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
       };
     } catch (error) {
-      console.error('Error deleting course:', error);
+      console.error("Error deleting course:", error);
       throw error;
     }
   }

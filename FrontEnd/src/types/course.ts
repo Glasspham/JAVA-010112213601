@@ -1,7 +1,7 @@
-export type AudienceType = 'student' | 'parent' | 'teacher' | 'general';
-export type LessonType = 'video' | 'text' | 'quiz' | 'interactive' | 'assignment';
-export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer' | 'essay';
-export type EnrollmentStatus = 'enrolled' | 'in_progress' | 'completed' | 'dropped';
+export type AudienceType = "student" | "parent" | "teacher" | "general";
+export type LessonType = "video" | "text" | "quiz" | "interactive" | "assignment";
+export type QuestionType = "multiple_choice" | "true_false" | "short_answer" | "essay";
+export type EnrollmentStatus = "enrolled" | "in_progress" | "completed" | "dropped";
 
 export interface Course {
   id: string;
@@ -16,7 +16,7 @@ export interface Course {
   // Extended properties
   lessons?: Lesson[];
   totalLessons?: number;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   tags?: string[];
   instructor?: string;
   certificate?: boolean;
@@ -44,7 +44,7 @@ export interface LessonMaterial {
   id: string;
   lessonId: string;
   title: string;
-  type: 'pdf' | 'doc' | 'image' | 'link' | 'video';
+  type: "pdf" | "doc" | "image" | "link" | "video";
   url: string;
   description?: string;
   downloadable: boolean;

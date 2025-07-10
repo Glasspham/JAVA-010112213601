@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,7 +26,7 @@ public class AuthController {
     IUserService userService;
 
     @PostMapping("/login")
-    ApiResponse<LoginResponse> login(@RequestBody LoginRequest request){
+    ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
         return ApiResponse.<LoginResponse>builder()
                 .data(authenService.login(request))
                 .build();
@@ -33,19 +34,19 @@ public class AuthController {
 
     @Operation(summary = "Tim user theo username")
     @GetMapping("")
-    ApiResponse<UserResponse> findByUsername(@RequestParam(name = "username") String username){
+    ApiResponse<UserResponse> findByUsername(@RequestParam(name = "username") String username) {
         return ApiResponse.<UserResponse>builder()
                 .data(userService.findByUsername(username))
                 .build();
     }
 
     @PostMapping("/register")
-    ApiResponse<String> register(@RequestBody RegisterRequest request){
+    ApiResponse<String> register(@RequestBody RegisterRequest request) {
         Boolean registStatus = authenService.register(request);
         String mess = "Đăng ký tài khoản thành công";
         int code = 200;
 
-        if(registStatus == false){
+        if (registStatus == false) {
             mess = "Đăng ký thất bại";
             code = 400;
         }
@@ -58,14 +59,18 @@ public class AuthController {
 
     @Operation(summary = "Cap nhat thong tin nguoi dung")
     @PutMapping("/update")
-    ApiResponse<UserResponse> updateProfile(@RequestParam(name ="username")String username, @RequestBody UserRequest request){
+    @PreAuthorize("#username == authentication.name or hasRole('ADMIN')")
+    ApiResponse<UserResponse> updateProfile(@RequestParam(name = "username") String username,
+            @RequestBody UserRequest request) {
         UserResponse user = userService.findByUsername(username);
         return ApiResponse.<UserResponse>builder().data(userService.update(user.getId(), request)).build();
     }
 
     @Operation(summary = "Cap nhat mat khau nguoi dung")
     @PutMapping("/update-password")
-    ApiResponse<UserResponse> updateProfile(@RequestParam(name ="username")String username, @RequestBody PasswordRequest request){
+    @PreAuthorize("#username == authentication.name or hasRole('ADMIN')")
+    ApiResponse<UserResponse> updateProfile(@RequestParam(name = "username") String username,
+            @RequestBody PasswordRequest request) {
         UserResponse user = userService.findByUsername(username);
         return ApiResponse.<UserResponse>builder().data(userService.changePassword(user.getId(), request)).build();
     }

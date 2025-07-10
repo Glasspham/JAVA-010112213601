@@ -1,53 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Button,
-  IconButton,
-  Tooltip,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-  Alert,
-  Snackbar,
-  Avatar,
-  Rating,
-  SelectChangeEvent,
-  CircularProgress
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
-  Visibility as VisibilityIcon,
-  Phone as PhoneIcon,
-  Email as EmailIcon
-} from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import { UserService } from '../../services/UserService';
-import { UserSearch } from '../../dto/UserSearch';
-import { UserDTO } from '../../dto/UserDTO';
-import { FileService } from '../../services/FileService';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useRef } from "react";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, Snackbar, Avatar, Rating, SelectChangeEvent, CircularProgress } from "@mui/material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Visibility as VisibilityIcon, Phone as PhoneIcon, Email as EmailIcon } from "@mui/icons-material";
+import { Link } from "react-router-dom";
+import { UserService } from "../../services/UserService";
+import { UserSearch } from "../../dto/UserSearch";
+import { UserDTO } from "../../dto/UserDTO";
+import { FileService } from "../../services/FileService";
+import { toast } from "react-toastify";
 
 const AdminConsultantsPage: React.FC = () => {
   // State for consultants data
@@ -65,33 +24,33 @@ const AdminConsultantsPage: React.FC = () => {
   const fileService = new FileService();
   const [userSearch, setUserSearch] = useState<UserSearch>({
     keyword: undefined,
-    roleName: 'SPECIALIST',
-    majorName: '',
+    roleName: "SPECIALIST",
+    majorName: "",
     page: 1,
     limit: 10,
-    timer: Date.now()
+    timer: Date.now(),
   });
 
   // State for search and filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
 
   // State for consultant dialog
   const [openConsultantDialog, setOpenConsultantDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [currentConsultant, setCurrentConsultant] = useState<any>(null);
   const [formData, setFormData] = useState({
-    username: '',
-    name: '',
-    title: '',
+    username: "",
+    name: "",
+    title: "",
     specialty: [] as string[],
-    bio: '',
-    email: '',
-    phone: '',
-    avatar: '',
-    password: '1234',
+    bio: "",
+    email: "",
+    phone: "",
+    avatar: "",
+    password: "1234",
     rating: 5,
-    availability: true
+    availability: true,
   });
 
   // State for delete confirmation dialog
@@ -101,8 +60,8 @@ const AdminConsultantsPage: React.FC = () => {
   // State for notifications
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    message: "",
+    severity: "success" as "success" | "error" | "info" | "warning",
   });
 
   // State for avatar upload
@@ -120,24 +79,24 @@ const AdminConsultantsPage: React.FC = () => {
     const loadConsultants = async () => {
       try {
         setIsLoading(true);
-        console.log('Loading consultants with search params:', userSearch);
+        console.log("Loading consultants with search params:", userSearch);
         const [code, pageData, message] = await userService.findAll(userSearch);
-        console.log('API Response:', { code, pageData, message });
+        console.log("API Response:", { code, pageData, message });
 
         if (code === 200 && pageData) {
           // Map API data to consultant format
           const consultantsData = pageData.content.map((user: any) => ({
             id: user.id,
             name: user.fullname,
-            title: user.position || 'Chuyên viên tư vấn',
+            title: user.position || "Chuyên viên tư vấn",
             specialty: user.majors || [],
-            bio: '', // API không có bio
+            bio: "", // API không có bio
             email: user.email,
             phone: user.phone,
-            avatar: user.avatar ? `${process.env.REACT_APP_API_URL}/${user.avatar}` : '',
+            avatar: user.avatar ? `${process.env.REACT_APP_API_URL}/${user.avatar}` : "",
             rating: 5, // Default rating
             availability: true, // Default availability
-            createdAt: new Date(user.createDate)
+            createdAt: new Date(user.createDate),
           }));
 
           setConsultants(consultantsData);
@@ -145,11 +104,11 @@ const AdminConsultantsPage: React.FC = () => {
           setTotalElements(pageData.totalElements);
           setTotalPages(pageData.totalPages);
         } else {
-          toast.error(message || 'Không thể tải danh sách chuyên viên');
+          toast.error(message || "Không thể tải danh sách chuyên viên");
         }
       } catch (error) {
-        console.error('Error loading consultants:', error);
-        toast.error('Có lỗi xảy ra khi tải danh sách chuyên viên');
+        console.error("Error loading consultants:", error);
+        toast.error("Có lỗi xảy ra khi tải danh sách chuyên viên");
       } finally {
         setIsLoading(false);
       }
@@ -171,21 +130,21 @@ const AdminConsultantsPage: React.FC = () => {
 
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
-    setUserSearch(prev => ({
+    setUserSearch((prev) => ({
       ...prev,
       page: newPage + 1, // API page starts from 1
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setRowsPerPage(newRowsPerPage);
-    setUserSearch(prev => ({
+    setUserSearch((prev) => ({
       ...prev,
       limit: newRowsPerPage,
       page: 1, // Reset to first page
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
@@ -201,11 +160,11 @@ const AdminConsultantsPage: React.FC = () => {
 
     // Debounce search to avoid too many API calls
     searchTimeoutRef.current = setTimeout(() => {
-      setUserSearch(prev => ({
+      setUserSearch((prev) => ({
         ...prev,
         keyword: keyword.trim() || undefined,
         page: 1,
-        timer: Date.now()
+        timer: Date.now(),
       }));
     }, 500);
   };
@@ -219,11 +178,11 @@ const AdminConsultantsPage: React.FC = () => {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    setUserSearch(prev => ({
+    setUserSearch((prev) => ({
       ...prev,
-      majorName: specialty === 'all' ? '' : specialty,
+      majorName: specialty === "all" ? "" : specialty,
       page: 1,
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
@@ -233,38 +192,38 @@ const AdminConsultantsPage: React.FC = () => {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    setSearchTerm('');
-    setSpecialtyFilter('all');
-    setUserSearch(prev => ({
+    setSearchTerm("");
+    setSpecialtyFilter("all");
+    setUserSearch((prev) => ({
       ...prev,
       keyword: undefined,
-      majorName: '',
+      majorName: "",
       page: 1,
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
   // Handle consultant dialog
   const handleOpenAddDialog = () => {
-    setDialogMode('add');
+    setDialogMode("add");
     setFormData({
-      username: '',
-      name: '',
-      title: '',
+      username: "",
+      name: "",
+      title: "",
       specialty: [],
-      bio: '',
-      email: '',
-      phone: '',
-      avatar: '',
-      password: '1234',
+      bio: "",
+      email: "",
+      phone: "",
+      avatar: "",
+      password: "1234",
       rating: 5,
-      availability: true
+      availability: true,
     });
     setOpenConsultantDialog(true);
   };
 
   const handleOpenEditDialog = async (consultant: any) => {
-    setDialogMode('edit');
+    setDialogMode("edit");
     setCurrentConsultant(consultant);
 
     try {
@@ -273,17 +232,17 @@ const AdminConsultantsPage: React.FC = () => {
 
       if (code === 200 && userData) {
         setFormData({
-          username: userData.username || '',
+          username: userData.username || "",
           name: userData.fullname,
-          title: userData.position || '',
+          title: userData.position || "",
           specialty: userData.majors || [],
-          bio: `${userData.fullname} là một chuyên viên tư vấn có kinh nghiệm trong lĩnh vực ${userData.majors?.join(', ') || 'tư vấn tâm lý'}.`,
+          bio: `${userData.fullname} là một chuyên viên tư vấn có kinh nghiệm trong lĩnh vực ${userData.majors?.join(", ") || "tư vấn tâm lý"}.`,
           email: userData.email,
           phone: userData.phone,
-          avatar: userData.avatar || '',
-          password: '1234',
+          avatar: userData.avatar || "",
+          password: "1234",
           rating: 4.8, // Default
-          availability: true // Default
+          availability: true, // Default
         });
 
         // Set avatar preview nếu có
@@ -293,12 +252,12 @@ const AdminConsultantsPage: React.FC = () => {
           setAvatarPreview(null);
         }
       } else {
-        toast.error(message || 'Không thể tải thông tin chuyên viên');
+        toast.error(message || "Không thể tải thông tin chuyên viên");
         return;
       }
     } catch (error) {
-      console.error('Error loading consultant data:', error);
-      toast.error('Có lỗi xảy ra khi tải thông tin chuyên viên');
+      console.error("Error loading consultant data:", error);
+      toast.error("Có lỗi xảy ra khi tải thông tin chuyên viên");
       return;
     }
 
@@ -327,31 +286,31 @@ const AdminConsultantsPage: React.FC = () => {
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleRatingChange = (event: React.SyntheticEvent, newValue: number | null) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      rating: newValue || 5
+      rating: newValue || 5,
     }));
   };
 
   const handleAvailabilityChange = (event: SelectChangeEvent) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      availability: event.target.value === 'true'
+      availability: event.target.value === "true",
     }));
   };
 
   const handleSpecialtyChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      specialty: typeof value === 'string' ? [value] : value
+      specialty: typeof value === "string" ? [value] : value,
     }));
   };
 
@@ -360,32 +319,32 @@ const AdminConsultantsPage: React.FC = () => {
     if (!formData.name || !formData.title || !formData.specialty.length || !formData.email || !formData.phone) {
       setSnackbar({
         open: true,
-        message: 'Vui lòng điền đầy đủ thông tin',
-        severity: 'error'
+        message: "Vui lòng điền đầy đủ thông tin",
+        severity: "error",
       });
       return;
     }
 
     // Validate username and password for add mode
-    if (dialogMode === 'add' && !formData.username) {
+    if (dialogMode === "add" && !formData.username) {
       setSnackbar({
         open: true,
-        message: 'Vui lòng nhập tên đăng nhập',
-        severity: 'error'
+        message: "Vui lòng nhập tên đăng nhập",
+        severity: "error",
       });
       return;
     }
 
-    if (dialogMode === 'add' && !formData.password) {
+    if (dialogMode === "add" && !formData.password) {
       setSnackbar({
         open: true,
-        message: 'Vui lòng nhập mật khẩu',
-        severity: 'error'
+        message: "Vui lòng nhập mật khẩu",
+        severity: "error",
       });
       return;
     }
 
-    if (dialogMode === 'add') {
+    if (dialogMode === "add") {
       try {
         // Prepare data for creating consultant
         const userDTO = new UserDTO();
@@ -396,7 +355,7 @@ const AdminConsultantsPage: React.FC = () => {
         userDTO.position = formData.title;
         userDTO.phone = formData.phone;
         userDTO.majors = formData.specialty;
-        userDTO.role = 'SPECIALIST';
+        userDTO.role = "SPECIALIST";
 
         // Create consultant using UserService
         const [code, data, message] = await userService.createUser(userDTO, avatarFile);
@@ -404,27 +363,27 @@ const AdminConsultantsPage: React.FC = () => {
         if (code === 200) {
           setSnackbar({
             open: true,
-            message: 'Thêm chuyên viên thành công',
-            severity: 'success'
+            message: "Thêm chuyên viên thành công",
+            severity: "success",
           });
           handleCloseConsultantDialog();
           // Refresh the consultant list
-          setUserSearch(prev => ({
+          setUserSearch((prev) => ({
             ...prev,
-            timer: Date.now()
+            timer: Date.now(),
           }));
         } else {
           setSnackbar({
             open: true,
-            message: message || 'Có lỗi xảy ra khi thêm chuyên viên',
-            severity: 'error'
+            message: message || "Có lỗi xảy ra khi thêm chuyên viên",
+            severity: "error",
           });
         }
       } catch (error: any) {
         setSnackbar({
           open: true,
-          message: 'Lỗi kết nối: ' + (error.message || 'Không thể thêm chuyên viên'),
-          severity: 'error'
+          message: "Lỗi kết nối: " + (error.message || "Không thể thêm chuyên viên"),
+          severity: "error",
         });
       }
     } else {
@@ -439,7 +398,7 @@ const AdminConsultantsPage: React.FC = () => {
             if (uploadCode === 200 && uploadData) {
               avatarFileName = uploadData;
             } else {
-              toast.error(uploadMessage || 'Không thể upload ảnh đại diện');
+              toast.error(uploadMessage || "Không thể upload ảnh đại diện");
               return;
             }
           }
@@ -447,48 +406,48 @@ const AdminConsultantsPage: React.FC = () => {
           // Prepare update data as UserDTO
           const updateData = {
             id: Number(currentConsultant.id),
-            username: (currentConsultant as any).username || formData.name.toLowerCase().replace(/\s+/g, ''),
+            username: (currentConsultant as any).username || formData.name.toLowerCase().replace(/\s+/g, ""),
             fullname: formData.name,
-            password: '1234', // Default password
+            password: "1234", // Default password
             email: formData.email,
             avatar: avatarFileName,
             position: formData.title,
             phone: formData.phone,
             majors: formData.specialty,
-            role: 'SPECIALIST'
+            role: "SPECIALIST",
           };
 
           const [code, userData, message] = await userService.updateUser(Number(currentConsultant.id), updateData);
 
           if (code === 200) {
-            toast.success('Cập nhật chuyên viên thành công');
+            toast.success("Cập nhật chuyên viên thành công");
 
             // Refresh data
-            setUserSearch(prev => ({
+            setUserSearch((prev) => ({
               ...prev,
-              timer: Date.now()
+              timer: Date.now(),
             }));
 
             setSnackbar({
               open: true,
-              message: 'Chuyên viên đã được cập nhật thành công',
-              severity: 'success'
+              message: "Chuyên viên đã được cập nhật thành công",
+              severity: "success",
             });
           } else {
-            toast.error(message || 'Không thể cập nhật chuyên viên');
+            toast.error(message || "Không thể cập nhật chuyên viên");
             setSnackbar({
               open: true,
-              message: message || 'Không thể cập nhật chuyên viên',
-              severity: 'error'
+              message: message || "Không thể cập nhật chuyên viên",
+              severity: "error",
             });
           }
         } catch (error: any) {
-          console.error('Error updating consultant:', error);
-          toast.error('Có lỗi xảy ra khi cập nhật chuyên viên');
+          console.error("Error updating consultant:", error);
+          toast.error("Có lỗi xảy ra khi cập nhật chuyên viên");
           setSnackbar({
             open: true,
-            message: 'Có lỗi xảy ra khi cập nhật chuyên viên',
-            severity: 'error'
+            message: "Có lỗi xảy ra khi cập nhật chuyên viên",
+            severity: "error",
           });
         }
       }
@@ -514,34 +473,34 @@ const AdminConsultantsPage: React.FC = () => {
         const [code, data, message] = await userService.deleteUser(consultantToDelete.id);
 
         if (code === 200) {
-          toast.success('Xóa chuyên viên thành công');
+          toast.success("Xóa chuyên viên thành công");
 
           // Refresh data
-          setUserSearch(prev => ({
+          setUserSearch((prev) => ({
             ...prev,
-            timer: Date.now()
+            timer: Date.now(),
           }));
 
           setSnackbar({
             open: true,
-            message: 'Chuyên viên đã được xóa thành công',
-            severity: 'success'
+            message: "Chuyên viên đã được xóa thành công",
+            severity: "success",
           });
         } else {
-          toast.error(message || 'Không thể xóa chuyên viên');
+          toast.error(message || "Không thể xóa chuyên viên");
           setSnackbar({
             open: true,
-            message: message || 'Không thể xóa chuyên viên',
-            severity: 'error'
+            message: message || "Không thể xóa chuyên viên",
+            severity: "error",
           });
         }
       } catch (error: any) {
-        console.error('Error deleting consultant:', error);
-        toast.error('Có lỗi xảy ra khi xóa chuyên viên');
+        console.error("Error deleting consultant:", error);
+        toast.error("Có lỗi xảy ra khi xóa chuyên viên");
         setSnackbar({
           open: true,
-          message: 'Có lỗi xảy ra khi xóa chuyên viên',
-          severity: 'error'
+          message: "Có lỗi xảy ra khi xóa chuyên viên",
+          severity: "error",
         });
       }
     }
@@ -551,9 +510,9 @@ const AdminConsultantsPage: React.FC = () => {
 
   // Handle snackbar close
   const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({
+    setSnackbar((prev) => ({
       ...prev,
-      open: false
+      open: false,
     }));
   };
 
@@ -576,14 +535,14 @@ const AdminConsultantsPage: React.FC = () => {
 
       {/* Toolbar */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
           <TextField
             label="Tìm kiếm theo tên, email, số điện thoại..."
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={handleSearchChange}
-            sx={{ flexGrow: 1, minWidth: '200px' }}
+            sx={{ flexGrow: 1, minWidth: "200px" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -592,30 +551,24 @@ const AdminConsultantsPage: React.FC = () => {
               ),
             }}
             onKeyPress={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 // Trigger immediate search on Enter
                 if (searchTimeoutRef.current) {
                   clearTimeout(searchTimeoutRef.current);
                 }
-                setUserSearch(prev => ({
+                setUserSearch((prev) => ({
                   ...prev,
                   keyword: searchTerm.trim() || undefined,
                   page: 1,
-                  timer: Date.now()
+                  timer: Date.now(),
                 }));
               }
             }}
           />
 
-          <FormControl variant="outlined" size="small" sx={{ minWidth: '150px' }}>
+          <FormControl variant="outlined" size="small" sx={{ minWidth: "150px" }}>
             <InputLabel id="specialty-filter-label">Chuyên môn</InputLabel>
-            <Select
-              labelId="specialty-filter-label"
-              id="specialty-filter"
-              value={specialtyFilter}
-              onChange={handleSpecialtyFilterChange}
-              label="Chuyên môn"
-            >
+            <Select labelId="specialty-filter-label" id="specialty-filter" value={specialtyFilter} onChange={handleSpecialtyFilterChange} label="Chuyên môn">
               <MenuItem value="all">Tất cả</MenuItem>
               <MenuItem value="Nghiện">Nghiện</MenuItem>
               <MenuItem value="Thanh thiếu niên">Thanh thiếu niên</MenuItem>
@@ -631,20 +584,15 @@ const AdminConsultantsPage: React.FC = () => {
             </IconButton>
           </Tooltip>
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddDialog}
-            sx={{ ml: 'auto' }}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog} sx={{ ml: "auto" }}>
             Thêm chuyên viên
           </Button>
         </Box>
       </Paper>
 
       {/* Consultants Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 300px)" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -679,12 +627,8 @@ const AdminConsultantsPage: React.FC = () => {
                   <TableRow hover key={consultant.id}>
                     <TableCell>{consultant.id}</TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                          src={consultant.avatar}
-                          alt={consultant.name}
-                          sx={{ mr: 2, width: 40, height: 40 }}
-                        >
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Avatar src={consultant.avatar} alt={consultant.name} sx={{ mr: 2, width: 40, height: 40 }}>
                           {consultant.name?.charAt(0)?.toUpperCase()}
                         </Avatar>
                         {consultant.name}
@@ -692,38 +636,27 @@ const AdminConsultantsPage: React.FC = () => {
                     </TableCell>
                     <TableCell>{consultant.title}</TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                         {consultant.specialty.map((spec: string, index: number) => (
-                          <Chip
-                            key={index}
-                            label={getSpecialtyDisplay(spec)}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
+                          <Chip key={index} label={getSpecialtyDisplay(spec)} size="small" color="primary" variant="outlined" />
                         ))}
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <EmailIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <EmailIcon fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />
                           {consultant.email}
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                          <PhoneIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                        <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
+                          <PhoneIcon fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />
                           {consultant.phone}
                         </Box>
                       </Box>
                     </TableCell>
                     <TableCell align="center">
                       <Tooltip title="Xem chi tiết">
-                        <IconButton
-                          component={Link}
-                          to={`/consultants/${consultant.id}`}
-                          state={{ from: 'admin' }}
-                          color="info"
-                        >
+                        <IconButton component={Link} to={`/consultants/${consultant.id}`} state={{ from: "admin" }} color="info">
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
@@ -759,51 +692,20 @@ const AdminConsultantsPage: React.FC = () => {
 
       {/* Add/Edit Consultant Dialog */}
       <Dialog open={openConsultantDialog} onClose={handleCloseConsultantDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {dialogMode === 'add' ? 'Thêm chuyên viên mới' : 'Chỉnh sửa chuyên viên'}
-        </DialogTitle>
+        <DialogTitle>{dialogMode === "add" ? "Thêm chuyên viên mới" : "Chỉnh sửa chuyên viên"}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              name="name"
-              label="Họ tên"
-              fullWidth
-              value={formData.name}
-              onChange={handleFormChange}
-            />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField name="name" label="Họ tên" fullWidth value={formData.name} onChange={handleFormChange} />
 
             {/* Username and Password fields - only show in add mode */}
-            {dialogMode === 'add' && (
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  name="username"
-                  label="Tên đăng nhập"
-                  fullWidth
-                  value={formData.username}
-                  onChange={handleFormChange}
-                  required
-                  helperText="Tên đăng nhập duy nhất cho chuyên viên"
-                />
-                <TextField
-                  name="password"
-                  label="Mật khẩu"
-                  type="password"
-                  fullWidth
-                  value={formData.password}
-                  onChange={handleFormChange}
-                  required
-                  helperText="Mật khẩu mặc định: 1234 (có thể thay đổi sau)"
-                />
+            {dialogMode === "add" && (
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <TextField name="username" label="Tên đăng nhập" fullWidth value={formData.username} onChange={handleFormChange} required helperText="Tên đăng nhập duy nhất cho chuyên viên" />
+                <TextField name="password" label="Mật khẩu" type="password" fullWidth value={formData.password} onChange={handleFormChange} required helperText="Mật khẩu mặc định: 1234 (có thể thay đổi sau)" />
               </Box>
             )}
 
-            <TextField
-              name="title"
-              label="Chức danh"
-              fullWidth
-              value={formData.title}
-              onChange={handleFormChange}
-            />
+            <TextField name="title" label="Chức danh" fullWidth value={formData.title} onChange={handleFormChange} />
 
             <FormControl fullWidth>
               <InputLabel id="specialty-label">Chuyên môn</InputLabel>
@@ -815,7 +717,7 @@ const AdminConsultantsPage: React.FC = () => {
                 onChange={handleSpecialtyChange}
                 label="Chuyên môn"
                 renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                     {(selected as string[]).map((value, index) => (
                       <Chip key={index} label={getSpecialtyDisplay(value)} />
                     ))}
@@ -830,17 +732,9 @@ const AdminConsultantsPage: React.FC = () => {
               </Select>
             </FormControl>
 
-            <TextField
-              name="bio"
-              label="Tiểu sử"
-              fullWidth
-              multiline
-              rows={3}
-              value={formData.bio}
-              onChange={handleFormChange}
-            />
+            <TextField name="bio" label="Tiểu sử" fullWidth multiline rows={3} value={formData.bio} onChange={handleFormChange} />
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
                 name="email"
                 label="Email"
@@ -877,19 +771,10 @@ const AdminConsultantsPage: React.FC = () => {
               <Typography variant="subtitle2" gutterBottom>
                 Ảnh đại diện
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar
-                  src={avatarPreview || (formData.avatar ? `${process.env.REACT_APP_API_URL}/${formData.avatar}` : '')}
-                  sx={{ width: 80, height: 80 }}
-                />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Avatar src={avatarPreview || (formData.avatar ? `${process.env.REACT_APP_API_URL}/${formData.avatar}` : "")} sx={{ width: 80, height: 80 }} />
                 <Box>
-                  <input
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    id="avatar-upload"
-                    type="file"
-                    onChange={handleAvatarChange}
-                  />
+                  <input accept="image/*" style={{ display: "none" }} id="avatar-upload" type="file" onChange={handleAvatarChange} />
                   <label htmlFor="avatar-upload">
                     <Button variant="outlined" component="span">
                       Chọn ảnh
@@ -908,7 +793,7 @@ const AdminConsultantsPage: React.FC = () => {
         <DialogActions>
           <Button onClick={handleCloseConsultantDialog}>Hủy</Button>
           <Button onClick={handleSaveConsultant} variant="contained" color="primary">
-            {dialogMode === 'add' ? 'Thêm' : 'Lưu'}
+            {dialogMode === "add" ? "Thêm" : "Lưu"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -917,9 +802,7 @@ const AdminConsultantsPage: React.FC = () => {
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
         <DialogTitle>Xác nhận xóa</DialogTitle>
         <DialogContent>
-          <Typography>
-            Bạn có chắc chắn muốn xóa chuyên viên "{consultantToDelete?.name}" không?
-          </Typography>
+          <Typography>Bạn có chắc chắn muốn xóa chuyên viên "{consultantToDelete?.name}" không?</Typography>
           <Typography variant="body2" color="error" sx={{ mt: 2 }}>
             Lưu ý: Hành động này không thể hoàn tác.
           </Typography>
@@ -933,13 +816,8 @@ const AdminConsultantsPage: React.FC = () => {
       </Dialog>
 
       {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

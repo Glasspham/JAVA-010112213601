@@ -19,7 +19,7 @@ public class MajorEntity {
 
     String name;
 
-    public MajorEntity(String name){
+    public MajorEntity(String name) {
         this.name = name;
     }
 }

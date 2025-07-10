@@ -11,11 +11,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ICourseRepository extends JpaRepository<CourseEntity, Long> {
     @Query("""
-    select cs from CourseEntity cs where cs.isDelete = false 
-        and (:keyword is null or cs.name like concat('%', :keyword, '%'))  
-        and (:object is null or exists (select 1 from cs.objects csoj where csoj.name = :object))  
-        order by cs.createDate desc     
-    """)
+            select cs from CourseEntity cs where cs.isDelete = false
+                and (:keyword is null or cs.name like concat('%', :keyword, '%'))
+                and (:object is null or exists (select 1 from cs.objects csoj where csoj.name = :object))
+                order by cs.createDate desc
+            """)
     Page<CourseEntity> findAll(
             @Param("keyword") String keyword,
             @Param("object") String object,

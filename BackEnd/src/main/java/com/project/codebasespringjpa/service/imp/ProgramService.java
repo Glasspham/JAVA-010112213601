@@ -57,7 +57,7 @@ public class ProgramService implements IProgramService {
         LocalTime time = null;
         try {
             time = LocalTime.of(request.getHourse(), request.getMinus());
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Can not get time in request program: " + e.getMessage());
         }
         ProgramEntity programUpdate = this.findEntityById(id);
@@ -87,9 +87,7 @@ public class ProgramService implements IProgramService {
     public void registerProgram(ProgramRegisterRequest request) {
         UserEntity user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         ProgramEntity programEntity = this.findEntityById(request.getProgramId());
-
         if (programEntity.getUsers().size() >= programEntity.getCapacity())
             throw new AppException(ErrorCode.CAPACITY_FULL);
         user.getPrograms().add(programEntity);
@@ -100,27 +98,21 @@ public class ProgramService implements IProgramService {
     public Boolean isRegister(ProgramRegisterRequest request) {
         UserEntity user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         ProgramEntity programEntity = this.findEntityById(request.getProgramId());
-
         return user.getPrograms().contains(programEntity);
     }
 
     @Override
     public List<UserResponse> listUserRegister(Long idProgram) {
         ProgramEntity programEntity = this.findEntityById(idProgram);
-
         List<UserResponse> userResponses = new ArrayList<>();
-
-        if(programEntity.getUsers() != null) {
+        if (programEntity.getUsers() != null) {
             List<UserEntity> userEntities = programEntity.getUsers();
-            for (UserEntity it: userEntities){
-                if(it.getIsDelete() == false)
+            for (UserEntity it : userEntities) {
+                if (it.getIsDelete() == false)
                     userResponses.add(userMapper.toResponse(it));
             }
         }
-
-
         return userResponses;
     }
 
@@ -128,11 +120,10 @@ public class ProgramService implements IProgramService {
     public List<ProgramResponse> listProgramRegister(String username) {
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         List<ProgramResponse> programResponses = new ArrayList<>();
-        if(userEntity.getPrograms() != null){
-            for (var it: userEntity.getPrograms())
-                if(it.getIsDelete() == false)
+        if (userEntity.getPrograms() != null) {
+            for (var it : userEntity.getPrograms())
+                if (it.getIsDelete() == false)
                     programResponses.add(programMapper.toResponse(it));
         }
         return programResponses;

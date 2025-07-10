@@ -12,7 +12,7 @@ public enum ErrorCode {
     UNAUTHEN(401, "Chưa đăng nhập"),
     FORBIDDEN(403, "Không có quyền truy cập"),
 
-    //---user exception
+    // ---user exception
     USER_NOT_FOUND(404, "Không tìm thấy user"),
     PASSWORD_NOT_MATCH(400, "Password không đúng"),
 
@@ -32,8 +32,7 @@ public enum ErrorCode {
 
     ANSWER_NOT_FOUND(404, "Không tìm thấy câu hỏi này"),
 
-    CAPACITY_FULL(404, "Chương trình đã được đặt đầy")
-    ;
+    CAPACITY_FULL(404, "Chương trình đã được đặt đầy");
 
     private int code;
     private String message;

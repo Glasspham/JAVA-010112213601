@@ -1,51 +1,14 @@
-import React, { useState, useEffect, use } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Button,
-  IconButton,
-  Tooltip,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-  Alert,
-  Snackbar,
-  SelectChangeEvent
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
-  FilterList as FilterListIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
-import { User, UserRole } from '../../types/user';
-import { mockUsers } from '../../utils/mockData';
-import { UserSearch } from '../../dto/UserSearch';
-import { UserService } from '../../services/UserService';
-import { UserDTO } from '../../dto/UserDTO';
-import { toast } from 'react-toastify';
-import { FileService } from '../../services/FileService';
-import Swal from 'sweetalert2';
+import React, { useState, useEffect, use } from "react";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, Snackbar, SelectChangeEvent } from "@mui/material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, FilterList as FilterListIcon, Close as CloseIcon } from "@mui/icons-material";
+import { User, UserRole } from "../../types/user";
+import { mockUsers } from "../../utils/mockData";
+import { UserSearch } from "../../dto/UserSearch";
+import { UserService } from "../../services/UserService";
+import { UserDTO } from "../../dto/UserDTO";
+import { toast } from "react-toastify";
+import { FileService } from "../../services/FileService";
+import Swal from "sweetalert2";
 
 const UsersPage: React.FC = () => {
   // State for users data
@@ -57,24 +20,24 @@ const UsersPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // State for search and filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
 
   // State for user dialog
   const [openUserDialog, setOpenUserDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    fullname: '',
-    password: '1234',
-    avatar: '',
-    position: '',
-    phone: '',
+    email: "",
+    username: "",
+    fullname: "",
+    password: "1234",
+    avatar: "",
+    position: "",
+    phone: "",
     major: [],
-    role: 'USER' as UserRole
+    role: "USER" as UserRole,
   });
 
   // State for delete confirmation dialog
@@ -84,11 +47,9 @@ const UsersPage: React.FC = () => {
   // State for notifications
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    message: "",
+    severity: "success" as "success" | "error" | "info" | "warning",
   });
-
-
 
   //----------------------------------------------------------------
   const _userService = new UserService();
@@ -100,10 +61,9 @@ const UsersPage: React.FC = () => {
   const [toIndex, setToIndex] = useState(0);
   const [totalElement, setTotalElement] = useState(0);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [newMajor, setNewMajor] = useState('');
+  const [newMajor, setNewMajor] = useState("");
 
   const [userDTO, setUserDTO] = useState<UserDTO>(new UserDTO());
-
 
   useEffect(() => {
     const findAllUser = async () => {
@@ -116,10 +76,9 @@ const UsersPage: React.FC = () => {
       setFromIndex((userSearch.page - 1) * userSearch.limit);
       setToIndex(userSearch.page * userSearch.limit);
       setTotalElement(pageUser.totalElements);
-    }
+    };
 
     findAllUser();
-
   }, [userSearch.timer]);
   //----------------------------------------------------------------
 
@@ -134,10 +93,10 @@ const UsersPage: React.FC = () => {
   const handleChangePage = (event: unknown, newPage: number) => {
     // console.log("Chuyển trang 1 ");
 
-    setUserSearch(prev => ({
+    setUserSearch((prev) => ({
       ...prev,
       page: newPage + 1,
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
@@ -146,64 +105,57 @@ const UsersPage: React.FC = () => {
     setPage(0);
   };
 
-  // Handle search and filter changes - call api 
+  // Handle search and filter changes - call api
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
     let keyworkInput = event.target.value;
-    setUserSearch(prev => ({
+    setUserSearch((prev) => ({
       ...prev,
       keyword: keyworkInput,
       page: 1,
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
-
-
-  //---call api - search role 
+  //---call api - search role
   const handleRoleFilterChange = (event: SelectChangeEvent) => {
     setRoleFilter(event.target.value);
     let roleInput: string | null = event.target.value;
-    if (roleInput === 'all')
-      roleInput = null;
-    setUserSearch(prev => ({
+    if (roleInput === "all") roleInput = null;
+    setUserSearch((prev) => ({
       ...prev,
       roleName: roleInput,
-      timer: Date.now()
+      timer: Date.now(),
     }));
-
   };
 
-
-  //----reset filter - call api 
+  //----reset filter - call api
   const handleResetFilters = () => {
-    setSearchTerm('');
-    setRoleFilter('all');
-    setUserSearch(prev => ({
+    setSearchTerm("");
+    setRoleFilter("all");
+    setUserSearch((prev) => ({
       ...prev,
       keyword: null,
       roleName: null,
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
-  //-----xử lý ảnh 
+  //-----xử lý ảnh
   // const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const handleAvatarChange = async (event: any) => {
     const file = event.target.files[0];
     if (file) {
-
       //----lưu file vào state
       const file = event.target.files?.[0] ?? null;
       setAvatarFile(file);
 
-
       // Kiểm tra định dạng ảnh (tùy chọn)
-      const isImage = file.type.startsWith('image/');
+      const isImage = file.type.startsWith("image/");
       if (!isImage) {
-        toast.error('Vui lòng chọn một tệp hình ảnh hợp lệ!');
+        toast.error("Vui lòng chọn một tệp hình ảnh hợp lệ!");
         return;
       }
 
@@ -217,16 +169,14 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  //----xóa user 
+  //----xóa user
   // const deleteUser = (name: any, id: any) => {
   //   console.log("name = ", name);
   //   console.log("id = ", id);
 
-
   // }
 
   const deleteUser = async (name: string, id: number) => {
-
     const result = await Swal.fire({
       title: `Xác nhận xóa?`,
       text: `Bạn có chắc muốn xóa người dùng "${name}" không?`,
@@ -235,25 +185,24 @@ const UsersPage: React.FC = () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Xóa",
-      cancelButtonText: "Hủy"
+      cancelButtonText: "Hủy",
     });
 
     if (result.isConfirmed) {
       try {
         const [code, data, message] = await _userService.deleteUser(id);
 
-
         await Swal.fire({
           icon: "success",
           title: "Đã xóa!",
           text: `Người dùng "${name}" đã được xóa.`,
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
 
-        setUserSearch(prev => ({
+        setUserSearch((prev) => ({
           ...prev,
-          timer: Date.now()
+          timer: Date.now(),
         }));
 
         // TODO: cập nhật lại danh sách người dùng sau khi xóa
@@ -268,19 +217,18 @@ const UsersPage: React.FC = () => {
     }
   };
 
-
   // Handle user dialog
   const handleOpenAddDialog = () => {
-    setDialogMode('add');
+    setDialogMode("add");
     setUserDTO(new UserDTO());
     setAvatarPreview(null);
     setAvatarFile(null);
-    setNewMajor('');
+    setNewMajor("");
     setOpenUserDialog(true);
   };
 
   const handleOpenEditDialog = async (user: any) => {
-    setDialogMode('edit');
+    setDialogMode("edit");
     setCurrentUserId(user.id);
 
     try {
@@ -290,15 +238,15 @@ const UsersPage: React.FC = () => {
       if (code === 200 && userData) {
         setUserDTO({
           id: userData.id || 0,
-          email: userData.email || '',
-          username: userData.username || '',
-          fullname: userData.fullname || '',
-          password: '', // Không hiển thị password cũ
-          avatar: userData.avatar || '',
-          position: userData.position || '',
-          phone: userData.phone || '',
+          email: userData.email || "",
+          username: userData.username || "",
+          fullname: userData.fullname || "",
+          password: "", // Không hiển thị password cũ
+          avatar: userData.avatar || "",
+          position: userData.position || "",
+          phone: userData.phone || "",
           majors: userData.majors || [],
-          role: userData.role || 'USER'
+          role: userData.role || "USER",
         });
 
         // Set avatar preview nếu có
@@ -308,12 +256,12 @@ const UsersPage: React.FC = () => {
           setAvatarPreview(null);
         }
       } else {
-        toast.error(message || 'Không thể tải thông tin người dùng');
+        toast.error(message || "Không thể tải thông tin người dùng");
         return;
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
-      toast.error('Có lỗi xảy ra khi tải thông tin người dùng');
+      console.error("Error loading user data:", error);
+      toast.error("Có lỗi xảy ra khi tải thông tin người dùng");
       return;
     }
 
@@ -336,48 +284,47 @@ const UsersPage: React.FC = () => {
     //   [name]: value
     // }));
 
-    setUserDTO(prev => ({
+    setUserDTO((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleRoleChange = (event: SelectChangeEvent) => {
-    setUserDTO(prev => ({
+    setUserDTO((prev) => ({
       ...prev,
-      role: event.target.value
+      role: event.target.value,
     }));
   };
 
   const handleAddMajor = () => {
     if (newMajor.trim() && !userDTO.majors.includes(newMajor.trim())) {
-      setUserDTO(prev => ({
+      setUserDTO((prev) => ({
         ...prev,
-        majors: [...prev.majors, newMajor.trim()]
+        majors: [...prev.majors, newMajor.trim()],
       }));
-      setNewMajor('');
+      setNewMajor("");
     }
   };
 
   const handleRemoveMajor = (index: number) => {
-    setUserDTO(prev => ({
+    setUserDTO((prev) => ({
       ...prev,
-      majors: prev.majors.filter((_: string, i: number) => i !== index)
+      majors: prev.majors.filter((_: string, i: number) => i !== index),
     }));
   };
 
   const handleSaveUser = async () => {
-    if (dialogMode === 'add') {
-      if (!userDTO.role)
-        userDTO.role = 'USER';
+    if (dialogMode === "add") {
+      if (!userDTO.role) userDTO.role = "USER";
 
       try {
         let [code, value, mess] = await _userService.createUser(userDTO, avatarFile);
         if (code === 200) {
-          toast.success("Thêm người dùng thành công")
-          setUserSearch(prev => ({
+          toast.success("Thêm người dùng thành công");
+          setUserSearch((prev) => ({
             ...prev,
-            timer: Date.now()
+            timer: Date.now(),
           }));
         } else {
           toast.error(mess);
@@ -387,31 +334,30 @@ const UsersPage: React.FC = () => {
       }
 
       setUserDTO(new UserDTO());
-
     } else {
       // Edit mode - call update API
       if (currentUserId) {
         try {
           // Validation
           if (!userDTO.username || !userDTO.fullname || !userDTO.email) {
-            toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+            toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
             return;
           }
 
           const [code, data, message] = await _userService.updateUser(currentUserId, userDTO, avatarFile || undefined);
 
           if (code === 200) {
-            toast.success('Cập nhật người dùng thành công');
-            setUserSearch(prev => ({
+            toast.success("Cập nhật người dùng thành công");
+            setUserSearch((prev) => ({
               ...prev,
-              timer: Date.now()
+              timer: Date.now(),
             }));
           } else {
-            toast.error(message || 'Cập nhật người dùng thất bại');
+            toast.error(message || "Cập nhật người dùng thất bại");
           }
         } catch (error: any) {
-          console.error('Error updating user:', error);
-          toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật người dùng');
+          console.error("Error updating user:", error);
+          toast.error(error.response?.data?.message || "Có lỗi xảy ra khi cập nhật người dùng");
         }
       }
     }
@@ -419,26 +365,25 @@ const UsersPage: React.FC = () => {
     handleCloseUserDialog();
   };
 
-
   // Handle snackbar close
   const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({
+    setSnackbar((prev) => ({
       ...prev,
-      open: false
+      open: false,
     }));
   };
 
   // Get role display text and color
   const getRoleDisplay = (role: UserRole) => {
     switch (role) {
-      case 'ADMIN':
-        return { text: 'Quản trị viên', color: 'error' };
-      case 'SPECIALIST':
-        return { text: 'Chuyên viên', color: 'info' };
-      case 'USER':
-        return { text: 'Người dùng', color: 'secondary' };
+      case "ADMIN":
+        return { text: "Quản trị viên", color: "error" };
+      case "SPECIALIST":
+        return { text: "Chuyên viên", color: "info" };
+      case "USER":
+        return { text: "Người dùng", color: "secondary" };
       default:
-        return { text: role, color: 'default' };
+        return { text: role, color: "default" };
     }
   };
 
@@ -455,14 +400,14 @@ const UsersPage: React.FC = () => {
 
       {/* Toolbar */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
           <TextField
             label="Tìm kiếm"
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={handleSearchChange}
-            sx={{ flexGrow: 1, minWidth: '200px' }}
+            sx={{ flexGrow: 1, minWidth: "200px" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -472,15 +417,9 @@ const UsersPage: React.FC = () => {
             }}
           />
 
-          <FormControl variant="outlined" size="small" sx={{ minWidth: '150px' }}>
+          <FormControl variant="outlined" size="small" sx={{ minWidth: "150px" }}>
             <InputLabel id="role-filter-label">Vai trò</InputLabel>
-            <Select
-              labelId="role-filter-label"
-              id="role-filter"
-              value={roleFilter}
-              onChange={handleRoleFilterChange}
-              label="Vai trò"
-            >
+            <Select labelId="role-filter-label" id="role-filter" value={roleFilter} onChange={handleRoleFilterChange} label="Vai trò">
               <MenuItem value="all">Tất cả</MenuItem>
               <MenuItem value="ADMIN">Quản trị viên</MenuItem>
               <MenuItem value="SPECIALIST">Chuyên viên</MenuItem>
@@ -494,20 +433,15 @@ const UsersPage: React.FC = () => {
             </IconButton>
           </Tooltip>
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddDialog}
-            sx={{ ml: 'auto' }}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog} sx={{ ml: "auto" }}>
             Thêm người dùng
           </Button>
         </Box>
       </Paper>
 
       {/* Users Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 300px)" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -520,7 +454,6 @@ const UsersPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-
               {listUser?.map((user) => {
                 const roleDisplay = getRoleDisplay(user.role);
                 return (
@@ -529,17 +462,11 @@ const UsersPage: React.FC = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{`${user.fullname}`}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={roleDisplay.text}
-                        color={roleDisplay.color as any}
-                        size="small"
-                      />
+                      <Chip label={roleDisplay.text} color={roleDisplay.color as any} size="small" />
                     </TableCell>
-                    <TableCell>
-                      {new Date(user.createDate).toLocaleDateString('vi-VN')}
-                    </TableCell>
+                    <TableCell>{new Date(user.createDate).toLocaleDateString("vi-VN")}</TableCell>
                     <TableCell align="center">
-                      {user.role !== 'ADMIN' && (
+                      {user.role !== "ADMIN" && (
                         <>
                           <Tooltip title="Chỉnh sửa">
                             <IconButton onClick={() => handleOpenEditDialog(user)} color="primary">
@@ -562,79 +489,29 @@ const UsersPage: React.FC = () => {
         </TableContainer>
 
         {/* Nút bấm chuyển trang  */}
-        <TablePagination
-          rowsPerPageOptions={[5]}
-          component="div"
-          count={totalElement}
-          rowsPerPage={userSearch.limit}
-          page={userSearch.page - 1}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Số hàng mỗi trang:"
-          labelDisplayedRows={({ from, to, count }) =>
-            `${from}–${Math.min(to, count)} của ${count}`
-          }
-        />
+        <TablePagination rowsPerPageOptions={[5]} component="div" count={totalElement} rowsPerPage={userSearch.limit} page={userSearch.page - 1} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Số hàng mỗi trang:" labelDisplayedRows={({ from, to, count }) => `${from}–${Math.min(to, count)} của ${count}`} />
       </Paper>
 
       {/* Add/Edit User Dialog */}
       <Dialog open={openUserDialog} onClose={handleCloseUserDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {dialogMode === 'add' ? 'Thêm người dùng mới' : 'Chỉnh sửa người dùng'}
-        </DialogTitle>
+        <DialogTitle>{dialogMode === "add" ? "Thêm người dùng mới" : "Chỉnh sửa người dùng"}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              name="email"
-              label="Email"
-              fullWidth
-              value={userDTO.email}
-              onChange={handleFormChange}
-            />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                name="username"
-                label="Tên đăng nhập"
-                fullWidth
-                value={userDTO.username}
-                onChange={handleFormChange}
-              />
-              <TextField
-                name="fullname"
-                label="Họ và tên"
-                fullWidth
-                value={userDTO.fullname}
-                onChange={handleFormChange}
-              />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField name="email" label="Email" fullWidth value={userDTO.email} onChange={handleFormChange} />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField name="username" label="Tên đăng nhập" fullWidth value={userDTO.username} onChange={handleFormChange} />
+              <TextField name="fullname" label="Họ và tên" fullWidth value={userDTO.fullname} onChange={handleFormChange} />
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                name="position"
-                label="Chức vụ"
-                fullWidth
-                value={userDTO.position}
-                onChange={handleFormChange}
-              />
-              <TextField
-                name="phone"
-                label="Số điện thoại"
-                fullWidth
-                value={userDTO.phone}
-                onChange={handleFormChange}
-              />
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField name="position" label="Chức vụ" fullWidth value={userDTO.position} onChange={handleFormChange} />
+              <TextField name="phone" label="Số điện thoại" fullWidth value={userDTO.phone} onChange={handleFormChange} />
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl sx={{ width: '50%' }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <FormControl sx={{ width: "50%" }}>
                 <InputLabel id="role-label">Vai trò</InputLabel>
-                <Select
-                  labelId="role-label"
-                  id="role"
-                  value={userDTO.role || "USER"}
-                  onChange={handleRoleChange}
-                  label="Vai trò"
-                >
+                <Select labelId="role-label" id="role" value={userDTO.role || "USER"} onChange={handleRoleChange} label="Vai trò">
                   <MenuItem value="ADMIN">Quản trị viên</MenuItem>
                   <MenuItem value="SPECIALIST">Chuyên viên</MenuItem>
                   <MenuItem value="USER">Người dùng</MenuItem>
@@ -643,38 +520,30 @@ const UsersPage: React.FC = () => {
             </Box>
 
             {/* Majors - chỉ hiển thị cho SPECIALIST */}
-            {userDTO.role === 'SPECIALIST' && (
+            {userDTO.role === "SPECIALIST" && (
               <Box>
-                <Typography variant="h6" gutterBottom>Chuyên ngành</Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Chuyên ngành
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
                   {userDTO.majors.map((major: string, index: number) => (
-                    <Chip
-                      key={index}
-                      label={major}
-                      onDelete={() => handleRemoveMajor(index)}
-                      color="primary"
-                      variant="outlined"
-                    />
+                    <Chip key={index} label={major} onDelete={() => handleRemoveMajor(index)} color="primary" variant="outlined" />
                   ))}
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: "flex", gap: 1 }}>
                   <TextField
                     label="Thêm chuyên ngành"
                     value={newMajor}
                     onChange={(e) => setNewMajor(e.target.value)}
                     size="small"
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         e.preventDefault();
                         handleAddMajor();
                       }
                     }}
                   />
-                  <Button
-                    variant="outlined"
-                    onClick={handleAddMajor}
-                    disabled={!newMajor.trim()}
-                  >
+                  <Button variant="outlined" onClick={handleAddMajor} disabled={!newMajor.trim()}>
                     Thêm
                   </Button>
                 </Box>
@@ -685,13 +554,7 @@ const UsersPage: React.FC = () => {
               <InputLabel shrink htmlFor="avatar-upload">
                 Ảnh đại diện
               </InputLabel>
-              <input
-                accept="image/*"
-                id="avatar-upload"
-                type="file"
-                style={{ marginTop: 8 }}
-                onChange={handleAvatarChange}
-              />
+              <input accept="image/*" id="avatar-upload" type="file" style={{ marginTop: 8 }} onChange={handleAvatarChange} />
               {avatarPreview && (
                 <img
                   src={avatarPreview}
@@ -702,31 +565,25 @@ const UsersPage: React.FC = () => {
                     marginTop: 16,
                     width: 100,
                     height: 100,
-                    objectFit: 'cover',
-                    // borderRadius: '50%' 
+                    objectFit: "cover",
+                    // borderRadius: '50%'
                   }}
                 />
               )}
             </FormControl>
-
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseUserDialog}>Hủy</Button>
           <Button onClick={handleSaveUser} variant="contained" color="primary">
-            {dialogMode === 'add' ? 'Thêm' : 'Lưu'}
+            {dialogMode === "add" ? "Thêm" : "Lưu"}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

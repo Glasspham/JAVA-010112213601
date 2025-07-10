@@ -28,8 +28,7 @@ public class SwaggerConfig {
                                 .url("https://myweb.com"))
                         .license(new License()
                                 .name("Apache 2.0")
-                                .url("https://www.apache.org/licenses/LICENSE-2.0.html"))
-                )
+                                .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
@@ -48,4 +47,3 @@ public class SwaggerConfig {
                 .build();
     }
 }
-

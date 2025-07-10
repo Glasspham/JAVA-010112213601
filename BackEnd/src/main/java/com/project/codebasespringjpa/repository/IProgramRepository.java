@@ -13,11 +13,11 @@ import java.util.List;
 @Repository
 public interface IProgramRepository extends JpaRepository<ProgramEntity, Long> {
     @Query("""
-    select pq from ProgramEntity pq where pq.isDelete = false 
-        and (:keyword is null or pq.title like concat('%', :keyword, '%'))  
-        and (:status is null or pq.status = :status) 
-        and (:date is null or pq.date = :date)        
-    """)
+            select pq from ProgramEntity pq where pq.isDelete = false
+                and (:keyword is null or pq.title like concat('%', :keyword, '%'))
+                and (:status is null or pq.status = :status)
+                and (:date is null or pq.date = :date)
+            """)
     Page<ProgramEntity> findAll(
             @Param("keyword") String keyword,
             @Param("status") String status,

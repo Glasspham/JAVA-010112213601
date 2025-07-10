@@ -37,33 +37,29 @@ public class BaseEntity {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
             if (userDetails instanceof UserDetailsImpl) {
                 this.createBy = ((UserDetailsImpl) userDetails).getUser().getEmail();
                 this.updateBy = ((UserDetailsImpl) userDetails).getUser().getEmail();
             }
         } catch (Exception e) {
-            this.createBy ="Unknow User";
-            this.updateBy ="Unknow User";
+            this.createBy = "Unknow User";
+            this.updateBy = "Unknow User";
         }
-
         this.createDate = LocalDateTime.now();
         this.updateDate = LocalDateTime.now();
     }
 
     @PreUpdate
-    public void preUpdate(){
+    public void preUpdate() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
             if (userDetails instanceof UserDetailsImpl) {
                 this.updateBy = ((UserDetailsImpl) userDetails).getUser().getEmail();
             }
         } catch (Exception e) {
-            this.updateBy ="Unknow User";
+            this.updateBy = "Unknow User";
         }
-
         this.updateDate = LocalDateTime.now();
     }
 }

@@ -30,11 +30,7 @@ public class UserEntity extends BaseEntity {
     String phone;
 
     @ManyToMany
-    @JoinTable(
-            name = "tbl_user_major",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "major_id")
-    )
+    @JoinTable(name = "tbl_user_major", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "major_id"))
     List<MajorEntity> majors;
 
     @ManyToOne
@@ -42,11 +38,7 @@ public class UserEntity extends BaseEntity {
     RoleEntity role;
 
     @ManyToMany
-    @JoinTable(
-            name = "tbl_user_program",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "program_id")
-    )
+    @JoinTable(name = "tbl_user_program", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "program_id"))
     List<ProgramEntity> programs;
 
     @OneToMany(mappedBy = "user")

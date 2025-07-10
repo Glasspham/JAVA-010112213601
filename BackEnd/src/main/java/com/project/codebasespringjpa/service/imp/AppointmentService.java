@@ -65,8 +65,9 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public Page<AppointmentResponse> findAll(Pageable pageable, AppointmentSearch appointmentSearch) {
-        return appointmentRepository.findAll(appointmentSearch.getUsername(), appointmentSearch.getSpecialistName(), appointmentSearch.getKeyword(), appointmentSearch.getStatus(), appointmentSearch.getDate(),
-                  pageable).map(it -> appointmentMapper.toResponse(it));
+        return appointmentRepository.findAll(appointmentSearch.getUsername(), appointmentSearch.getSpecialistName(),
+                appointmentSearch.getKeyword(), appointmentSearch.getStatus(), appointmentSearch.getDate(),
+                pageable).map(it -> appointmentMapper.toResponse(it));
     }
 
     @Override

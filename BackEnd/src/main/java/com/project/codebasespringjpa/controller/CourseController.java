@@ -30,11 +30,11 @@ public class CourseController {
 
     @GetMapping("/find-all")
     ApiResponse<Page<CourseResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
-                                            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
-                                            @RequestParam(name = "keyword", required = false) String keyword,
-                                            @RequestParam(name = "object", required = false) String object){
+            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "object", required = false) String object) {
 
-        Pageable pageable = PageRequest.of(page-1, limit);
+        Pageable pageable = PageRequest.of(page - 1, limit);
         CourseSearch courseSearch = CourseSearch.builder()
                 .keyword(keyword)
                 .object(object)

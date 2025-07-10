@@ -27,8 +27,7 @@ public class CourseDetailService implements ICourseDetailService {
     @Override
     public CourseDetailEntity findEntityById(Long id) {
         return courseDetailRepository.findById(id).orElseThrow(
-                () -> new AppException(ErrorCode.COURSE_DETAIL_NOT_FOUND)
-        );
+                () -> new AppException(ErrorCode.COURSE_DETAIL_NOT_FOUND));
     }
 
     @Override
@@ -37,7 +36,6 @@ public class CourseDetailService implements ICourseDetailService {
         CourseEntity course = CourseEntity.builder()
                 .id(idCourse)
                 .build();
-
         courseDetail.setCourse(course);
         return courseDetailMapper.toResponse(courseDetailRepository.save(courseDetail));
     }
@@ -45,12 +43,10 @@ public class CourseDetailService implements ICourseDetailService {
     @Override
     public CourseDetailResponse update(Long id, CourseDetailRequest request) {
         CourseDetailEntity courseDetail = this.findEntityById(id);
-
         courseDetail.setVideo(request.getVideo());
         courseDetail.setDuration(request.getDuration());
         courseDetail.setObjective(request.getObjective());
         courseDetail.setContent(request.getContent());
-
         return courseDetailMapper.toResponse(courseDetailRepository.save(courseDetail));
     }
 
@@ -58,7 +54,6 @@ public class CourseDetailService implements ICourseDetailService {
     public void delete(Long id) {
         CourseDetailEntity courseDetail = this.findEntityById(id);
         courseDetail.setIsDelete(true);
-
         courseDetailRepository.save(courseDetail);
     }
 }

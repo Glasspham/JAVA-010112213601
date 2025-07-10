@@ -31,7 +31,6 @@ public class UserMapper {
 
     public UserEntity toEntity(UserRequest request) {
         List<MajorEntity> majorList = new ArrayList<>();
-
         if (request != null && request.getMajors() != null) {
             for (String it : request.getMajors()) {
                 MajorEntity major = majorRepository.findByName(it);
@@ -39,10 +38,8 @@ public class UserMapper {
                     majorList.add(major);
             }
         }
-
         RoleEntity role = roleRepository.findByName(request.getRole()).orElseThrow(
                 () -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-
         return UserEntity.builder()
                 .username(request.getUsername())
                 .fullname(request.getFullname())
@@ -58,12 +55,10 @@ public class UserMapper {
 
     public UserResponse toResponse(UserEntity entity) {
         List<String> majorList = new ArrayList<>();
-
         try {
             for (var it : entity.getMajors())
                 majorList.add(it.getName());
         } catch (Exception e) {}
-
         return UserResponse.builder()
                 .id(entity.getId())
                 .username(entity.getUsername())

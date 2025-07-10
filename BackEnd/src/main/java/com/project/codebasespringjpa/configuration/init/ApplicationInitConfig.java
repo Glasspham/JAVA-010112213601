@@ -57,7 +57,8 @@ public class ApplicationInitConfig {
 
     void createMajors() {
         if (majorRepository.count() == 0) {
-            List<String> majorEntityList = Arrays.asList("Thanh thiếu niên", "Nghiện", "Gia đình", "Sức khỏe tâm thần", "Giáo dục");
+            List<String> majorEntityList = Arrays.asList("Thanh thiếu niên", "Nghiện", "Gia đình", "Sức khỏe tâm thần",
+                    "Giáo dục");
             for (var it : majorEntityList) {
                 MajorEntity major = new MajorEntity(it);
                 majorRepository.save(major);

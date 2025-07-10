@@ -49,29 +49,24 @@ public class AuthenService implements IAuthenService {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setPhone(request.getPhone());
             user.setEmail(request.getEmail());
-
             RoleEntity role = new RoleEntity(RoleEnum.USER.name());
             user.setRole(role);
             user.setAvatar(UtilConst.IMAGE_USER_DEFAULT);
             userRepository.save(user);
-
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error(">>>Co loi trong qua trinh dang ky: " + e.getMessage());
             return false;
         }
     }
-    
+
     @Override
     public LoginResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate
-                (new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-
+        Authentication authentication = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
         String jwt = jwtProvider.generateTokenByUsername(request.getUsername());
-
         return LoginResponse.builder()
                 .token(jwt)
                 .role(userDetails.getRoleName())

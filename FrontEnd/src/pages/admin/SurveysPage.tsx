@@ -1,49 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Button,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  Alert,
-  CircularProgress,
-  SelectChangeEvent
-} from '@mui/material';
-import Swal from 'sweetalert2';
-import { toast } from 'react-toastify';
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
-import { Survey, Question, Answer } from '../../types/survey';
-import { SurveyService } from '../../services/SurveyService';
+import React, { useState, useEffect } from "react";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Alert, CircularProgress, SelectChangeEvent } from "@mui/material";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import { Add as AddIcon, Search as SearchIcon, Edit as EditIcon, Delete as DeleteIcon, Refresh as RefreshIcon } from "@mui/icons-material";
+import { Survey, Question, Answer } from "../../types/survey";
+import { SurveyService } from "../../services/SurveyService";
 
 const SURVEY_TYPES = [
-  { value: 'ASSIST', label: 'ASSIST' },
-  { value: 'CRAFFT', label: 'CRAFFT' }
+  { value: "ASSIST", label: "ASSIST" },
+  { value: "CRAFFT", label: "CRAFFT" },
 ];
 
 const AdminSurveysPage: React.FC = () => {
@@ -60,27 +25,27 @@ const AdminSurveysPage: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
 
   // State for search and filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
 
   // State for survey dialog
   const [openSurveyDialog, setOpenSurveyDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [currentSurvey, setCurrentSurvey] = useState<Survey | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'ASSIST',
-    questions: [] as Question[]
+    name: "",
+    type: "ASSIST",
+    questions: [] as Question[],
   });
 
   // State for question dialog
   const [openQuestionDialog, setOpenQuestionDialog] = useState(false);
   const [questionFormData, setQuestionFormData] = useState({
-    content: '',
+    content: "",
     answers: [
-      { content: '', correct: false },
-      { content: '', correct: false }
-    ] as Answer[]
+      { content: "", correct: false },
+      { content: "", correct: false },
+    ] as Answer[],
   });
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
 
@@ -89,23 +54,23 @@ const AdminSurveysPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [code, data, message] = await surveyService.findAllSurveys({
         page: page + 1,
         limit: rowsPerPage,
         keyword: searchTerm || undefined,
-        type: typeFilter || undefined
+        type: typeFilter || undefined,
       });
 
       if (code === 200) {
         setSurveys(data.content);
         setTotalElements(data.totalElements);
       } else {
-        setError(message || 'Failed to load surveys');
+        setError(message || "Failed to load surveys");
       }
     } catch (error) {
-      console.error('Error loading surveys:', error);
-      setError('An error occurred while loading surveys');
+      console.error("Error loading surveys:", error);
+      setError("An error occurred while loading surveys");
     } finally {
       setLoading(false);
     }
@@ -137,18 +102,18 @@ const AdminSurveysPage: React.FC = () => {
   };
 
   const handleResetFilters = () => {
-    setSearchTerm('');
-    setTypeFilter('');
+    setSearchTerm("");
+    setTypeFilter("");
     setPage(0);
   };
 
   // Handle survey dialog
   const handleOpenAddDialog = () => {
-    setDialogMode('add');
+    setDialogMode("add");
     setFormData({
-      name: '',
-      type: 'ASSIST',
-      questions: []
+      name: "",
+      type: "ASSIST",
+      questions: [],
     });
     setOpenSurveyDialog(true);
   };
@@ -160,27 +125,27 @@ const AdminSurveysPage: React.FC = () => {
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleTypeChange = (event: SelectChangeEvent) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      type: event.target.value
+      type: event.target.value,
     }));
   };
 
   // Handle question dialog
   const handleOpenAddQuestionDialog = () => {
     setQuestionFormData({
-      content: '',
+      content: "",
       answers: [
-        { id: null, content: '', correct: false },
-        { id: null, content: '', correct: false }
-      ]
+        { id: null, content: "", correct: false },
+        { id: null, content: "", correct: false },
+      ],
     });
     setEditingQuestionIndex(null);
     setOpenQuestionDialog(true);
@@ -193,27 +158,27 @@ const AdminSurveysPage: React.FC = () => {
 
   const handleQuestionFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
-    setQuestionFormData(prev => ({
+    setQuestionFormData((prev) => ({
       ...prev,
-      content: value
+      content: value,
     }));
   };
 
-  const handleAnswerChange = (index: number, field: 'content' | 'correct', value: string | boolean) => {
-    setQuestionFormData(prev => {
+  const handleAnswerChange = (index: number, field: "content" | "correct", value: string | boolean) => {
+    setQuestionFormData((prev) => {
       const newAnswers = [...prev.answers];
       newAnswers[index] = { ...newAnswers[index], [field]: value };
       return {
         ...prev,
-        answers: newAnswers
+        answers: newAnswers,
       };
     });
   };
 
   const handleAddAnswer = () => {
-    setQuestionFormData(prev => ({
+    setQuestionFormData((prev) => ({
       ...prev,
-      answers: [...prev.answers, { id: null, content: '', correct: false }]
+      answers: [...prev.answers, { id: null, content: "", correct: false }],
     }));
   };
 
@@ -227,12 +192,12 @@ const AdminSurveysPage: React.FC = () => {
       return;
     }
 
-    setQuestionFormData(prev => {
+    setQuestionFormData((prev) => {
       const newAnswers = [...prev.answers];
       newAnswers.splice(index, 1);
       return {
         ...prev,
-        answers: newAnswers
+        answers: newAnswers,
       };
     });
   };
@@ -249,7 +214,7 @@ const AdminSurveysPage: React.FC = () => {
     }
 
     // Validate answers
-    const validAnswers = questionFormData.answers.filter(ans => ans.content.trim() !== '');
+    const validAnswers = questionFormData.answers.filter((ans) => ans.content.trim() !== "");
     if (validAnswers.length < 2) {
       Swal.fire({
         icon: "warning",
@@ -262,10 +227,10 @@ const AdminSurveysPage: React.FC = () => {
     const newQuestion: Question = {
       id: null,
       content: questionFormData.content,
-      answers: validAnswers.map(ans => ({ ...ans, id: null }))
+      answers: validAnswers.map((ans) => ({ ...ans, id: null })),
     };
 
-    setFormData(prev => {
+    setFormData((prev) => {
       const newQuestions = [...prev.questions];
       if (editingQuestionIndex !== null) {
         newQuestions[editingQuestionIndex] = newQuestion;
@@ -274,7 +239,7 @@ const AdminSurveysPage: React.FC = () => {
       }
       return {
         ...prev,
-        questions: newQuestions
+        questions: newQuestions,
       };
     });
 
@@ -285,34 +250,34 @@ const AdminSurveysPage: React.FC = () => {
     const question = formData.questions[index];
     setQuestionFormData({
       content: question.content,
-      answers: question.answers.map(ans => ({ ...ans }))
+      answers: question.answers.map((ans) => ({ ...ans })),
     });
     setEditingQuestionIndex(index);
     setOpenQuestionDialog(true);
   };
 
   const handleRemoveQuestion = (index: number) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newQuestions = [...prev.questions];
       newQuestions.splice(index, 1);
       return {
         ...prev,
-        questions: newQuestions
+        questions: newQuestions,
       };
     });
   };
 
   const handleEditSurvey = (survey: Survey) => {
-    setDialogMode('edit');
+    setDialogMode("edit");
     setCurrentSurvey(survey);
 
     // Ensure type is valid, default to ASSIST if not
-    const validType = SURVEY_TYPES.find(t => t.value === survey.type) ? survey.type : 'ASSIST';
+    const validType = SURVEY_TYPES.find((t) => t.value === survey.type) ? survey.type : "ASSIST";
 
     setFormData({
       name: survey.name,
       type: validType,
-      questions: survey.questions.map(q => ({ ...q }))
+      questions: survey.questions.map((q) => ({ ...q })),
     });
     setOpenSurveyDialog(true);
   };
@@ -321,14 +286,14 @@ const AdminSurveysPage: React.FC = () => {
     if (!surveyId) return;
 
     const result = await Swal.fire({
-      title: 'Xác nhận xóa?',
+      title: "Xác nhận xóa?",
       text: `Bạn có chắc muốn xóa khảo sát "${surveyName}" không?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Xóa",
-      cancelButtonText: "Hủy"
+      cancelButtonText: "Hủy",
     });
 
     if (result.isConfirmed) {
@@ -342,7 +307,7 @@ const AdminSurveysPage: React.FC = () => {
           toast.error(message || "Không thể xóa khảo sát. Vui lòng thử lại sau.");
         }
       } catch (error) {
-        console.error('Error deleting survey:', error);
+        console.error("Error deleting survey:", error);
         toast.error("Không thể xóa khảo sát. Vui lòng thử lại sau.");
       }
     }
@@ -361,37 +326,37 @@ const AdminSurveysPage: React.FC = () => {
 
     try {
       const surveyData: Survey = {
-        id: dialogMode === 'edit' ? currentSurvey?.id || null : null,
+        id: dialogMode === "edit" ? currentSurvey?.id || null : null,
         name: formData.name,
         type: formData.type,
-        questions: formData.questions
+        questions: formData.questions,
       };
 
       let code: number, data: Survey, message: string;
 
-      if (dialogMode === 'edit' && currentSurvey?.id) {
+      if (dialogMode === "edit" && currentSurvey?.id) {
         [code, data, message] = await surveyService.updateSurvey(currentSurvey.id, surveyData);
       } else {
         [code, data, message] = await surveyService.createSurvey(surveyData);
       }
 
       if (code === 200) {
-        toast.success(dialogMode === 'edit' ? 'Cập nhật khảo sát thành công' : 'Thêm khảo sát thành công');
+        toast.success(dialogMode === "edit" ? "Cập nhật khảo sát thành công" : "Thêm khảo sát thành công");
         handleCloseSurveyDialog();
         loadSurveys();
       } else {
-        toast.error(message || `Có lỗi xảy ra khi ${dialogMode === 'edit' ? 'cập nhật' : 'tạo'} khảo sát`);
+        toast.error(message || `Có lỗi xảy ra khi ${dialogMode === "edit" ? "cập nhật" : "tạo"} khảo sát`);
       }
     } catch (error) {
-      console.error(`Error ${dialogMode === 'edit' ? 'updating' : 'creating'} survey:`, error);
-      toast.error(`Có lỗi xảy ra khi ${dialogMode === 'edit' ? 'cập nhật' : 'tạo'} khảo sát`);
+      console.error(`Error ${dialogMode === "edit" ? "updating" : "creating"} survey:`, error);
+      toast.error(`Có lỗi xảy ra khi ${dialogMode === "edit" ? "cập nhật" : "tạo"} khảo sát`);
     }
   };
 
   if (loading && surveys.length === 0) {
     return (
       <Container>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
           <CircularProgress />
         </Box>
       </Container>
@@ -421,14 +386,14 @@ const AdminSurveysPage: React.FC = () => {
 
       {/* Toolbar */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
           <TextField
             label="Tìm kiếm"
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={handleSearchChange}
-            sx={{ flexGrow: 1, minWidth: '200px' }}
+            sx={{ flexGrow: 1, minWidth: "200px" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -438,18 +403,14 @@ const AdminSurveysPage: React.FC = () => {
             }}
           />
 
-          <FormControl variant="outlined" size="small" sx={{ minWidth: '150px' }}>
+          <FormControl variant="outlined" size="small" sx={{ minWidth: "150px" }}>
             <InputLabel id="type-filter-label">Loại</InputLabel>
-            <Select
-              labelId="type-filter-label"
-              id="type-filter"
-              value={typeFilter}
-              onChange={handleTypeFilterChange}
-              label="Loại"
-            >
+            <Select labelId="type-filter-label" id="type-filter" value={typeFilter} onChange={handleTypeFilterChange} label="Loại">
               <MenuItem value="">Tất cả</MenuItem>
-              {SURVEY_TYPES.map(type => (
-                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+              {SURVEY_TYPES.map((type) => (
+                <MenuItem key={type.value} value={type.value}>
+                  {type.label}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -460,20 +421,15 @@ const AdminSurveysPage: React.FC = () => {
             </IconButton>
           </Tooltip>
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddDialog}
-            sx={{ ml: 'auto' }}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog} sx={{ ml: "auto" }}>
             Thêm khảo sát
           </Button>
         </Box>
       </Paper>
 
       {/* Surveys Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+      <Paper sx={{ width: "100%", overflow: "hidden" }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 300px)" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -490,11 +446,7 @@ const AdminSurveysPage: React.FC = () => {
                   <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                   <TableCell>{survey.name}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={SURVEY_TYPES.find(t => t.value === survey.type)?.label || survey.type}
-                      color="primary"
-                      size="small"
-                    />
+                    <Chip label={SURVEY_TYPES.find((t) => t.value === survey.type)?.label || survey.type} color="primary" size="small" />
                   </TableCell>
                   <TableCell>{survey.questions.length}</TableCell>
                   <TableCell align="center">
@@ -514,55 +466,29 @@ const AdminSurveysPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={totalElements}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Số hàng mỗi trang:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
-        />
+        <TablePagination rowsPerPageOptions={[5, 10, 25, 50]} component="div" count={totalElements} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Số hàng mỗi trang:" labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`} />
       </Paper>
 
       {/* Add/Edit Survey Dialog */}
       <Dialog open={openSurveyDialog} onClose={handleCloseSurveyDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {dialogMode === 'add' ? 'Thêm khảo sát mới' : 'Chỉnh sửa khảo sát'}
-        </DialogTitle>
+        <DialogTitle>{dialogMode === "add" ? "Thêm khảo sát mới" : "Chỉnh sửa khảo sát"}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              name="name"
-              label="Tên khảo sát"
-              fullWidth
-              value={formData.name}
-              onChange={handleFormChange}
-            />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField name="name" label="Tên khảo sát" fullWidth value={formData.name} onChange={handleFormChange} />
             <FormControl fullWidth>
               <InputLabel id="type-label">Loại</InputLabel>
-              <Select
-                labelId="type-label"
-                id="type"
-                value={formData.type}
-                onChange={handleTypeChange}
-                label="Loại"
-              >
-                {SURVEY_TYPES.map(type => (
-                  <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+              <Select labelId="type-label" id="type" value={formData.type} onChange={handleTypeChange} label="Loại">
+                {SURVEY_TYPES.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
             <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="subtitle1">Danh sách câu hỏi</Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenAddQuestionDialog}
-                >
+                <Button variant="outlined" startIcon={<AddIcon />} onClick={handleOpenAddQuestionDialog}>
                   Thêm câu hỏi
                 </Button>
               </Box>
@@ -570,7 +496,7 @@ const AdminSurveysPage: React.FC = () => {
                 <Box>
                   {formData.questions.map((question, index) => (
                     <Paper key={index} sx={{ p: 2, mb: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <Box sx={{ flexGrow: 1 }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Câu {index + 1}: {question.content}
@@ -592,9 +518,7 @@ const AdminSurveysPage: React.FC = () => {
                   ))}
                 </Box>
               ) : (
-                <Alert severity="info">
-                  Chưa có câu hỏi nào. Vui lòng thêm câu hỏi cho khảo sát.
-                </Alert>
+                <Alert severity="info">Chưa có câu hỏi nào. Vui lòng thêm câu hỏi cho khảo sát.</Alert>
               )}
             </Box>
           </Box>
@@ -602,64 +526,35 @@ const AdminSurveysPage: React.FC = () => {
         <DialogActions>
           <Button onClick={handleCloseSurveyDialog}>Hủy</Button>
           <Button onClick={handleSaveSurvey} variant="contained">
-            {dialogMode === 'add' ? 'Tạo khảo sát' : 'Cập nhật'}
+            {dialogMode === "add" ? "Tạo khảo sát" : "Cập nhật"}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Add/Edit Question Dialog */}
       <Dialog open={openQuestionDialog} onClose={handleCloseQuestionDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingQuestionIndex !== null ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}
-        </DialogTitle>
+        <DialogTitle>{editingQuestionIndex !== null ? "Chỉnh sửa câu hỏi" : "Thêm câu hỏi mới"}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Nội dung câu hỏi"
-              fullWidth
-              multiline
-              rows={2}
-              value={questionFormData.content}
-              onChange={handleQuestionFormChange}
-            />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField label="Nội dung câu hỏi" fullWidth multiline rows={2} value={questionFormData.content} onChange={handleQuestionFormChange} />
             <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="subtitle2">Đáp án</Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddAnswer}
-                >
+                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleAddAnswer}>
                   Thêm đáp án
                 </Button>
               </Box>
               {questionFormData.answers.map((answer, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
-                  <TextField
-                    label={`Đáp án ${index + 1}`}
-                    fullWidth
-                    size="small"
-                    value={answer.content}
-                    onChange={(e) => handleAnswerChange(index, 'content', e.target.value)}
-                  />
+                <Box key={index} sx={{ display: "flex", gap: 1, mb: 1, alignItems: "center" }}>
+                  <TextField label={`Đáp án ${index + 1}`} fullWidth size="small" value={answer.content} onChange={(e) => handleAnswerChange(index, "content", e.target.value)} />
                   <FormControl size="small" sx={{ minWidth: 100 }}>
                     <InputLabel>Đúng</InputLabel>
-                    <Select
-                      value={answer.correct ? 'true' : 'false'}
-                      onChange={(e) => handleAnswerChange(index, 'correct', e.target.value === 'true')}
-                      label="Đúng"
-                    >
+                    <Select value={answer.correct ? "true" : "false"} onChange={(e) => handleAnswerChange(index, "correct", e.target.value === "true")} label="Đúng">
                       <MenuItem value="false">Sai</MenuItem>
                       <MenuItem value="true">Đúng</MenuItem>
                     </Select>
                   </FormControl>
-                  <IconButton
-                    onClick={() => handleRemoveAnswer(index)}
-                    color="error"
-                    size="small"
-                    disabled={questionFormData.answers.length <= 2}
-                  >
+                  <IconButton onClick={() => handleRemoveAnswer(index)} color="error" size="small" disabled={questionFormData.answers.length <= 2}>
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -670,7 +565,7 @@ const AdminSurveysPage: React.FC = () => {
         <DialogActions>
           <Button onClick={handleCloseQuestionDialog}>Hủy</Button>
           <Button onClick={handleSaveQuestion} variant="contained">
-            {editingQuestionIndex !== null ? 'Cập nhật' : 'Thêm'}
+            {editingQuestionIndex !== null ? "Cập nhật" : "Thêm"}
           </Button>
         </DialogActions>
       </Dialog>

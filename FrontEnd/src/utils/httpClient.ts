@@ -1,13 +1,13 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Base URL
+// Base URL với debug info
 const BASE_URL = process.env.REACT_APP_API_URL;
 
 // Tạo axios instance
 const httpClient = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -15,12 +15,12 @@ const httpClient = axios.create({
 httpClient.interceptors.request.use(
   (config) => {
     // Lấy token từ localStorage
-    const token = localStorage.getItem('TOKEN');
-    
+    const token = localStorage.getItem("TOKEN");
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -34,14 +34,14 @@ httpClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ
-      localStorage.removeItem('TOKEN');
-      localStorage.removeItem('USERNAME');
-      localStorage.removeItem('USER_ROLE');
-      
+      localStorage.removeItem("TOKEN");
+      localStorage.removeItem("USERNAME");
+      localStorage.removeItem("USER_ROLE");
+
       // Redirect về login
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
-    
+
     return Promise.reject(error);
   }
 );

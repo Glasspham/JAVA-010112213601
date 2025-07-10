@@ -40,15 +40,15 @@ export interface LocationStatsResponse {
 class DashboardService {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
-      const response = await httpClient.get<DashboardResponse>('/static/dashboard');
+      const response = await httpClient.get<DashboardResponse>("/static/dashboard");
 
       if (response.data.code === 200) {
         return response.data.data;
       } else {
-        throw new Error(response.data.message || 'Failed to fetch dashboard stats');
+        throw new Error(response.data.message || "Failed to fetch dashboard stats");
       }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error("Error fetching dashboard stats:", error);
       throw error;
     }
   }
@@ -60,10 +60,10 @@ class DashboardService {
       if (response.data.code === 200) {
         return response.data.data;
       } else {
-        throw new Error(response.data.message || 'Failed to fetch yearly stats');
+        throw new Error(response.data.message || "Failed to fetch yearly stats");
       }
     } catch (error) {
-      console.error('Error fetching yearly stats:', error);
+      console.error("Error fetching yearly stats:", error);
       throw error;
     }
   }
@@ -75,10 +75,10 @@ class DashboardService {
       if (response.data.code === 200) {
         return response.data.data;
       } else {
-        throw new Error(response.data.message || 'Failed to fetch location stats');
+        throw new Error(response.data.message || "Failed to fetch location stats");
       }
     } catch (error) {
-      console.error('Error fetching location stats:', error);
+      console.error("Error fetching location stats:", error);
       throw error;
     }
   }

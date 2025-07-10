@@ -42,7 +42,6 @@ public class ProgramMapper {
 
     public ProgramResponse toResponse(ProgramEntity entity) {
         List<UserResponse> userResponses = new ArrayList<>();
-
         if (entity != null && entity.getUsers() != null) {
             for (UserEntity user : entity.getUsers()) {
                 if (user.getIsDelete() == false) {
@@ -50,7 +49,6 @@ public class ProgramMapper {
                 }
             }
         }
-
         return ProgramResponse.builder()
                 .id(entity.getId())
                 .image(entity.getImage())

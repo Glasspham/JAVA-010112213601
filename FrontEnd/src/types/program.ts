@@ -1,4 +1,4 @@
-export type ProgramStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+export type ProgramStatus = "upcoming" | "ongoing" | "completed" | "cancelled";
 
 export interface Program {
   id: string;

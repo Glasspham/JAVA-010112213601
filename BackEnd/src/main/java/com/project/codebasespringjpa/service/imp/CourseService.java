@@ -46,9 +46,8 @@ public class CourseService implements ICourseService {
     @Override
     public CourseResponse create(CourseRequest request) {
         CourseEntity save = courseRepository.save(courseMapper.toEntity(request));
-
-        if(request != null && request.getCourseDetail() != null){
-            for (CourseDetailRequest courseDetailRequest: request.getCourseDetail()){
+        if (request != null && request.getCourseDetail() != null) {
+            for (CourseDetailRequest courseDetailRequest : request.getCourseDetail()) {
                 courseDetailService.create(save.getId(), courseDetailRequest);
             }
         }
@@ -59,33 +58,29 @@ public class CourseService implements ICourseService {
     @Override
     public CourseResponse update(Long id, CourseRequest request) {
         List<ObjectEntity> objectEntities = new ArrayList<>();
-
         try {
-            for (var it: request.getObjects()){
+            for (var it : request.getObjects()) {
                 ObjectEntity object = objectRepository.findByName(it);
-                if(object != null){
+                if (object != null) {
                     objectEntities.add(object);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Loi convert object entity - course mapper: ", e.getMessage());
         }
-
         CourseEntity courseUpdate = this.findEntityById(id);
         courseUpdate.setName(request.getName());
         courseUpdate.setDescription(request.getDescription());
         courseUpdate.setImage(request.getImage());
         courseUpdate.setObjects(objectEntities);
-
-        if(request != null && request.getCourseDetail() != null){
-            for (CourseDetailRequest courseDetailRequest: request.getCourseDetail()){
-                if(courseDetailRequest.getId() != null)
+        if (request != null && request.getCourseDetail() != null) {
+            for (CourseDetailRequest courseDetailRequest : request.getCourseDetail()) {
+                if (courseDetailRequest.getId() != null)
                     courseDetailService.update(courseDetailRequest.getId(), courseDetailRequest);
                 else
                     courseDetailService.create(courseUpdate.getId(), courseDetailRequest);
             }
         }
-
         return courseMapper.toResponse(courseRepository.save(courseUpdate));
     }
 

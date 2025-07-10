@@ -26,68 +26,56 @@ public class CourseMapper {
     @Autowired
     CourseDetailMapper courseDetailMapper;
 
-    public CourseEntity toEntity(CourseRequest request){
+    public CourseEntity toEntity(CourseRequest request) {
         List<ObjectEntity> objectEntities = new ArrayList<>();
-
         try {
-            for (var it: request.getObjects()){
+            for (var it : request.getObjects()) {
                 ObjectEntity object = objectRepository.findByName(it);
-                if(object != null){
+                if (object != null) {
                     objectEntities.add(object);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Loi convert object entity - course mapper: ", e.getMessage());
         }
-
         return CourseEntity.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .image(request.getImage())
-
                 .objects(objectEntities)
                 .build();
     }
 
-    public CourseResponse toResponse(CourseEntity entity){
+    public CourseResponse toResponse(CourseEntity entity) {
         List<String> objects = new ArrayList<>();
         List<String> sallybus = new ArrayList<>();
         List<CourseDetailResponse> courseDetailResponses = new ArrayList<>();
-
-        if(entity != null && entity.getObjects() != null){
-            for (ObjectEntity object: entity.getObjects()){
+        if (entity != null && entity.getObjects() != null) {
+            for (ObjectEntity object : entity.getObjects()) {
                 objects.add(object.getName());
             }
         }
-
-        if(entity != null && entity.getCourseDetail() != null){
-            for (CourseDetailEntity courseDetail: entity.getCourseDetail()) {
-                if(courseDetail.getIsDelete() == false) {
+        if (entity != null && entity.getCourseDetail() != null) {
+            for (CourseDetailEntity courseDetail : entity.getCourseDetail()) {
+                if (courseDetail.getIsDelete() == false) {
                     courseDetailResponses.add(courseDetailMapper.toResponse(courseDetail));
                     sallybus.add(courseDetail.getName());
                 }
             }
         }
-
-
         String imageTmp = UtilConst.NO_IMAGE_DEFAULT;
-        if(UtilFile.hasImage(entity.getImage()))
+        if (UtilFile.hasImage(entity.getImage()))
             imageTmp = entity.getImage();
-
-
         return CourseResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .description(entity.getDescription())
                 .duration(entity.getDuration())
                 .image(imageTmp)
-
                 .createDate(entity.getCreateDate().toLocalDate())
                 .updateDate(entity.getUpdateDate().toLocalDate())
-
                 .objects(objects)
                 .courseDetail(courseDetailResponses)
-
                 .build();
     }
 }

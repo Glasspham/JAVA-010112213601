@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AnswerMapper {
 
-    public AnswerResponse toResponse(AnswerEntity entity){
+    public AnswerResponse toResponse(AnswerEntity entity) {
         return AnswerResponse.builder()
                 .id(entity.getId())
                 .content(entity.getContent())

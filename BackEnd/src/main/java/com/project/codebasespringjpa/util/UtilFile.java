@@ -8,16 +8,19 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 public class UtilFile {
-    /* !Cấu hình thư mục lưu trữ ảnh */
-    /* Chạy bằng Docker */
-    // private static final String RESOURCE_DIR = System.getProperty("user.dir") + "/static/";
-    /* Chạy bằng IntelliJ, Maven,... nói chung là local */
-    private static final String RESOURCE_DIR = System.getProperty("user.dir") + "/src/main/resources/static/";
+    private static final String RESOURCE_DIR = getResourceDirectory();
+    
+    private static String getResourceDirectory() {
+        String dockerEnv = System.getenv("DOCKER_ENV");
+        if (dockerEnv != null && !dockerEnv.isEmpty()) {
+            // Môi trường Docker
+            return "/app/static/";
+        }
+        return System.getProperty("user.dir") + "/src/main/resources/static/";
+    }
 
     public static String saveFileToStaticFolder(MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("File empty");
-        }
+        if (file.isEmpty()) throw new IllegalArgumentException("File empty");
         // Tạo tên file duy nhất
         String originalFilename = file.getOriginalFilename();
         String fileExtension = "";

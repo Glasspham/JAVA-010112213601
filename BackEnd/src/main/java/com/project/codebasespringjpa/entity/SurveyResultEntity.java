@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Entity
 @Table(name = "tbl_survey_result")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SurveyResultEntity extends BaseEntity{
+public class SurveyResultEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;

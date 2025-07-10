@@ -21,13 +21,11 @@ public class QuestionMapper {
 
     public QuestionResponse toResponse(QuestionEntity entity){
         List<AnswerResponse>answerResponses = new ArrayList<>();
-
         if (entity != null && entity.getAnswers() != null){
             for (AnswerEntity answer: entity.getAnswers()){
                 answerResponses.add(answerMapper.toResponse(answer));
             }
         }
-
         return QuestionResponse.builder()
                 .id(entity.getId())
                 .content(entity.getContent())

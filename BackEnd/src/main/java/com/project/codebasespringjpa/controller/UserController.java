@@ -23,7 +23,6 @@ public class UserController {
     IUserService userService;
 
     @GetMapping("")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
     ApiResponse<UserResponse> findById(@RequestParam(name = "id") Long id) {
         return ApiResponse.<UserResponse>builder()
                 .data(userService.findByid(id))
@@ -33,12 +32,12 @@ public class UserController {
     @GetMapping("/find-all")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Page<UserResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
-                                            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
-                                            @RequestParam(name = "keyword", required = false) String keyword,
-                                            @RequestParam(name = "roleName", required = false) String roleName,
-                                            @RequestParam(name = "majorName", required = false) String majorName){
+            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "roleName", required = false) String roleName,
+            @RequestParam(name = "majorName", required = false) String majorName) {
 
-        Pageable pageable = PageRequest.of(page-1, limit);
+        Pageable pageable = PageRequest.of(page - 1, limit);
         UserSearch userSearch = UserSearch.builder()
                 .keyword(keyword)
                 .roleName(roleName)
@@ -76,13 +75,13 @@ public class UserController {
     }
 
     @GetMapping("/list-specialist")
-    public ApiResponse<List<UserResponse>> findAllSpecialist(){
+    public ApiResponse<List<UserResponse>> findAllSpecialist() {
         return ApiResponse.<List<UserResponse>>builder().data(userService.findAllSpecialist()).build();
     }
 
     @GetMapping("/list-user")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<UserResponse>> findAllUser(){
+    public ApiResponse<List<UserResponse>> findAllUser() {
         return ApiResponse.<List<UserResponse>>builder().data(userService.findAllUser()).build();
     }
 }

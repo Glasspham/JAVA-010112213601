@@ -12,7 +12,7 @@ import java.util.List;
 @Entity
 @Table(name = "tbl_question")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class QuestionEntity extends BaseEntity{
+public class QuestionEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;

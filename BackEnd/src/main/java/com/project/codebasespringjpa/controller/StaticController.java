@@ -24,7 +24,7 @@ public class StaticController {
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-    ApiResponse<DashboardResponse> getDashboard(){
+    ApiResponse<DashboardResponse> getDashboard() {
         return ApiResponse.<DashboardResponse>builder()
                 .data(staticService.getDashboard())
                 .build();
@@ -32,7 +32,7 @@ public class StaticController {
 
     @GetMapping("/static-year")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-    ApiResponse<List<StaticProgramResponse>> getProgramByYear(@RequestParam(name = "year") Integer year){
+    ApiResponse<List<StaticProgramResponse>> getProgramByYear(@RequestParam(name = "year") Integer year) {
         return ApiResponse.<List<StaticProgramResponse>>builder()
                 .data(staticService.getStaticProgram(year))
                 .build();
@@ -40,7 +40,7 @@ public class StaticController {
 
     @GetMapping("/static-location-year")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-    ApiResponse<List<ProgramLocationResponse>> getLocationByYear(@RequestParam(name = "year") Integer year){
+    ApiResponse<List<ProgramLocationResponse>> getLocationByYear(@RequestParam(name = "year") Integer year) {
         return ApiResponse.<List<ProgramLocationResponse>>builder()
                 .data(staticService.getCountLocation(year))
                 .build();

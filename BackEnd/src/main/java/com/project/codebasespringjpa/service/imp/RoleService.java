@@ -26,7 +26,6 @@ public class RoleService implements IRoleService {
         RoleEntity entity = RoleEntity.builder()
                 .name(name)
                 .build();
-
         roleRepository.save(entity);
     }
 }

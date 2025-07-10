@@ -1,45 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Button,
-  Box,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-  Chip,
-  Pagination,
-  IconButton,
-  Tooltip,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  CircularProgress,
-  Alert
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon
-} from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import { CourseService, CourseResponse, CourseSearch } from '../../services/CourseService';
-import { getImageUrl, handleImageError } from '../../utils/imageUtils';
+import React, { useState, useEffect } from "react";
+import { Container, Typography, Grid, Card, CardContent, CardMedia, Button, Box, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Chip, Pagination, IconButton, Tooltip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress, Alert } from "@mui/material";
+import { Search as SearchIcon, Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Visibility as ViewIcon } from "@mui/icons-material";
+import { Link } from "react-router-dom";
+import { CourseService, CourseResponse, CourseSearch } from "../../services/CourseService";
+import { getImageUrl, handleImageError } from "../../utils/imageUtils";
 
 interface CoursesPageProps {
   isAdmin?: boolean;
@@ -49,12 +13,12 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
   const [courses, setCourses] = useState<CourseResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [audienceFilter, setAudienceFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [audienceFilter, setAudienceFilter] = useState<string>("all");
   const [totalElement, setTotalElement] = useState(0);
   const [courseSearch, setCourseSearch] = useState<CourseSearch>({
     page: 1,
-    limit: 6
+    limit: 6,
   });
 
   const _courseService = new CourseService();
@@ -70,11 +34,11 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
           setCourses(data.content || []);
           setTotalElement(data.totalElements || 0);
         } else {
-          setError(message || 'Không thể tải danh sách khóa học');
+          setError(message || "Không thể tải danh sách khóa học");
         }
       } catch (error) {
-        console.error('Error fetching courses:', error);
-        setError('Có lỗi xảy ra khi tải danh sách khóa học');
+        console.error("Error fetching courses:", error);
+        setError("Có lỗi xảy ra khi tải danh sách khóa học");
       } finally {
         setLoading(false);
       }
@@ -86,10 +50,10 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
   // Handle search with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setCourseSearch(prev => ({
+      setCourseSearch((prev) => ({
         ...prev,
         page: 1,
-        keyword: searchTerm || undefined
+        keyword: searchTerm || undefined,
       }));
     }, 500);
 
@@ -98,10 +62,10 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
 
   // Handle audience filter
   useEffect(() => {
-    setCourseSearch(prev => ({
+    setCourseSearch((prev) => ({
       ...prev,
       page: 1,
-      object: audienceFilter !== 'all' ? audienceFilter : undefined
+      object: audienceFilter !== "all" ? audienceFilter : undefined,
     }));
   }, [audienceFilter]);
 
@@ -114,9 +78,9 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
   };
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setCourseSearch(prev => ({
+    setCourseSearch((prev) => ({
       ...prev,
-      page: value
+      page: value,
     }));
   };
 
@@ -124,11 +88,15 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
 
   // Hàm hiển thị nhãn đối tượng
   const getAudienceLabel = (type: string) => {
-    switch(type) {
-      case 'Học sinh': return 'Học sinh';
-      case 'Giáo viên': return 'Giáo viên';
-      case 'Chung': return 'Chung';
-      default: return type;
+    switch (type) {
+      case "Học sinh":
+        return "Học sinh";
+      case "Giáo viên":
+        return "Giáo viên";
+      case "Chung":
+        return "Chung";
+      default:
+        return type;
     }
   };
 
@@ -136,24 +104,18 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
   const renderAdminView = () => {
     return (
       <Container maxWidth={false}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
           <Typography variant="h4" component="h1">
             Quản lý khóa học
           </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            component={Link}
-            to="/admin/courses/create"
-          >
+          <Button variant="contained" color="primary" startIcon={<AddIcon />} component={Link} to="/admin/courses/create">
             Thêm khóa học mới
           </Button>
         </Box>
 
         {/* Bộ lọc và tìm kiếm */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
             <TextField
               fullWidth
               label="Tìm kiếm khóa học"
@@ -170,13 +132,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
             />
             <FormControl fullWidth variant="outlined">
               <InputLabel id="audience-filter-label">Đối tượng</InputLabel>
-              <Select
-                labelId="audience-filter-label"
-                id="audience-filter"
-                value={audienceFilter}
-                onChange={handleAudienceFilterChange}
-                label="Đối tượng"
-              >
+              <Select labelId="audience-filter-label" id="audience-filter" value={audienceFilter} onChange={handleAudienceFilterChange} label="Đối tượng">
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="Học sinh">Học sinh</MenuItem>
                 <MenuItem value="Giáo viên">Giáo viên</MenuItem>
@@ -188,7 +144,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
 
         {/* Loading and Error States */}
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress />
           </Box>
         )}
@@ -201,75 +157,63 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
 
         {/* Bảng dữ liệu */}
         {!loading && !error && (
-        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-          <TableContainer sx={{ maxHeight: 600 }}>
-            <Table stickyHeader aria-label="sticky table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Tiêu đề</TableCell>
-                  <TableCell>Đối tượng</TableCell>
-                  <TableCell>Thời lượng</TableCell>
-                  <TableCell>Số lượt học</TableCell>
-                  <TableCell align="center">Thao tác</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {courses.map((course) => (
-                  <TableRow hover key={course.id}>
-                    <TableCell>{course.id}</TableCell>
-                    <TableCell>{course.name}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {course.objects.map((obj, index) => (
-                          <Chip
-                            key={index}
-                            label={getAudienceLabel(obj)}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{course.duration || 0} giờ</TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <Tooltip title="Xem chi tiết">
-                          <IconButton component={Link} to={`/courses/${course.id}`} color="info">
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Chỉnh sửa">
-                          <IconButton component={Link} to={`/admin/courses/edit/${course.id}`} color="primary">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Xóa">
-                          <IconButton color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
+          <Paper sx={{ width: "100%", overflow: "hidden" }}>
+            <TableContainer sx={{ maxHeight: 600 }}>
+              <Table stickyHeader aria-label="sticky table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Tiêu đề</TableCell>
+                    <TableCell>Đối tượng</TableCell>
+                    <TableCell>Thời lượng</TableCell>
+                    <TableCell>Số lượt học</TableCell>
+                    <TableCell align="center">Thao tác</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              <Pagination
-                count={totalPages}
-                page={courseSearch.page}
-                onChange={handlePageChange}
-                color="primary"
-                size="large"
-              />
-            </Box>
-          )}
-        </Paper>
+                </TableHead>
+                <TableBody>
+                  {courses.map((course) => (
+                    <TableRow hover key={course.id}>
+                      <TableCell>{course.id}</TableCell>
+                      <TableCell>{course.name}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {course.objects.map((obj, index) => (
+                            <Chip key={index} label={getAudienceLabel(obj)} size="small" color="primary" variant="outlined" />
+                          ))}
+                        </Box>
+                      </TableCell>
+                      <TableCell>{course.duration || 0} giờ</TableCell>
+                      <TableCell>0</TableCell>
+                      <TableCell align="center">
+                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                          <Tooltip title="Xem chi tiết">
+                            <IconButton component={Link} to={`/courses/${course.id}`} color="info">
+                              <ViewIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Chỉnh sửa">
+                            <IconButton component={Link} to={`/admin/courses/edit/${course.id}`} color="primary">
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Xóa">
+                            <IconButton color="error">
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {totalPages > 1 && (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+                <Pagination count={totalPages} page={courseSearch.page} onChange={handlePageChange} color="primary" size="large" />
+              </Box>
+            )}
+          </Paper>
         )}
       </Container>
     );
@@ -285,7 +229,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
 
         {/* Bộ lọc và tìm kiếm */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
             <TextField
               fullWidth
               label="Tìm kiếm khóa học"
@@ -302,13 +246,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
             />
             <FormControl fullWidth variant="outlined">
               <InputLabel id="audience-filter-label">Đối tượng</InputLabel>
-              <Select
-                labelId="audience-filter-label"
-                id="audience-filter"
-                value={audienceFilter}
-                onChange={handleAudienceFilterChange}
-                label="Đối tượng"
-              >
+              <Select labelId="audience-filter-label" id="audience-filter" value={audienceFilter} onChange={handleAudienceFilterChange} label="Đối tượng">
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="Phụ huynh">Phụ huynh</MenuItem>
                 <MenuItem value="Học sinh">Học sinh</MenuItem>
@@ -321,7 +259,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
 
         {/* Loading and Error States */}
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress />
           </Box>
         )}
@@ -336,23 +274,15 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
           <>
             {/* Hiển thị số lượng kết quả */}
             <Box sx={{ mb: 2 }}>
-              <Typography variant="body1">
-                Hiển thị {totalElement} khóa học
-              </Typography>
+              <Typography variant="body1">Hiển thị {totalElement} khóa học</Typography>
             </Box>
 
             {/* Danh sách khóa học */}
             {courses.length > 0 ? (
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 4 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 4 }}>
                 {courses.map((course) => (
-                  <Card key={course.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-                    <CardMedia
-                      component="img"
-                      height="140"
-                      image={getImageUrl(course.image)}
-                      alt={course.name}
-                      onError={handleImageError}
-                    />
+                  <Card key={course.id} sx={{ height: "100%", display: "flex", flexDirection: "column", borderRadius: 2 }}>
+                    <CardMedia component="img" height="140" image={getImageUrl(course.image)} alt={course.name} onError={handleImageError} />
                     <CardContent sx={{ flexGrow: 1 }}>
                       <Typography gutterBottom variant="h5" component="h2">
                         {course.name}
@@ -360,15 +290,9 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         {course.description}
                       </Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2 }}>
                         {course.objects.map((obj, index) => (
-                          <Chip
-                            key={index}
-                            label={getAudienceLabel(obj)}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
+                          <Chip key={index} label={getAudienceLabel(obj)} size="small" color="primary" variant="outlined" />
                         ))}
                       </Box>
                       <Typography variant="body2" color="text.secondary">
@@ -376,12 +300,7 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                       </Typography>
                     </CardContent>
                     <Box sx={{ p: 2 }}>
-                      <Button
-                        component={Link}
-                        to={`/courses/${course.id}`}
-                        variant="contained"
-                        fullWidth
-                      >
+                      <Button component={Link} to={`/courses/${course.id}`} variant="contained" fullWidth>
                         Xem chi tiết
                       </Button>
                     </Box>
@@ -389,23 +308,15 @@ const CoursesPage: React.FC<CoursesPageProps> = ({ isAdmin = false }) => {
                 ))}
               </Box>
             ) : (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6">
-                  Không tìm thấy khóa học nào phù hợp với tiêu chí tìm kiếm.
-                </Typography>
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography variant="h6">Không tìm thấy khóa học nào phù hợp với tiêu chí tìm kiếm.</Typography>
               </Box>
             )}
 
             {/* Phân trang */}
             {totalPages > 1 && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Pagination
-                  count={totalPages}
-                  page={courseSearch.page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                />
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                <Pagination count={totalPages} page={courseSearch.page} onChange={handlePageChange} color="primary" size="large" />
               </Box>
             )}
           </>

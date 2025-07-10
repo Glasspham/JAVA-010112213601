@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ISurveyRepository extends JpaRepository<SurveyEntity, Long> {
     @Query("""
-    select sv from SurveyEntity sv where sv.isDelete = false 
-        and (:keyword is null or sv.name like concat('%', :keyword, '%')) 
-        and (:type is null or sv.type = :type) 
-    """)
+            select sv from SurveyEntity sv where sv.isDelete = false
+                and (:keyword is null or sv.name like concat('%', :keyword, '%'))
+                and (:type is null or sv.type = :type)
+            """)
     Page<SurveyEntity> findAll(
             @Param("keyword") String keyword,
             @Param("type") String type,

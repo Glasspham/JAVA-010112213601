@@ -19,7 +19,7 @@ public class ObjectEntity {
 
     String name;
 
-    public ObjectEntity(String name){
+    public ObjectEntity(String name) {
         this.name = name;
     }
 }

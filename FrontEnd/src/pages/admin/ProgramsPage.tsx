@@ -1,55 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Button,
-  IconButton,
-  Tooltip,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-  SelectChangeEvent
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
-  Visibility as VisibilityIcon,
-  Event as EventIcon,
-  LocationOn as LocationIcon,
-  People as PeopleIcon
-} from '@mui/icons-material';
-import { Program } from '../../types/program';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { toast } from 'react-toastify';
-import { ProgramService } from '../../services/ProgramService';
-import { ProgramDTO } from '../../dto/ProgramDTO';
-import { ProgramSearch } from '../../dto/ProgramSearch';
-import Swal from 'sweetalert2';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, SelectChangeEvent } from "@mui/material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Visibility as VisibilityIcon, Event as EventIcon, LocationOn as LocationIcon, People as PeopleIcon } from "@mui/icons-material";
+import { Program } from "../../types/program";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import { toast } from "react-toastify";
+import { ProgramService } from "../../services/ProgramService";
+import { ProgramDTO } from "../../dto/ProgramDTO";
+import { ProgramSearch } from "../../dto/ProgramSearch";
+import Swal from "sweetalert2";
+import { Link } from "react-router-dom";
 
 const AdminProgramsPage: React.FC = () => {
   // State for programs data
@@ -68,29 +31,29 @@ const AdminProgramsPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(programSearch.limit);
 
   // State for search and filter
-  const [searchTerm, setSearchTerm] = useState(programSearch.keyword || '');
+  const [searchTerm, setSearchTerm] = useState(programSearch.keyword || "");
   const [dateFilter, setDateFilter] = useState<Date | null>(programSearch.date ? new Date(programSearch.date) : null);
 
   // State for program dialog
   const [openProgramDialog, setOpenProgramDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [currentProgram, setCurrentProgram] = useState<Program | null>(null);
   const [formData, setFormData] = useState({
     id: 0,
-    title: '',
-    description: '',
-    location: '',
+    title: "",
+    description: "",
+    location: "",
     date: new Date(),
-    time: '09:00',
+    time: "09:00",
     duration: 120,
     capacity: 50,
     registrations: 0,
-    image: ''
+    image: "",
   });
 
   // State for image upload
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   // Helper function to map API response to UI's Program interface
   const mapApiResponseToProgram = (apiData: any): Program => {
@@ -98,34 +61,34 @@ const AdminProgramsPage: React.FC = () => {
     let programDate: Date;
     try {
       // API trả về date dạng "2025-06-21" và time dạng "00:00:00"
-      const dateStr = apiData.date || new Date().toISOString().split('T')[0];
-      const timeStr = apiData.time || '00:00:00';
+      const dateStr = apiData.date || new Date().toISOString().split("T")[0];
+      const timeStr = apiData.time || "00:00:00";
 
-      const [year, month, day] = dateStr.split('-').map(Number);
-      const [hour, minute] = timeStr.split(':').map(Number);
+      const [year, month, day] = dateStr.split("-").map(Number);
+      const [hour, minute] = timeStr.split(":").map(Number);
 
       programDate = new Date(year, month - 1, day, hour, minute);
 
       // Kiểm tra tính hợp lệ của date
       if (isNaN(programDate.getTime())) {
-        console.warn('Invalid date detected, using current date');
+        console.warn("Invalid date detected, using current date");
         programDate = new Date();
       }
     } catch (error) {
-      console.error('Error creating date:', error);
+      console.error("Error creating date:", error);
       programDate = new Date();
     }
 
     return {
       id: apiData.id.toString(),
       title: apiData.title,
-      description: apiData.description || '',
+      description: apiData.description || "",
       location: apiData.address,
       date: programDate,
       duration: 120, // Default duration
       capacity: apiData.capacity,
       registrations: apiData.users ? apiData.users.length : 0,
-      image: apiData.image || '',
+      image: apiData.image || "",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -139,9 +102,9 @@ const AdminProgramsPage: React.FC = () => {
     programDTO.description = data.description;
     programDTO.image = data.image;
     programDTO.address = data.location; // Map location to address
-    programDTO.date = format(data.date, 'yyyy-MM-dd'); // Format date to YYYY-MM-DD
-    programDTO.hourse = parseInt(data.time.split(':')[0]);
-    programDTO.minus = parseInt(data.time.split(':')[1]);
+    programDTO.date = format(data.date, "yyyy-MM-dd"); // Format date to YYYY-MM-DD
+    programDTO.hourse = parseInt(data.time.split(":")[0]);
+    programDTO.minus = parseInt(data.time.split(":")[1]);
     programDTO.capacity = data.capacity;
     return programDTO;
   };
@@ -175,23 +138,20 @@ const AdminProgramsPage: React.FC = () => {
 
     // Apply search filter
     if (searchTerm) {
-      result = result.filter(program =>
-        program.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        program.description.toLowerCase().includes(searchTerm.toLowerCase()) || // description is empty now, might not work as intended
-        program.location.toLowerCase().includes(searchTerm.toLowerCase())
+      result = result.filter(
+        (program) =>
+          program.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          program.description.toLowerCase().includes(searchTerm.toLowerCase()) || // description is empty now, might not work as intended
+          program.location.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Apply date filter
     if (dateFilter) {
       const filterDate = new Date(dateFilter);
-      result = result.filter(program => {
+      result = result.filter((program) => {
         const programDate = new Date(program.date);
-        return (
-          programDate.getDate() === filterDate.getDate() &&
-          programDate.getMonth() === filterDate.getMonth() &&
-          programDate.getFullYear() === filterDate.getFullYear()
-        );
+        return programDate.getDate() === filterDate.getDate() && programDate.getMonth() === filterDate.getMonth() && programDate.getFullYear() === filterDate.getFullYear();
       });
     }
 
@@ -201,10 +161,10 @@ const AdminProgramsPage: React.FC = () => {
   // Handle pagination changes
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage); // MUI uses 0-indexed
-    setProgramSearch(prev => ({
+    setProgramSearch((prev) => ({
       ...prev,
       page: newPage + 1, // API uses 1-indexed
-      timer: Date.now() // Trigger useEffect
+      timer: Date.now(), // Trigger useEffect
     }));
   };
 
@@ -212,75 +172,75 @@ const AdminProgramsPage: React.FC = () => {
     const newLimit = parseInt(event.target.value, 10);
     setRowsPerPage(newLimit);
     setPage(0); // Reset to first page
-    setProgramSearch(prev => ({
+    setProgramSearch((prev) => ({
       ...prev,
       limit: newLimit,
       page: 1, // API uses 1-indexed
-      timer: Date.now() // Trigger useEffect
+      timer: Date.now(), // Trigger useEffect
     }));
   };
 
   // Handle search and filter changes - call api
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-    setProgramSearch(prev => ({
+    setProgramSearch((prev) => ({
       ...prev,
       keyword: event.target.value,
       page: 1, // Reset page on new search
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
   const handleDateFilterChange = (date: Date | null) => {
     setDateFilter(date);
-    setProgramSearch(prev => ({
+    setProgramSearch((prev) => ({
       ...prev,
-      date: date ? format(date, 'yyyy-MM-dd') : null,
+      date: date ? format(date, "yyyy-MM-dd") : null,
       page: 1, // Reset page on new filter
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
   const handleResetFilters = () => {
-    setSearchTerm('');
+    setSearchTerm("");
     setDateFilter(null);
-    setProgramSearch(prev => ({
+    setProgramSearch((prev) => ({
       ...prev,
       keyword: null,
       date: null,
       page: 1, // Reset page
-      timer: Date.now()
+      timer: Date.now(),
     }));
   };
 
   // Handle program dialog
   const handleOpenAddDialog = () => {
-    setDialogMode('add');
+    setDialogMode("add");
     setFormData({
       id: 0,
-      title: '',
-      description: '',
-      location: '',
+      title: "",
+      description: "",
+      location: "",
       date: new Date(),
-      time: '09:00',
+      time: "09:00",
       duration: 120,
       capacity: 0,
       registrations: 0,
-      image: ''
+      image: "",
     });
     setSelectedImageFile(null);
-    setImagePreview('');
+    setImagePreview("");
     setOpenProgramDialog(true);
   };
 
   const handleOpenEditDialog = (program: Program) => {
-    setDialogMode('edit');
+    setDialogMode("edit");
     setCurrentProgram(program);
 
     // Retrieve full DTO data to fill form if needed, or rely on existing Program data
     // Assuming Program object has enough data for editing (e.g. date, time extracted from date object)
     const programDate = new Date(program.date);
-    const programTime = format(programDate, 'HH:mm'); // Format date object back to HH:mm string
+    const programTime = format(programDate, "HH:mm"); // Format date object back to HH:mm string
 
     setFormData({
       id: parseInt(program.id), // Convert string ID back to number for DTO
@@ -292,7 +252,7 @@ const AdminProgramsPage: React.FC = () => {
       duration: program.duration,
       capacity: program.capacity,
       registrations: program.registrations,
-      image: program.image || ''
+      image: program.image || "",
     });
 
     // Set image preview for existing program
@@ -300,7 +260,7 @@ const AdminProgramsPage: React.FC = () => {
     if (program.image) {
       setImagePreview(_programService.getImageUrl(program.image));
     } else {
-      setImagePreview('');
+      setImagePreview("");
     }
 
     setOpenProgramDialog(true);
@@ -310,22 +270,22 @@ const AdminProgramsPage: React.FC = () => {
     setOpenProgramDialog(false);
     setCurrentProgram(null);
     setSelectedImageFile(null);
-    setImagePreview('');
+    setImagePreview("");
   };
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        date
+        date,
       }));
     }
   };
@@ -344,7 +304,7 @@ const AdminProgramsPage: React.FC = () => {
 
   const handleSaveProgram = async () => {
     if (!formData.title || !formData.location || !formData.date || !formData.time || formData.capacity <= 0) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc và sức chứa phải lớn hơn 0.');
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc và sức chứa phải lớn hơn 0.");
       return;
     }
 
@@ -352,22 +312,22 @@ const AdminProgramsPage: React.FC = () => {
       const programDTO = mapFormDataToProgramDTO(formData);
       let code, data, message;
 
-      if (dialogMode === 'add') {
+      if (dialogMode === "add") {
         [code, data, message] = await _programService.createProgram(programDTO, selectedImageFile || undefined);
       } else {
         [code, data, message] = await _programService.updateProgram(programDTO.id, programDTO, selectedImageFile || undefined);
       }
 
       if (code === 200) {
-        toast.success(message || `Chương trình đã được ${dialogMode === 'add' ? 'thêm' : 'cập nhật'} thành công!`);
+        toast.success(message || `Chương trình đã được ${dialogMode === "add" ? "thêm" : "cập nhật"} thành công!`);
         handleCloseProgramDialog();
         // Trigger a refresh of the program list
-        setProgramSearch(prev => ({
+        setProgramSearch((prev) => ({
           ...prev,
-          timer: Date.now()
+          timer: Date.now(),
         }));
       } else {
-        toast.error(message || `Đã có lỗi xảy ra khi ${dialogMode === 'add' ? 'thêm' : 'cập nhật'} chương trình.`);
+        toast.error(message || `Đã có lỗi xảy ra khi ${dialogMode === "add" ? "thêm" : "cập nhật"} chương trình.`);
       }
     } catch (error: any) {
       toast.error(`Lỗi kết nối: ${error.message}`);
@@ -383,7 +343,7 @@ const AdminProgramsPage: React.FC = () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Xóa",
-      cancelButtonText: "Hủy"
+      cancelButtonText: "Hủy",
     });
 
     if (result.isConfirmed) {
@@ -396,16 +356,16 @@ const AdminProgramsPage: React.FC = () => {
             title: "Đã xóa!",
             text: `Chương trình "${program.title}" đã được xóa.`,
             timer: 2000,
-            showConfirmButton: false
+            showConfirmButton: false,
           });
 
           // Trigger a refresh of the program list
-          setProgramSearch(prev => ({
+          setProgramSearch((prev) => ({
             ...prev,
-            timer: Date.now()
+            timer: Date.now(),
           }));
         } else {
-          toast.error(message || 'Đã có lỗi xảy ra khi xóa chương trình.');
+          toast.error(message || "Đã có lỗi xảy ra khi xóa chương trình.");
         }
       } catch (error: any) {
         console.error("Lỗi khi xóa:", error);
@@ -419,7 +379,7 @@ const AdminProgramsPage: React.FC = () => {
   };
 
   const getRegistrationPercentage = (program: Program) => {
-    if (program.capacity === 0) return '0%';
+    if (program.capacity === 0) return "0%";
     const percentage = (program.registrations / program.capacity) * 100;
     return `${percentage.toFixed(0)}%`;
   };
@@ -437,14 +397,14 @@ const AdminProgramsPage: React.FC = () => {
 
       {/* Toolbar */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
           <TextField
             label="Tìm kiếm"
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={handleSearchChange}
-            sx={{ flexGrow: 1, minWidth: '200px' }}
+            sx={{ flexGrow: 1, minWidth: "200px" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -455,13 +415,7 @@ const AdminProgramsPage: React.FC = () => {
           />
 
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
-            <DatePicker
-              label="Lọc theo ngày"
-              value={dateFilter}
-              onChange={handleDateFilterChange}
-              format="dd/MM/yyyy"
-              slotProps={{ textField: { size: 'small' } }}
-            />
+            <DatePicker label="Lọc theo ngày" value={dateFilter} onChange={handleDateFilterChange} format="dd/MM/yyyy" slotProps={{ textField: { size: "small" } }} />
           </LocalizationProvider>
 
           <Tooltip title="Đặt lại bộ lọc">
@@ -470,18 +424,14 @@ const AdminProgramsPage: React.FC = () => {
             </IconButton>
           </Tooltip>
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddDialog}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog}>
             Thêm chương trình
           </Button>
         </Box>
       </Paper>
 
       {/* Programs Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+      <Paper sx={{ width: "100%", overflow: "hidden" }}>
         <TableContainer>
           <Table stickyHeader>
             <TableHead>
@@ -500,25 +450,23 @@ const AdminProgramsPage: React.FC = () => {
               {programs.length > 0 ? (
                 programs.map((program, index) => (
                   <TableRow hover key={program.id}>
-                    <TableCell>{(page * rowsPerPage) + index + 1}</TableCell>
+                    <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                     <TableCell>
-                      <Typography variant="body1" fontWeight="medium">{program.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                        {program.description ? program.description.substring(0, 50) + '...' : 'Không có mô tả'}
+                      <Typography variant="body1" fontWeight="medium">
+                        {program.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
+                        {program.description ? program.description.substring(0, 50) + "..." : "Không có mô tả"}
                       </Typography>
                     </TableCell>
                     <TableCell>{program.location}</TableCell>
-                    <TableCell>{format(new Date(program.date), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell>{format(new Date(program.date), 'HH:mm')}</TableCell>
+                    <TableCell>{format(new Date(program.date), "dd/MM/yyyy")}</TableCell>
+                    <TableCell>{format(new Date(program.date), "HH:mm")}</TableCell>
                     <TableCell>{program.capacity}</TableCell>
                     <TableCell>{program.registrations}</TableCell>
                     <TableCell align="center">
                       <Tooltip title="Xem danh sách đăng ký">
-                        <IconButton
-                          component={Link}
-                          to={`/admin/programs/${program.id}/registrations`}
-                          color="info"
-                        >
+                        <IconButton component={Link} to={`/admin/programs/${program.id}/registrations`} color="info">
                           <PeopleIcon />
                         </IconButton>
                       </Tooltip>
@@ -547,36 +495,14 @@ const AdminProgramsPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={totalElements}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Số hàng mỗi trang:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`}
-        />
+        <TablePagination rowsPerPageOptions={[5, 10, 25, 50]} component="div" count={totalElements} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Số hàng mỗi trang:" labelDisplayedRows={({ from, to, count }) => `${from}-${to} của ${count}`} />
       </Paper>
 
       {/* Program Dialog (Add/Edit) */}
       <Dialog open={openProgramDialog} onClose={handleCloseProgramDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{dialogMode === 'add' ? 'Thêm Chương trình mới' : 'Chỉnh sửa Chương trình'}</DialogTitle>
+        <DialogTitle>{dialogMode === "add" ? "Thêm Chương trình mới" : "Chỉnh sửa Chương trình"}</DialogTitle>
         <DialogContent dividers>
-          <TextField
-            autoFocus
-            margin="dense"
-            name="title"
-            label="Tiêu đề chương trình"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={formData.title}
-            onChange={handleFormChange}
-            sx={{ mb: 2 }}
-            required
-          />
+          <TextField autoFocus margin="dense" name="title" label="Tiêu đề chương trình" type="text" fullWidth variant="outlined" value={formData.title} onChange={handleFormChange} sx={{ mb: 2 }} required />
           <TextField
             margin="dense"
             name="location" // Mapped to address in DTO
@@ -589,16 +515,10 @@ const AdminProgramsPage: React.FC = () => {
             sx={{ mb: 2 }}
             required
           />
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 2, mb: 2 }}>
             <Box>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
-                <DatePicker
-                  label="Ngày diễn ra"
-                  value={formData.date}
-                  onChange={handleDateChange}
-                  format="dd/MM/yyyy"
-                  sx={{ width: '100%' }}
-                />
+                <DatePicker label="Ngày diễn ra" value={formData.date} onChange={handleDateChange} format="dd/MM/yyyy" sx={{ width: "100%" }} />
               </LocalizationProvider>
             </Box>
             <Box>
@@ -621,19 +541,7 @@ const AdminProgramsPage: React.FC = () => {
               />
             </Box>
           </Box>
-          <TextField
-            margin="dense"
-            name="capacity"
-            label="Sức chứa"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={formData.capacity}
-            onChange={handleFormChange}
-            sx={{ mb: 2 }}
-            required
-            inputProps={{ min: 0 }}
-          />
+          <TextField margin="dense" name="capacity" label="Sức chứa" type="number" fullWidth variant="outlined" value={formData.capacity} onChange={handleFormChange} sx={{ mb: 2 }} required inputProps={{ min: 0 }} />
 
           <TextField
             margin="dense"
@@ -654,13 +562,7 @@ const AdminProgramsPage: React.FC = () => {
             <Typography variant="subtitle2" gutterBottom>
               Ảnh chương trình
             </Typography>
-            <input
-              accept="image/*"
-              style={{ display: 'none' }}
-              id="image-upload"
-              type="file"
-              onChange={handleImageChange}
-            />
+            <input accept="image/*" style={{ display: "none" }} id="image-upload" type="file" onChange={handleImageChange} />
             <label htmlFor="image-upload">
               <Button variant="outlined" component="span" sx={{ mb: 1 }}>
                 Chọn ảnh
@@ -672,10 +574,10 @@ const AdminProgramsPage: React.FC = () => {
                   src={imagePreview}
                   alt="Preview"
                   style={{
-                    maxWidth: '200px',
-                    maxHeight: '150px',
-                    objectFit: 'cover',
-                    borderRadius: '4px'
+                    maxWidth: "200px",
+                    maxHeight: "150px",
+                    objectFit: "cover",
+                    borderRadius: "4px",
                   }}
                 />
               </Box>
@@ -685,7 +587,7 @@ const AdminProgramsPage: React.FC = () => {
         <DialogActions>
           <Button onClick={handleCloseProgramDialog}>Hủy</Button>
           <Button onClick={handleSaveProgram} variant="contained" color="primary">
-            {dialogMode === 'add' ? 'Thêm' : 'Cập nhật'}
+            {dialogMode === "add" ? "Thêm" : "Cập nhật"}
           </Button>
         </DialogActions>
       </Dialog>

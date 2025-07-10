@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CourseDetailMapper {
 
-    public CourseDetailEntity toEntity(CourseDetailRequest request){
+    public CourseDetailEntity toEntity(CourseDetailRequest request) {
         return CourseDetailEntity.builder()
                 .name(request.getName())
                 .video(request.getVideo())
@@ -23,11 +23,10 @@ public class CourseDetailMapper {
                 .build();
     }
 
-    public CourseDetailResponse toResponse(CourseDetailEntity entity){
+    public CourseDetailResponse toResponse(CourseDetailEntity entity) {
         String videoTmp = UtilConst.NO_IMAGE_DEFAULT;
-        if(UtilFile.hasImage(entity.getVideo()))
+        if (UtilFile.hasImage(entity.getVideo()))
             videoTmp = entity.getVideo();
-
         return CourseDetailResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())

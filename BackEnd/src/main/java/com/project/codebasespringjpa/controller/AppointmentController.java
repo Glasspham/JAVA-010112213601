@@ -32,12 +32,12 @@ public class AppointmentController {
 
     @GetMapping("/find-all")
     ApiResponse<Page<AppointmentResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
-                                                   @RequestParam(name = "limit", defaultValue = "5") Integer limit,
-                                                   @RequestParam(name = "username", required = false) String username,
-                                                   @RequestParam(name = "specialistName", required = false) String specialistName,
-                                                   @RequestParam(name = "keyword", required = false) String keyword,
-                                                   @RequestParam(name = "status", required = false) String status,
-                                                   @RequestParam(name = "date", required = false) LocalDate date) {
+            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
+            @RequestParam(name = "username", required = false) String username,
+            @RequestParam(name = "specialistName", required = false) String specialistName,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "date", required = false) LocalDate date) {
 
         Pageable pageable = PageRequest.of(page - 1, limit);
         AppointmentSearch appointmentSearch = AppointmentSearch.builder()
@@ -78,7 +78,7 @@ public class AppointmentController {
 
     @PutMapping("/change-status/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-    ApiResponse<AppointmentResponse> changeStatus(@PathVariable Long id, @RequestBody StatusRequest request){
+    ApiResponse<AppointmentResponse> changeStatus(@PathVariable Long id, @RequestBody StatusRequest request) {
         return ApiResponse.<AppointmentResponse>builder()
                 .data(appointmentService.changeStatus(id, request))
                 .build();

@@ -15,11 +15,11 @@ public interface IUserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(String username);
 
     @Query("""
-    select us from UserEntity us where us.isDelete = false 
-        and (:keyword is null or us.username like concat('%', :keyword, '%') or us.fullname like concat('%', :keyword, '%')) 
-        and (:role is null or us.role.name = :role) 
-        and (:major is null or exists (select 1 from us.majors usmj where usmj.name = :major))
-    """)
+            select us from UserEntity us where us.isDelete = false
+                and (:keyword is null or us.username like concat('%', :keyword, '%') or us.fullname like concat('%', :keyword, '%'))
+                and (:role is null or us.role.name = :role)
+                and (:major is null or exists (select 1 from us.majors usmj where usmj.name = :major))
+            """)
     Page<UserEntity> findAll(
             @Param("keyword") String keyword,
             @Param("role") String role,

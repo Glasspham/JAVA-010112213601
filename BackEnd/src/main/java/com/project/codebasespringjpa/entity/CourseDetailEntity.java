@@ -12,15 +12,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Table(name = "tbl_course_detail")
-public class CourseDetailEntity extends BaseEntity{
+public class CourseDetailEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     String name;
-
     String video;
-
     Double duration;
 
     @Lob

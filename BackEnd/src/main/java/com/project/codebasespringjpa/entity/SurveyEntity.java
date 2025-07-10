@@ -18,7 +18,6 @@ public class SurveyEntity extends BaseEntity{
     Long id;
 
     String name;
-
     String type;
 
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)

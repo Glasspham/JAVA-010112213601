@@ -50,9 +50,7 @@ public class UserService implements IUserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity user = userRepository.findByUsername(username).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_FOUND)
-        );
-
+                () -> new AppException(ErrorCode.USER_NOT_FOUND));
         return new UserDetailsImpl(user);
     }
 
@@ -97,7 +95,8 @@ public class UserService implements IUserService {
         } catch (Exception e) {
             log.error(">>>Khong tim thay majors, update user: " + e.getMessage());
         }
-        RoleEntity role = roleRepository.findByName(request.getRole()).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        RoleEntity role = roleRepository.findByName(request.getRole())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
         UserEntity userUpdate = this.findEntityById(id);
         userUpdate.setFullname(request.getFullname());
         userUpdate.setEmail(request.getEmail());
@@ -124,9 +123,9 @@ public class UserService implements IUserService {
     @Override
     public UserResponse changePassword(Long id, PasswordRequest passwordRequest) {
         UserEntity userFind = this.findEntityById(id);
-        if (passwordEncoder.matches(passwordRequest.getOldpassword(), userFind.getPassword())){
+        if (passwordEncoder.matches(passwordRequest.getOldpassword(), userFind.getPassword())) {
             userFind.setPassword(passwordEncoder.encode(passwordRequest.getNewpassword()));
-        }else
+        } else
             throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
         return userMapper.toResponse(userRepository.save(userFind));
     }
@@ -155,5 +154,4 @@ public class UserService implements IUserService {
         List<UserEntity> user = userRepository.findAllUser();
         return user.stream().map(it -> userMapper.toResponse(it)).toList();
     }
-
 }

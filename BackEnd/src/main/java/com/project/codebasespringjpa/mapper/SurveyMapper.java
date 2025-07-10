@@ -20,15 +20,13 @@ public class SurveyMapper {
     @Autowired
     QuestionMapper questionMapper;
 
-    public SurveyResponse toResponse(SurveyEntity entity){
+    public SurveyResponse toResponse(SurveyEntity entity) {
         List<QuestionResponse> questionResponses = new ArrayList<>();
-
-        if(entity != null && entity.getQuestions() != null){
-            for (QuestionEntity question: entity.getQuestions()){
+        if (entity != null && entity.getQuestions() != null) {
+            for (QuestionEntity question : entity.getQuestions()) {
                 questionResponses.add(questionMapper.toResponse(question));
             }
         }
-
         return SurveyResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
@@ -37,7 +35,7 @@ public class SurveyMapper {
                 .build();
     }
 
-    public SurveyEntity toEntity(SurveyRequest request){
+    public SurveyEntity toEntity(SurveyRequest request) {
         return SurveyEntity.builder()
                 .id(request.getId())
                 .name(request.getName())

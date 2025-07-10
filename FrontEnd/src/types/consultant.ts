@@ -1,4 +1,4 @@
-export type ConsultantSpecialty = 'addiction' | 'youth' | 'family' | 'education' | 'mental_health';
+export type ConsultantSpecialty = "addiction" | "youth" | "family" | "education" | "mental_health";
 
 export interface Consultant {
   id: string;

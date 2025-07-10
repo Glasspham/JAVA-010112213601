@@ -1,5 +1,5 @@
-export class AuthenDTO{
-    token?:string|'';
-    userName?:string|'';
-    role?:string|'';
+export class AuthenDTO {
+  token?: string | "";
+  userName?: string | "";
+  role?: string | "";
 }

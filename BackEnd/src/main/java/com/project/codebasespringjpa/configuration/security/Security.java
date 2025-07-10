@@ -22,6 +22,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -32,22 +33,22 @@ public class Security {
     UnauthenErr unauthenErr;
 
     private static final String[] ALLOWED_ORIGINS = {
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
+            "http://localhost:3000",
+            "http://127.0.0.1:3000"
     };
 
     private static final String[] ALLOWED_ORIGIN_PATTERNS = {
-        "http://192.168.*.*:3000",
-        "http://10.*.*.*:3000",
-        "http://172.16.*.*:3000"
+            "http://192.168.*.*:3000",
+            "http://10.*.*.*:3000",
+            "http://172.16.*.*:3000"
     };
 
     private static final String[] SWAGGER_WHITELIST = {
-        "/auth/login", "/auth/register",
-        "/files/**",
-        "/swagger-ui/**", "/v3/api-docs/**",
-        "/avatar*", // Thêm đường dẫn avatar
-        "/*.avif", "/*.jpg", "/*.jpeg", "/*.png", "/*.gif" // Thêm các định dạng ảnh phổ biến
+            "/auth/login", "/auth/register",
+            "/files/**",
+            "/swagger-ui/**", "/v3/api-docs/**",
+            "/avatar*", // Thêm đường dẫn avatar
+            "/*.avif", "/*.jpg", "/*.jpeg", "/*.png", "/*.gif" // Thêm các định dạng ảnh phổ biến
     };
 
     @Bean
@@ -55,7 +56,7 @@ public class Security {
         return new JwtAuthenticationFilter();
     }
 
-    //---cors
+    // ---cors
     @Bean
     public WebMvcConfigurer configurer() {
         return new WebMvcConfigurer() {
@@ -77,7 +78,8 @@ public class Security {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
@@ -85,21 +87,19 @@ public class Security {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(cfrs -> cfrs.disable());
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-        http
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - không cần authentication
-                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
-                        // Tất cả endpoints khác cần authentication
-                        .anyRequest().authenticated())
+        http.authorizeHttpRequests(auth -> auth
+                // Public endpoints - không cần authentication
+                .requestMatchers(SWAGGER_WHITELIST).permitAll()
+                // Tất cả endpoints khác cần authentication
+                .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(unauthenErr)
-                )
+                        .authenticationEntryPoint(unauthenErr))
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
     @Bean
-    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(ALLOWED_ORIGINS));
         configuration.setAllowedOriginPatterns(Arrays.asList(ALLOWED_ORIGIN_PATTERNS));

@@ -21,70 +21,70 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequestMapping("/survey")
 public class SurveyController {
-        @Autowired
-        ISurveyService surveyService;
+    @Autowired
+    ISurveyService surveyService;
 
-        @GetMapping("")
-        ApiResponse<SurveyResponse> findById(@RequestParam(name = "id") Long id) {
-                return ApiResponse.<SurveyResponse>builder()
-                                .data(surveyService.findByid(id))
-                                .build();
-        }
+    @GetMapping("")
+    ApiResponse<SurveyResponse> findById(@RequestParam(name = "id") Long id) {
+        return ApiResponse.<SurveyResponse>builder()
+                .data(surveyService.findByid(id))
+                .build();
+    }
 
-        @GetMapping("/find-all")
-        ApiResponse<Page<SurveyResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
-                        @RequestParam(name = "limit", defaultValue = "5") Integer limit,
-                        @RequestParam(name = "keyword", required = false) String keyword,
-                        @RequestParam(name = "type", required = false) String type) {
+    @GetMapping("/find-all")
+    ApiResponse<Page<SurveyResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
+            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "type", required = false) String type) {
 
-                Pageable pageable = PageRequest.of(page - 1, limit);
-                SurveySearch surveySearch = SurveySearch.builder()
-                                .keyword(keyword)
-                                .type(type)
-                                .build();
+        Pageable pageable = PageRequest.of(page - 1, limit);
+        SurveySearch surveySearch = SurveySearch.builder()
+                .keyword(keyword)
+                .type(type)
+                .build();
 
-                return ApiResponse.<Page<SurveyResponse>>builder()
-                                .data(surveyService.findAll(pageable, surveySearch))
-                                .build();
-        }
+        return ApiResponse.<Page<SurveyResponse>>builder()
+                .data(surveyService.findAll(pageable, surveySearch))
+                .build();
+    }
 
-        @PostMapping("/create")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-        ApiResponse<SurveyResponse> create(@RequestBody SurveyRequest request) {
-                return ApiResponse.<SurveyResponse>builder()
-                                .data(surveyService.create(request))
-                                .build();
-        }
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
+    ApiResponse<SurveyResponse> create(@RequestBody SurveyRequest request) {
+        return ApiResponse.<SurveyResponse>builder()
+                .data(surveyService.create(request))
+                .build();
+    }
 
-        @PutMapping("/update/{id}")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-        ApiResponse<SurveyResponse> update(@PathVariable Long id, @RequestBody SurveyRequest request) {
-                return ApiResponse.<SurveyResponse>builder()
-                                .data(surveyService.update(id, request))
-                                .build();
-        }
+    @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
+    ApiResponse<SurveyResponse> update(@PathVariable Long id, @RequestBody SurveyRequest request) {
+        return ApiResponse.<SurveyResponse>builder()
+                .data(surveyService.update(id, request))
+                .build();
+    }
 
-        @DeleteMapping("/delete/{id}")
-        @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-        ApiResponse<String> delete(@PathVariable Long id) {
-                surveyService.delete(id);
-                return ApiResponse.<String>builder()
-                                .data("Xóa thành công")
-                                .build();
-        }
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
+    ApiResponse<String> delete(@PathVariable Long id) {
+        surveyService.delete(id);
+        return ApiResponse.<String>builder()
+                .data("Xóa thành công")
+                .build();
+    }
 
-        @PostMapping("/mark")
-        ApiResponse<SurveyResultResponse> mark(@RequestBody SurveyResultRequest request){
-                return ApiResponse.<SurveyResultResponse>builder()
-                        .data(surveyService.mark(request))
-                        .build();
-        }
+    @PostMapping("/mark")
+    ApiResponse<SurveyResultResponse> mark(@RequestBody SurveyResultRequest request) {
+        return ApiResponse.<SurveyResultResponse>builder()
+                .data(surveyService.mark(request))
+                .build();
+    }
 
-        @GetMapping("/list-mark")
-        ApiResponse<List<SurveyResultResponse>> findAll(@RequestParam(name = "username") String username,
-                                                        @RequestParam(name = "idSurvey", required = false)Long idSurvey){
-                return ApiResponse.<List<SurveyResultResponse>>builder()
-                        .data(surveyService.findResultByUsernameAndSurvey(username, idSurvey))
-                        .build();
-        }
+    @GetMapping("/list-mark")
+    ApiResponse<List<SurveyResultResponse>> findAll(@RequestParam(name = "username") String username,
+            @RequestParam(name = "idSurvey", required = false) Long idSurvey) {
+        return ApiResponse.<List<SurveyResultResponse>>builder()
+                .data(surveyService.findResultByUsernameAndSurvey(username, idSurvey))
+                .build();
+    }
 }

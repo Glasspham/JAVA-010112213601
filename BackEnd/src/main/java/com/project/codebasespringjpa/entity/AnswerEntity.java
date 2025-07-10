@@ -24,7 +24,7 @@ public class AnswerEntity {
     @JoinColumn(name = "question_id")
     QuestionEntity question;
 
-    public AnswerEntity(String content, Boolean correct){
+    public AnswerEntity(String content, Boolean correct) {
         this.content = content;
         this.correct = correct;
     }

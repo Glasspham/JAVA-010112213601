@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: "3.8"
 services:
   mysql:
     image: mysql:8.0.40-debian
@@ -27,6 +27,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/doanyte?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf-8
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 123
+      DOCKER_ENV: "true"
     ports:
       - "8080:8080"
     volumes:
@@ -37,7 +38,7 @@ services:
     build:
       context: ./FrontEnd
       args:
-        REACT_APP_API_URL: http://localhost:8080
+        REACT_APP_API_URL: http://192.168.1.141:8080
     container_name: frontend
     ports:
       - "3000:80"

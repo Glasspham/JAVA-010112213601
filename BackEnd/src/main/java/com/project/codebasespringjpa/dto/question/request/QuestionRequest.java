@@ -13,7 +13,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QuestionRequest {
     Long id;
-
     String content;
     List<AnswerRequest> answers;
 }

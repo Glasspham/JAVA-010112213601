@@ -22,7 +22,7 @@ public class RoleEntity {
     @OneToMany(mappedBy = "role")
     List<UserEntity> users;
 
-    public RoleEntity(String name){
+    public RoleEntity(String name) {
         this.name = name;
     }
 }

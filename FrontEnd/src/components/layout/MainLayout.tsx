@@ -1,40 +1,11 @@
-import React, { useState } from 'react';
-import {
-  AppBar,
-  Box,
-  CssBaseline,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography,
-  Button,
-  Avatar,
-  Menu,
-  MenuItem
-} from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Home as HomeIcon,
-  School as SchoolIcon,
-  AssessmentOutlined as AssessmentIcon,
-  EventNote as EventNoteIcon,
-  Groups as GroupsIcon,
-  Person as PersonIcon,
-  Dashboard as DashboardIcon,
-  Logout as LogoutIcon,
-  MedicalServices
-} from '@mui/icons-material';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'react-toastify';
-import { UTIL_AWAIT_TIME } from '../../utils/UtilFunction';
-import { AuthService } from '../../services/AuthService';
+import React, { useState } from "react";
+import { AppBar, Box, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, Button, Avatar, Menu, MenuItem } from "@mui/material";
+import { Menu as MenuIcon, Home as HomeIcon, School as SchoolIcon, AssessmentOutlined as AssessmentIcon, EventNote as EventNoteIcon, Groups as GroupsIcon, Person as PersonIcon, Dashboard as DashboardIcon, Logout as LogoutIcon, MedicalServices } from "@mui/icons-material";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { toast } from "react-toastify";
+import { UTIL_AWAIT_TIME } from "../../utils/UtilFunction";
+import { AuthService } from "../../services/AuthService";
 
 const drawerWidth = 240;
 
@@ -70,32 +41,34 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     _authService.deleteInfoFromLocal();
     toast.warning("Đã đăng xuất");
     await UTIL_AWAIT_TIME(1000);
-    navigate('/login');
+    navigate("/login");
   };
 
   const menuItems = [
-    { text: 'Trang chủ', icon: <HomeIcon />, path: '/' },
-    { text: 'Khóa học', icon: <SchoolIcon />, path: '/courses' },
-    { text: 'Đánh giá nguy cơ', icon: <AssessmentIcon />, path: '/surveys' },
-    { text: 'Đặt lịch tư vấn', icon: <EventNoteIcon />, path: '/appointments' },
-    { text: 'Chương trình cộng đồng', icon: <GroupsIcon />, path: '/programs' },
+    { text: "Trang chủ", icon: <HomeIcon />, path: "/" },
+    { text: "Khóa học", icon: <SchoolIcon />, path: "/courses" },
+    { text: "Đánh giá nguy cơ", icon: <AssessmentIcon />, path: "/surveys" },
+    { text: "Đặt lịch tư vấn", icon: <EventNoteIcon />, path: "/appointments" },
+    { text: "Chương trình cộng đồng", icon: <GroupsIcon />, path: "/programs" },
   ];
 
   // Admin and manager menu items
   const adminMenuItems = [
-    { text: 'Quản lý chuyên viên', icon: <PersonIcon />, path: '/consultants' },
-    { text: 'Báo cáo & Thống kê', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: "Quản lý chuyên viên", icon: <PersonIcon />, path: "/consultants" },
+    { text: "Báo cáo & Thống kê", icon: <DashboardIcon />, path: "/dashboard" },
   ];
 
   const drawer = (
     <div>
-      <Toolbar sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'primary.main',
-        color: 'white'
-      }}>
+      <Toolbar
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "primary.main",
+          color: "white",
+        }}
+      >
         <MedicalServices sx={{ fontSize: 32, mr: 1 }} />
       </Toolbar>
       <Divider />
@@ -107,21 +80,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               to={item.path}
               selected={location.pathname === item.path}
               sx={{
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.light',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: 'primary.main',
+                "&.Mui-selected": {
+                  backgroundColor: "primary.light",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "primary.main",
                   },
-                  '& .MuiListItemIcon-root': {
-                    color: 'white',
+                  "& .MuiListItemIcon-root": {
+                    color: "white",
                   },
                 },
               }}
             >
-              <ListItemIcon sx={{
-                color: location.pathname === item.path ? 'white' : 'inherit'
-              }}>
+              <ListItemIcon
+                sx={{
+                  color: location.pathname === item.path ? "white" : "inherit",
+                }}
+              >
                 {item.icon}
               </ListItemIcon>
               <ListItemText primary={item.text} />
@@ -130,7 +105,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         ))}
       </List>
       <Divider />
-      {(user?.role === 'admin' || user?.role === 'manager') && (
+      {(user?.role === "admin" || user?.role === "manager") && (
         <List>
           {adminMenuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
@@ -139,21 +114,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 to={item.path}
                 selected={location.pathname === item.path}
                 sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.light',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'primary.main',
+                  "&.Mui-selected": {
+                    backgroundColor: "primary.light",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "primary.main",
                     },
-                    '& .MuiListItemIcon-root': {
-                      color: 'white',
+                    "& .MuiListItemIcon-root": {
+                      color: "white",
                     },
                   },
                 }}
               >
-                <ListItemIcon sx={{
-                  color: location.pathname === item.path ? 'white' : 'inherit'
-                }}>
+                <ListItemIcon
+                  sx={{
+                    color: location.pathname === item.path ? "white" : "inherit",
+                  }}
+                >
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -166,7 +143,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -176,13 +153,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         }}
       >
         <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
+          <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2, display: { sm: "none" } }}>
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
@@ -190,26 +161,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </Typography>
           {isAuthenticated ? (
             <>
-              <IconButton
-                size="large"
-                edge="end"
-                aria-label="account of current user"
-                aria-haspopup="true"
-                onClick={handleProfileMenuOpen}
-                color="inherit"
-              >
-                <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                  {user?.firstName.charAt(0)}
-                </Avatar>
+              <IconButton size="large" edge="end" aria-label="account of current user" aria-haspopup="true" onClick={handleProfileMenuOpen} color="inherit">
+                <Avatar sx={{ bgcolor: "secondary.main" }}>{user?.firstName.charAt(0)}</Avatar>
               </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleProfileMenuClose}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              >
-                <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/profile'); }}>
+              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleProfileMenuClose} transformOrigin={{ horizontal: "right", vertical: "top" }} anchorOrigin={{ horizontal: "right", vertical: "bottom" }}>
+                <MenuItem
+                  onClick={() => {
+                    handleProfileMenuClose();
+                    navigate("/profile");
+                  }}
+                >
                   <ListItemIcon>
                     <PersonIcon fontSize="small" />
                   </ListItemIcon>
@@ -225,17 +186,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </>
           ) : (
             <>
-              <Button color="inherit" component={Link} to="/login">Đăng nhập</Button>
-              <Button color="inherit" component={Link} to="/register">Đăng ký</Button>
+              <Button color="inherit" component={Link} to="/login">
+                Đăng nhập
+              </Button>
+              <Button color="inherit" component={Link} to="/register">
+                Đăng ký
+              </Button>
             </>
           )}
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
-      >
+      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }} aria-label="mailbox folders">
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -244,8 +205,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             keepMounted: true, // Better open performance on mobile.
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
           }}
         >
           {drawer}
@@ -253,22 +214,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
           }}
           open
         >
           {drawer}
         </Drawer>
       </Box>
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
-      >
+      <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}>
         <Toolbar />
-        <Box sx={{ mt: 3 }}>
-          {children}
-        </Box>
+        <Box sx={{ mt: 3 }}>{children}</Box>
       </Box>
     </Box>
   );

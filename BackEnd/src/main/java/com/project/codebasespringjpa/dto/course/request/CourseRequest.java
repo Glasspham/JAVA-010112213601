@@ -11,11 +11,9 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CourseRequest {
     Long id;
-
     String name;
     String description;
     String image;
     List<String> objects;
-
     List<CourseDetailRequest> courseDetail;
 }

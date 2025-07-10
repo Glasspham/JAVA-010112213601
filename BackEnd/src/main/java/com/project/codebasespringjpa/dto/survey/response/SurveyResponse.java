@@ -3,7 +3,6 @@ package com.project.codebasespringjpa.dto.survey.response;
 import com.project.codebasespringjpa.dto.question.response.QuestionResponse;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import java.util.List;
 
 @Data
@@ -15,6 +14,5 @@ public class SurveyResponse {
     Long id;
     String name;
     String type;
-
     List<QuestionResponse> questions;
 }

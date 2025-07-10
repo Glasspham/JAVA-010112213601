@@ -15,7 +15,7 @@ import java.time.LocalTime;
 @Builder
 @Entity
 @Table(name = "tbl_appoiment")
-public class AppointmentEntity extends BaseEntity{
+public class AppointmentEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -33,11 +33,8 @@ public class AppointmentEntity extends BaseEntity{
     String specialistName;
 
     LocalDate date;
-
     LocalTime hours;
-
     Double duration;
-
     String status;
 
     @Formula("(SELECT u.is_delete FROM tbl_user u WHERE u.id = specialist_id)")

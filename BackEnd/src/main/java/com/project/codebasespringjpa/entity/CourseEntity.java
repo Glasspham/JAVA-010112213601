@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "tbl_course")
-public class CourseEntity extends BaseEntity{
+public class CourseEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -27,13 +27,8 @@ public class CourseEntity extends BaseEntity{
     @Formula("(SELECT SUM(cd.duration) FROM tbl_course_detail cd WHERE cd.course_id = id AND cd.is_delete = false)")
     Double duration;
 
-
     @ManyToMany
-    @JoinTable(
-            name = "tbl_course_object",
-            joinColumns = @JoinColumn(name = "course_id"),
-            inverseJoinColumns = @JoinColumn(name = "object_id")
-    )
+    @JoinTable(name = "tbl_course_object", joinColumns = @JoinColumn(name = "course_id"), inverseJoinColumns = @JoinColumn(name = "object_id"))
     List<ObjectEntity> objects;
 
     @OneToMany(mappedBy = "course")

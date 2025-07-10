@@ -1,9 +1,12 @@
 # JAVA-010112213601
+
 # Drug Use Prevention Support System
+
+[Tổng quan dự án](Project_Overview.md)
 
 ## Thành Viên Nhóm
 
-| STT | Họ & Tên               | MSSV         |
+| STT | Họ & Tên               |     MSSV     |
 | :-: | ---------------------- | :----------: |
 |  1  | Phạm Hà Võ             | 079205013990 |
 |  2  | Su Đức Tiến            | 079205025447 |
@@ -14,7 +17,9 @@
 ---
 
 ## Nội Dung Đề Tài
+
 Phần mềm hỗ trợ phòng ngừa sử dụng ma túy
+
 ```
 Guest
 Member
@@ -23,7 +28,9 @@ Consultant
 Manager
 Admin
 ```
+
 Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng của 01 tổ chức tình nguyện.
+
 - Trang chủ giới thiệu thông tin tổ chức, blog chia sẽ kinh nghiệm, …
 - Chức năng cho phép người dùng tìm kiếm và đăng ký các khóa học đào tạo online về ma túy (nhận thức ma túy, kỹ năng phòng tránh, kỹ năng từ chối, …), nội dung được phân theo độ tuổi (học sinh, sinh viên, phụ huynh, giáo viên, ...).
 - Chức năng cho phép người dùng làm bài khảo sát trắc nghiệm như ASSIST, CRAFFT, ... để xác định mức độ nguy cơ sử dụng ma túy. Dựa trên kết quả đánh giá này hệ thống đề xuất hành động phù hợp cho người dùng (tham gia khóa đào tạo, gặp chuyên viên tư vấn, ...).
@@ -35,17 +42,10 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 
 ---
 
-## Task & Meeting
-
-[Notion](https://www.notion.so/1f58d2dce42880599cc5c13217803046?v=1f58d2dce42881d09e6f000c797d91a9)
-
-[Meet](https://meet.google.com/izz-oxfi-zfw)
-
----
-
 ## 💻Languages and Tools
 
 ### Languages
+
 > Front-End
 
 | React | TypeScript | JavaScript |
@@ -78,31 +78,20 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 
 ---
 
-## Hướng dẫn chạy Project
+## Hướng dẫn chạy thủ công
 
-> **Lưu ý: Chỉnh sửa file `UtilFile.java` cho phù hợp trước khi chạy chương trình**
-   - Mở file `BackEnd/src/main/java/com/project/codebasespringjpa/util/UtilFile.java`
-   - Tìm dòng: /* !Cấu hình thư mục lưu trữ ảnh */
-      - Nếu chạy bằng `Local` thì để dòng này:
-      ```java
-      private static final String RESOURCE_DIR  = System.getProperty("user.dir") + "/src/main/resources/static/";
-      ```
-      - Nếu chạy bằng `Docker` thì để dòng này:
-      ```java
-      private static final String RESOURCE_DIR = System.getProperty("user.dir") + "/static/";
-      ```
-   - Comment lại dòng còn lại!
+### Chạy với môi trường Development
 
-## Chạy với môi trường local (Chạy trên máy tính cá nhân)
-
-### Chạy Backend (BE)
+#### Chạy Backend (BE)
 
 1. **Yêu cầu môi trường:**
+
    - Java 17 trở lên
    - MySQL
    - Maven (hoặc sử dụng file `mvnw`/`mvnw.cmd` đi kèm)
 
 2. **Cấu hình database:**
+
    - Mở file `BackEnd/src/main/resources/application.properties`
    - Chỉnh sửa các thông tin kết nối MySQL cho phù hợp:
      ```properties
@@ -112,13 +101,15 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
      ```
 
 3. **Cài đặt thư viện:**
+
    - Mở terminal tại thư mục `BackEnd` và chạy:
      ```pwsh
      mvn clean install
      ```
-   > Có thể chạy thẳng bước thứ 4 luôn!
+     > Có thể chạy thẳng bước thứ 4 luôn!
 
 4. **Chạy ứng dụng:**
+
    - Chạy lệnh sau trong terminal:
      ```pwsh
      mvn spring-boot:run
@@ -131,19 +122,22 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 
 ---
 
-### Chạy Frontend (FE)
+#### Chạy Frontend (FE)
 
 1. **Yêu cầu môi trường:**
+
    - Node.js >= 16
    - npm >= 8
 
 2. **Cài đặt thư viện:**
+
    - Mở terminal tại thư mục `FrontEnd` và chạy:
      ```pwsh
      npm install
      ```
 
 3. **Chạy ứng dụng:**
+
    - Tại thư mục `FrontEnd`, chạy:
      ```pwsh
      npm start
@@ -156,12 +150,14 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
 
 ---
 
-## Hướng dẫn chạy bằng Docker (BE + FE)
+### Hướng dẫn chạy bằng Docker Compose (BE + FE)
 
 1. **Yêu cầu môi trường:**
+
    - Docker Desktop
 
 2. **Chạy Docker Compose:**
+
    - Ở thư mục gốc project, chạy lệnh:
      ```pwsh
      docker-compose up --build
@@ -174,5 +170,123 @@ Phần mềm hỗ trợ phòng ngừa sử dụng ma túy trong cộng đồng c
      ```pwsh
      docker-compose down
      ```
+
+## Chạy với Script tự động (Khuyến nghị)
+
+### Chạy môi trường Development
+
+1. **Yêu cầu môi trường:**
+
+   - Java 17 trở lên
+   - MySQL
+   - Maven (hoặc sử dụng file `mvnw`/`mvnw.cmd` đi kèm)
+
+2. **Cấu hình database:**
+
+   - Mở file `BackEnd/src/main/resources/application.properties`
+   - Chỉnh sửa các thông tin kết nối MySQL cho phù hợp:
+     ```properties
+     spring.datasource.url=jdbc:mysql://localhost:3306/ten_database
+     spring.datasource.username=ten_user
+     spring.datasource.password=mat_khau
+     ```
+
+3. **Sử dụng start-dev.bat:**
+
+   - Double-click vào file `start-dev.bat` trong thư mục gốc project
+   - Hoặc chạy lệnh:
+     ```pwsh
+     .\start-dev.bat
+     ```
+
+4. **Tính năng:**
+   - Tự động mở 2 terminal riêng biệt cho Backend và Frontend
+   - Backend: Maven development mode với hot reload
+   - Frontend: React development server với hot reload
+   - Phù hợp cho việc phát triển và debug
+
+---
+
+### Chạy bằng Docker Compose
+
+1. **Yêu cầu môi trường:**
+
+   - Docker Desktop
+
+
+2. **Sử dụng docker-start.bat:**
+
+   - Double-click vào file `docker-start.bat` trong thư mục gốc project
+   - Hoặc chạy lệnh:
+     ```pwsh
+     .\docker-start.bat
+     ```
+
+3. **Các tùy chọn:**
+
+   - **Option 1 - Quick Start (No Build):** Chạy nhanh với images đã build sẵn
+   - **Option 2 - Full Build & Start:** Build lại toàn bộ và chạy
+
+4. **Tính năng:**
+   - Tự động phát hiện IP hiện tại của máy
+   - Cập nhật cấu hình Docker để các thiết bị khác có thể truy cập
+   - Chạy Docker trong terminal riêng biệt
+   - Hiển thị thông tin truy cập đầy đủ
+
+### Lưu ý quan trọng:
+
+- **IP động:** Script sẽ tự động cập nhật IP cho phép truy cập từ các thiết bị khác trong mạng
+- **Port mặc định:**
+  - Frontend: `http://[IP]:3000`
+  - Backend: `http://[IP]:8080`
+- **Database:** MySQL sẽ được chạy trong Docker container
+- **Logs:** Docker logs sẽ hiển thị trong terminal riêng biệt
+
+## 🚀 Script Utilities
+
+Project này cung cấp các script tiện ích để dễ dàng quản lý và chạy ứng dụng:
+
+### 📁 Các file script có sẵn:
+
+| Script | Mô tả | Sử dụng |
+| ------ | ----- | ------- |
+| `docker-start.bat` | Chạy full-stack với Docker | Tự động detect IP, 2 options: Quick Start / Full Build |
+| `start-dev.bat` | Chạy development mode | Mở 2 terminal riêng cho BE/FE development |
+
+### 📋 Chi tiết các script:
+
+#### 1. docker-start.bat
+
+```pwsh
+# Chạy với giao diện lựa chọn
+.\docker-start.bat
+
+# Các tính năng:
+# - Tự động phát hiện IP của máy
+# - Cập nhật docker-compose.yml với IP hiện tại
+# - Lựa chọn Quick Start (không build) hoặc Full Build
+# - Chạy Docker trong terminal riêng biệt
+# - Hiển thị URL truy cập cho các thiết bị khác
+```
+
+#### 2. start-dev.bat
+
+```pwsh
+# Chạy development environment
+.\start-dev.bat
+
+# Các tính năng:
+# - Mở terminal riêng cho Backend (Maven)
+# - Mở terminal riêng cho Frontend (React)
+# - Hot reload cho cả BE và FE
+# - Phù hợp cho development và debugging
+```
+
+### 💡 Tips sử dụng:
+
+1. **Lần đầu chạy:** Sử dụng `docker-start.bat` với option "Full Build"
+2. **Chạy lại:** Sử dụng option "Quick Start" để tiết kiệm thời gian
+3. **Development:** Sử dụng `start-dev.bat` khi cần chỉnh sửa code
+4. **Production:** Sử dụng `docker-start.bat` để đảm bảo môi trường ổn định
 
 ---

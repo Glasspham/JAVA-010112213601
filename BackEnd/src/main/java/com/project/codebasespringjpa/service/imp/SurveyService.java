@@ -55,23 +55,19 @@ public class SurveyService implements ISurveyService {
 
     @Override
     public SurveyResponse create(SurveyRequest request) {
-        //1. ----Luu survey entity
+        // 1. ----Luu survey entity
         SurveyEntity surveyEntity = surveyMapper.toEntity(request);
         SurveyEntity surveySave = surveyRepository.save(surveyEntity);
-
-        //2. ---- luu question and answer
+        // 2. ---- luu question and answer
         try {
-
             for (QuestionRequest questionRequest : request.getQuestions()) {
                 QuestionEntity question = QuestionEntity.builder()
                         .content(questionRequest.getContent())
                         .survey(surveySave)
                         .build();
-
-                //-----save question
+                // -----save question
                 QuestionEntity questionSave = questionRepository.save(question);
-
-                //---save answer
+                // ---save answer
                 if (questionRequest != null && questionRequest.getAnswers() != null) {
                     for (AnswerRequest answerRequest : questionRequest.getAnswers()) {
                         AnswerEntity answer = AnswerEntity.builder()
@@ -79,7 +75,6 @@ public class SurveyService implements ISurveyService {
                                 .correct(answerRequest.getCorrect())
                                 .question(questionSave)
                                 .build();
-
                         answerRepository.save(answer);
                     }
                 }
@@ -87,7 +82,6 @@ public class SurveyService implements ISurveyService {
         } catch (Exception e) {
             log.error("Loi khi luu answer (survey service): " + e.getMessage());
         }
-
         return surveyMapper.toResponse(surveySave);
     }
 
@@ -96,23 +90,18 @@ public class SurveyService implements ISurveyService {
         SurveyEntity surveyFind = this.findEntityById(id);
         surveyFind.setName(request.getName());
         surveyFind.setType(request.getType());
-
         surveyFind.getQuestions().clear();
         SurveyEntity surveyUpdate = surveyRepository.save(surveyFind);
-
-        //2. ---- luu question and answer
+        // 2. ---- luu question and answer
         try {
-
             for (QuestionRequest questionRequest : request.getQuestions()) {
                 QuestionEntity question = QuestionEntity.builder()
                         .content(questionRequest.getContent())
                         .survey(surveyUpdate)
                         .build();
-
-                //-----save question
+                // -----save question
                 QuestionEntity questionSave = questionRepository.save(question);
-
-                //---save answer
+                // ---save answer
                 if (questionRequest != null && questionRequest.getAnswers() != null) {
                     for (AnswerRequest answerRequest : questionRequest.getAnswers()) {
                         AnswerEntity answer = AnswerEntity.builder()
@@ -120,7 +109,6 @@ public class SurveyService implements ISurveyService {
                                 .correct(answerRequest.getCorrect())
                                 .question(questionSave)
                                 .build();
-
                         answerRepository.save(answer);
                     }
                 }
@@ -128,8 +116,6 @@ public class SurveyService implements ISurveyService {
         } catch (Exception e) {
             log.error("Loi khi luu answer (survey service): " + e.getMessage());
         }
-
-
         return surveyMapper.toResponse(surveyUpdate);
     }
 

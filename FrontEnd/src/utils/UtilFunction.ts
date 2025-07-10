@@ -1,2 +1,1 @@
-export const UTIL_AWAIT_TIME = (ms: number): Promise<void> =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+export const UTIL_AWAIT_TIME = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));

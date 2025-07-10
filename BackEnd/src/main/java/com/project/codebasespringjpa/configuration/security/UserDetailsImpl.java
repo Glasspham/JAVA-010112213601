@@ -19,25 +19,23 @@ public class UserDetailsImpl implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> roles = new HashSet<>();
         String roleName = userEntity.getRole().getName();
-        
         // Thêm prefix ROLE_ nếu chưa có
         if (!roleName.startsWith("ROLE_")) {
             roleName = "ROLE_" + roleName;
         }
-        
         roles.add(new SimpleGrantedAuthority(roleName));
         return roles;
     }
 
-    public UserEntity getUser(){
+    public UserEntity getUser() {
         return this.userEntity;
     }
 
     @Override
     public String getPassword() {
-        if(userEntity == null)
+        if (userEntity == null)
             return null;
-        if(userEntity.getPassword() == null)
+        if (userEntity.getPassword() == null)
             return null;
         return userEntity.getPassword();
     }
@@ -47,7 +45,7 @@ public class UserDetailsImpl implements UserDetails {
         return userEntity.getUsername();
     }
 
-    public String getFullName(){
+    public String getFullName() {
         return userEntity.getFullname();
     }
 

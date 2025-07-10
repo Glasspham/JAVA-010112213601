@@ -36,12 +36,12 @@ public class ProgramController {
 
     @GetMapping("/find-all")
     ApiResponse<Page<ProgramResponse>> findAll(@RequestParam(name = "page", defaultValue = "1") Integer page,
-                                              @RequestParam(name = "limit", defaultValue = "5") Integer limit,
-                                              @RequestParam(name = "keyword", required = false) String keyword,
-                                               @RequestParam(name = "status", required = false) String status,
-                                               @RequestParam(name = "date", required = false) LocalDate date){
+            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "date", required = false) LocalDate date) {
 
-        Pageable pageable = PageRequest.of(page-1, limit);
+        Pageable pageable = PageRequest.of(page - 1, limit);
         ProgramSearch programSearch = ProgramSearch.builder()
                 .keyword(keyword)
                 .status(status)
@@ -82,15 +82,16 @@ public class ProgramController {
     }
 
     @PostMapping("/register")
-    ApiResponse<Void> register(@RequestBody ProgramRegisterRequest request){
+    ApiResponse<Void> register(@RequestBody ProgramRegisterRequest request) {
         programService.registerProgram(request);
         return ApiResponse.<Void>builder()
                 .build();
     }
 
     @GetMapping("/is-register")
-    ApiResponse<Boolean> isRegister(@RequestParam("username") String username, @RequestParam("programId") Long programId){
-        ProgramRegisterRequest request  = ProgramRegisterRequest.builder()
+    ApiResponse<Boolean> isRegister(@RequestParam("username") String username,
+            @RequestParam("programId") Long programId) {
+        ProgramRegisterRequest request = ProgramRegisterRequest.builder()
                 .username(username)
                 .programId(programId)
                 .build();
@@ -101,7 +102,7 @@ public class ProgramController {
     }
 
     @GetMapping("/list-program-register")
-    ApiResponse<List<ProgramResponse>> listProgramRegister(@RequestParam(name = "username") String username){
+    ApiResponse<List<ProgramResponse>> listProgramRegister(@RequestParam(name = "username") String username) {
         return ApiResponse.<List<ProgramResponse>>builder()
                 .data(programService.listProgramRegister(username))
                 .build();
@@ -109,7 +110,7 @@ public class ProgramController {
 
     @GetMapping("/list-user-register")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SPECIALIST')")
-    ApiResponse<List<UserResponse>> listUserRegister(@RequestParam(name = "idProgram") Long idProgram){
+    ApiResponse<List<UserResponse>> listUserRegister(@RequestParam(name = "idProgram") Long idProgram) {
         return ApiResponse.<List<UserResponse>>builder()
                 .data(programService.listUserRegister(idProgram))
                 .build();
