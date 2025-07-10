@@ -26,7 +26,7 @@ REM Kiểm tra xem có cần build không
 echo.
 echo ╔═══════════════════════════════╗
 echo ║       Choose an option:       ║
-echo ║  1. Quick Start - No Build    ║
+echo ║  1. Quick Start - Rebuild FE  ║
 echo ║  2. Full Build and Start All  ║
 echo ╚═══════════════════════════════╝
 echo.

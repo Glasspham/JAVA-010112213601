@@ -121,6 +121,12 @@ BackEnd/src/main/java/com/project/codebasespringjpa/
 └── util/                # Utilities
 ```
 
+### Database (MySQL)
+- **Version**: 8.0.40
+- **Database name**: `doanyte`
+- **Encoding**: UTF-8 (utf8mb4)
+- **Connection**: `jdbc:mysql://localhost:3306/doanyte`
+
 #### 🗃️ Database Entities:
 - **UserEntity**: Thông tin người dùng
 - **ProgramEntity**: Chương trình truyền thông
@@ -132,11 +138,195 @@ BackEnd/src/main/java/com/project/codebasespringjpa/
 - **RoleEntity**: Vai trò người dùng
 - **BaseEntity**: Entity cơ sở
 
-### Database (MySQL)
-- **Version**: 8.0.40
-- **Database name**: `doanyte`
-- **Encoding**: UTF-8 (utf8mb4)
-- **Connection**: `jdbc:mysql://localhost:3306/doanyte`
+#### Cấu trúc Database
+
+```sql
+CREATE TABLE `tbl_answer` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `content` varchar(255) DEFAULT NULL,
+  `correct` bit(1) DEFAULT NULL,
+  `question_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK9g1eq48ckxg43nr81oi3asbm` (`question_id`),
+  CONSTRAINT `FK9g1eq48ckxg43nr81oi3asbm` FOREIGN KEY (`question_id`) REFERENCES `tbl_question` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_appoiment` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `duration` double DEFAULT NULL,
+  `hours` time(6) DEFAULT NULL,
+  `specialist_id` bigint NOT NULL,
+  `specialist_name` varchar(255) DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `user_id` bigint DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_course` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_course_detail` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `content` text,
+  `duration` double DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `objective` text,
+  `video` varchar(255) DEFAULT NULL,
+  `course_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKi4slm61yx5cd5fiqx3fn8kcy1` (`course_id`),
+  CONSTRAINT `FKi4slm61yx5cd5fiqx3fn8kcy1` FOREIGN KEY (`course_id`) REFERENCES `tbl_course` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_course_object` (
+  `course_id` bigint NOT NULL,
+  `object_id` bigint NOT NULL,
+  KEY `FKebxayac65ihcultfn1kcbx1k0` (`object_id`),
+  KEY `FKebm46qkbts25xg887mkabed92` (`course_id`),
+  CONSTRAINT `FKebm46qkbts25xg887mkabed92` FOREIGN KEY (`course_id`) REFERENCES `tbl_course` (`id`),
+  CONSTRAINT `FKebxayac65ihcultfn1kcbx1k0` FOREIGN KEY (`object_id`) REFERENCES `tbl_object` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_major` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_object` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_program` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `capacity` bigint DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `time` time(6) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_question` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `content` varchar(255) DEFAULT NULL,
+  `survey_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKbxvljn5jcykjeehpox2f75gtr` (`survey_id`),
+  CONSTRAINT `FKbxvljn5jcykjeehpox2f75gtr` FOREIGN KEY (`survey_id`) REFERENCES `tbl_survey` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_role` (
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_survey` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `type` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_survey_result` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `mark` double DEFAULT NULL,
+  `survey_id` bigint DEFAULT NULL,
+  `user_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK81wnbtji80jf14xnljll3yy41` (`survey_id`),
+  KEY `FKjt3t5p8umrw1gddh8x9mr1iq5` (`user_id`),
+  CONSTRAINT `FK81wnbtji80jf14xnljll3yy41` FOREIGN KEY (`survey_id`) REFERENCES `tbl_survey` (`id`),
+  CONSTRAINT `FKjt3t5p8umrw1gddh8x9mr1iq5` FOREIGN KEY (`user_id`) REFERENCES `tbl_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_user` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `create_by` varchar(255) DEFAULT NULL,
+  `create_date` datetime(6) DEFAULT NULL,
+  `is_delete` bit(1) DEFAULT NULL,
+  `update_by` varchar(255) DEFAULT NULL,
+  `update_date` datetime(6) DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `fullname` varchar(255) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `phone` varchar(255) DEFAULT NULL,
+  `position` varchar(255) DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  `role_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UKk0bty7tbcye41jpxam88q5kj2` (`username`),
+  KEY `FKqyhp9ytkc0o8uapy1vtqmw350` (`role_id`),
+  CONSTRAINT `FKqyhp9ytkc0o8uapy1vtqmw350` FOREIGN KEY (`role_id`) REFERENCES `tbl_role` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_user_major` (
+  `user_id` bigint NOT NULL,
+  `major_id` bigint NOT NULL,
+  KEY `FKsr1js05uwfnqoxmkwiumi92c` (`major_id`),
+  KEY `FKk3jkqs669y9is95qa4fysd3c9` (`user_id`),
+  CONSTRAINT `FKk3jkqs669y9is95qa4fysd3c9` FOREIGN KEY (`user_id`) REFERENCES `tbl_user` (`id`),
+  CONSTRAINT `FKsr1js05uwfnqoxmkwiumi92c` FOREIGN KEY (`major_id`) REFERENCES `tbl_major` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `tbl_user_program` (
+  `user_id` bigint NOT NULL,
+  `program_id` bigint NOT NULL,
+  KEY `FKiw4r64jegiji5q7pwkrj7smpb` (`program_id`),
+  KEY `FK7l70o0n3ws065395p8g6cq1b8` (`user_id`),
+  CONSTRAINT `FK7l70o0n3ws065395p8g6cq1b8` FOREIGN KEY (`user_id`) REFERENCES `tbl_user` (`id`),
+  CONSTRAINT `FKiw4r64jegiji5q7pwkrj7smpb` FOREIGN KEY (`program_id`) REFERENCES `tbl_program` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+```
 
 ## 🐳 Containerization (Docker)
 

@@ -38,7 +38,7 @@ services:
     build:
       context: ./FrontEnd
       args:
-        REACT_APP_API_URL: http://192.168.1.141:8080
+        REACT_APP_API_URL: http://localhost:8080
     container_name: frontend
     ports:
       - "3000:80"

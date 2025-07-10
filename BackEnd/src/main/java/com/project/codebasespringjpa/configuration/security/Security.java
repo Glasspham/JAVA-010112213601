@@ -48,7 +48,10 @@ public class Security {
             "/files/**",
             "/swagger-ui/**", "/v3/api-docs/**",
             "/avatar*", // Thêm đường dẫn avatar
-            "/*.avif", "/*.jpg", "/*.jpeg", "/*.png", "/*.gif" // Thêm các định dạng ảnh phổ biến
+            "/*.avif", "/*.jpg", "/*.jpeg", "/*.png", "/*.gif", // Thêm các định dạng ảnh phổ biến
+            "/*.JPG", "/*.JPEG", "/*.PNG",
+            "/*.mp4", "/*.mp3", "/*.mkv", // Thêm các định dạng âm thanh phổ biến
+            "/*.MP4", "/*.MP3", "/*.MKV"
     };
 
     @Bean
