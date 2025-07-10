@@ -101,7 +101,7 @@ FrontEnd/
 #### 📁 Cấu trúc thư mục:
 ```
 BackEnd/src/main/java/com/project/codebasespringjpa/
-├── configuration/        # Cấu hình Spring
+├── configuration/       # Cấu hình Spring
 ├── controller/          # REST Controllers
 │   ├── AuthController.java
 │   ├── UserController.java
