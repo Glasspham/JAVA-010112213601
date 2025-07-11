@@ -1,6 +1,6 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, Snackbar, SelectChangeEvent } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, FilterList as FilterListIcon, Close as CloseIcon } from "@mui/icons-material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { User, UserRole } from "../../types/user";
 import { mockUsers } from "../../utils/mockData";
 import { UserSearch } from "../../dto/UserSearch";
@@ -9,6 +9,7 @@ import { UserDTO } from "../../dto/UserDTO";
 import { toast } from "react-toastify";
 import { FileService } from "../../services/FileService";
 import Swal from "sweetalert2";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 const UsersPage: React.FC = () => {
   // State for users data
@@ -142,7 +143,6 @@ const UsersPage: React.FC = () => {
   };
 
   //-----xử lý ảnh
-  // const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const handleAvatarChange = async (event: any) => {
@@ -168,13 +168,6 @@ const UsersPage: React.FC = () => {
       }));
     }
   };
-
-  //----xóa user
-  // const deleteUser = (name: any, id: any) => {
-  //   console.log("name = ", name);
-  //   console.log("id = ", id);
-
-  // }
 
   const deleteUser = async (name: string, id: number) => {
     const result = await Swal.fire({
@@ -251,7 +244,7 @@ const UsersPage: React.FC = () => {
 
         // Set avatar preview nếu có
         if (userData.avatar) {
-          setAvatarPreview(`${process.env.REACT_APP_API_URL}/${userData.avatar}`);
+          setAvatarPreview(getAvatarUrl(userData.avatar));
         } else {
           setAvatarPreview(null);
         }
@@ -279,11 +272,6 @@ const UsersPage: React.FC = () => {
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    // setFormData(prev => ({
-    //   ...prev,
-    //   [name]: value
-    // }));
-
     setUserDTO((prev) => ({
       ...prev,
       [name]: value,
@@ -559,14 +547,11 @@ const UsersPage: React.FC = () => {
                 <img
                   src={avatarPreview}
                   alt="Ảnh đại diện preview"
-                  // style={{ marginTop: 16, maxWidth: '100%', maxHeight: 200, borderRadius: 8 }}
-
                   style={{
                     marginTop: 16,
                     width: 100,
                     height: 100,
                     objectFit: "cover",
-                    // borderRadius: '50%'
                   }}
                 />
               )}

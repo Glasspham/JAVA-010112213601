@@ -7,6 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { AuthService } from "../../services/AuthService";
 import { UTIL_AWAIT_TIME } from "../../utils/UtilFunction";
 import { toast } from "react-toastify";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -163,7 +164,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           {isAuthenticated ? (
             <>
               <IconButton size="large" edge="end" aria-label="account of current user" aria-haspopup="true" onClick={handleProfileMenuOpen} color="inherit">
-                <Avatar src={userAvatar ? `${process.env.REACT_APP_API_URL}/${userAvatar}` : undefined} sx={{ bgcolor: "secondary.main", width: 32, height: 32 }}>
+                <Avatar src={userAvatar ? getAvatarUrl(userAvatar) : undefined} sx={{ bgcolor: "secondary.main", width: 32, height: 32 }}>
                   {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : user?.firstName?.charAt(0) || "U")}
                 </Avatar>
               </IconButton>

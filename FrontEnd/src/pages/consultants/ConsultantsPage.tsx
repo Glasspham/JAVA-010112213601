@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, CardMedia, Button, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Chip, Rating, Pagination, Divider } from "@mui/material";
+import { Container, Typography, Box, Card, CardContent, CardMedia, Button, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Rating, Pagination, Divider } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import { AppointmentService } from "../../services/AppointmentService";
 import { toast } from "react-toastify";
-
+import { getAvatarUrl} from "../../utils/imageUtils";
 interface ConsultantsPageProps {
   isAdmin?: boolean;
 }
@@ -42,7 +42,7 @@ const ConsultantsPage: React.FC<ConsultantsPageProps> = ({ isAdmin = false }) =>
             fullname: user.fullname,
             email: user.email,
             phoneNumber: user.phone,
-            profilePicture: user.avatar ? `${process.env.REACT_APP_API_URL}/${user.avatar}` : `${process.env.REACT_APP_API_URL}/default-avatar.png`,
+            profilePicture: user.avatar ? getAvatarUrl(user.avatar) : getAvatarUrl("default-avatar.png"),
             specialization: user.majors || [],
             education: user.position || "Chuyên viên tư vấn",
             experience: 5, // Default experience

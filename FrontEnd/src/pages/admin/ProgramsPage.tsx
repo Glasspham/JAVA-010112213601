@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, SelectChangeEvent } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Visibility as VisibilityIcon, Event as EventIcon, LocationOn as LocationIcon, People as PeopleIcon } from "@mui/icons-material";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment, Avatar, List, ListItem, ListItemAvatar, ListItemText, Divider } from "@mui/material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Event as EventIcon, LocationOn as LocationIcon, People as PeopleIcon, Email as EmailIcon, Phone as PhoneIcon } from "@mui/icons-material";
+import { getImageUrl, getAvatarUrl, handleImageError } from "../../utils/imageUtils";
 import { Program } from "../../types/program";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -12,7 +13,6 @@ import { ProgramService } from "../../services/ProgramService";
 import { ProgramDTO } from "../../dto/ProgramDTO";
 import { ProgramSearch } from "../../dto/ProgramSearch";
 import Swal from "sweetalert2";
-import { Link } from "react-router-dom";
 
 const AdminProgramsPage: React.FC = () => {
   // State for programs data
@@ -54,6 +54,11 @@ const AdminProgramsPage: React.FC = () => {
   // State for image upload
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+
+  // Add new states for registrations dialog
+  const [openRegistrationsDialog, setOpenRegistrationsDialog] = useState(false);
+  const [selectedProgramForRegistrations, setSelectedProgramForRegistrations] = useState<Program | null>(null);
+  const [registrationsList, setRegistrationsList] = useState<any[]>([]);
 
   // Helper function to map API response to UI's Program interface
   const mapApiResponseToProgram = (apiData: any): Program => {
@@ -258,7 +263,7 @@ const AdminProgramsPage: React.FC = () => {
     // Set image preview for existing program
     setSelectedImageFile(null);
     if (program.image) {
-      setImagePreview(_programService.getImageUrl(program.image));
+      setImagePreview(getImageUrl(program.image));
     } else {
       setImagePreview("");
     }
@@ -378,10 +383,25 @@ const AdminProgramsPage: React.FC = () => {
     }
   };
 
-  const getRegistrationPercentage = (program: Program) => {
-    if (program.capacity === 0) return "0%";
-    const percentage = (program.registrations / program.capacity) * 100;
-    return `${percentage.toFixed(0)}%`;
+  const handleOpenRegistrationsDialog = async (program: Program) => {
+    setSelectedProgramForRegistrations(program);
+    try {
+      const [code, data, message] = await _programService.getRegisteredUsers(parseInt(program.id));
+      if (code === 200 && data) {
+        setRegistrationsList(data);
+      } else {
+        toast.error(message || "Không thể tải danh sách đăng ký");
+      }
+    } catch (error: any) {
+      toast.error(`Lỗi khi tải danh sách đăng ký: ${error.message}`);
+    }
+    setOpenRegistrationsDialog(true);
+  };
+
+  const handleCloseRegistrationsDialog = () => {
+    setOpenRegistrationsDialog(false);
+    setSelectedProgramForRegistrations(null);
+    setRegistrationsList([]);
   };
 
   return (
@@ -466,7 +486,7 @@ const AdminProgramsPage: React.FC = () => {
                     <TableCell>{program.registrations}</TableCell>
                     <TableCell align="center">
                       <Tooltip title="Xem danh sách đăng ký">
-                        <IconButton component={Link} to={`/admin/programs/${program.id}/registrations`} color="info">
+                        <IconButton onClick={() => handleOpenRegistrationsDialog(program)} color="info">
                           <PeopleIcon />
                         </IconButton>
                       </Tooltip>
@@ -589,6 +609,80 @@ const AdminProgramsPage: React.FC = () => {
           <Button onClick={handleSaveProgram} variant="contained" color="primary">
             {dialogMode === "add" ? "Thêm" : "Cập nhật"}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Registrations Dialog */}
+      <Dialog open={openRegistrationsDialog} onClose={handleCloseRegistrationsDialog} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box>
+            <Typography component="span">Danh sách đăng ký: {selectedProgramForRegistrations?.title}</Typography>
+            <Box sx={{ mt: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <LocationIcon fontSize="small" color="action" />
+                <Typography variant="subtitle1" component="span" color="text.secondary">
+                  {selectedProgramForRegistrations?.location}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <EventIcon fontSize="small" color="action" />
+                <Typography variant="subtitle2" component="span" color="text.secondary">
+                  {selectedProgramForRegistrations?.date ? format(new Date(selectedProgramForRegistrations.date), "dd/MM/yyyy HH:mm") : ""}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <List>
+            {registrationsList.length > 0 ? (
+              registrationsList.map((registration, index) => (
+                <React.Fragment key={registration.id || index}>
+                  <ListItem alignItems="flex-start">
+                    <ListItemAvatar>
+                      <Avatar src={getAvatarUrl(registration.avatar)} alt={registration.fullname} sx={{ mr: 2, width: 40, height: 40 }} onError={handleImageError}>
+                        {registration.fullname?.charAt(0)?.toUpperCase() || "?"}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={registration.fullname}
+                      secondaryTypographyProps={{ component: "div" }}
+                      secondary={
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 0.5 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <EmailIcon fontSize="small" color="action" />
+                            <Typography variant="body2" color="text.secondary" component="span">
+                              {registration.email}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <PhoneIcon fontSize="small" color="action" />
+                            <Typography variant="body2" color="text.secondary" component="span">
+                              {registration.phone}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                  {index < registrationsList.length - 1 && <Divider variant="inset" component="li" />}
+                </React.Fragment>
+              ))
+            ) : (
+              <ListItem>
+                <ListItemText
+                  primary={
+                    <Typography variant="body1" align="center" color="text.secondary">
+                      Chưa có người đăng ký tham gia chương trình này.
+                    </Typography>
+                  }
+                />
+              </ListItem>
+            )}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRegistrationsDialog}>Đóng</Button>
         </DialogActions>
       </Dialog>
     </Container>

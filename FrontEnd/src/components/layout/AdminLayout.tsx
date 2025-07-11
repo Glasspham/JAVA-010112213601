@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { AppBar, Box, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, Avatar, Menu, MenuItem, Button } from "@mui/material";
-import { Menu as MenuIcon, Home as HomeIcon, School as SchoolIcon, AssessmentOutlined as AssessmentIcon, EventNote as EventNoteIcon, Groups as GroupsIcon, Person as PersonIcon, Dashboard as DashboardIcon, Logout as LogoutIcon, People as PeopleIcon, Book as BookIcon, Assignment as SurveyIcon } from "@mui/icons-material";
+import { AppBar, Box, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, Avatar, Menu, MenuItem } from "@mui/material";
+import { Menu as MenuIcon, Home as HomeIcon, EventNote as EventNoteIcon, Groups as GroupsIcon, Person as PersonIcon, Dashboard as DashboardIcon, Logout as LogoutIcon, People as PeopleIcon, Book as BookIcon, Assignment as SurveyIcon } from "@mui/icons-material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { AuthService } from "../../services/AuthService";
 import { toast } from "react-toastify";
 import { UTIL_AWAIT_TIME } from "../../utils/UtilFunction";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 const drawerWidth = 260;
 
@@ -105,7 +106,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <Divider />
       <Box sx={{ p: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Avatar src={userAvatar ? `${process.env.REACT_APP_API_URL}/${userAvatar}` : undefined} sx={{ bgcolor: "secondary.main", mr: 2 }}>
+          <Avatar src={userAvatar ? getAvatarUrl(userAvatar) : undefined} sx={{ bgcolor: "secondary.main", mr: 2 }}>
             {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : user?.firstName?.charAt(0) || "U")}
           </Avatar>
           <Box>
@@ -194,7 +195,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             {adminMenuItems.find((item) => item.path === location.pathname)?.text || "Dashboard"}
           </Typography>
           <IconButton size="large" edge="end" aria-label="account of current user" aria-haspopup="true" onClick={handleProfileMenuOpen} color="inherit">
-            <Avatar src={userAvatar ? `${process.env.REACT_APP_API_URL}/${userAvatar}` : undefined} sx={{ bgcolor: "primary.main" }}>
+            <Avatar src={userAvatar ? getAvatarUrl(userAvatar) : undefined} sx={{ bgcolor: "primary.main" }}>
               {!userAvatar && (userFullname ? userFullname.charAt(0).toUpperCase() : user?.firstName?.charAt(0) || "U")}
             </Avatar>
           </IconButton>

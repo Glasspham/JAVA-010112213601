@@ -138,38 +138,6 @@ export class CourseService {
     }
   }
 
-  public getImageUrl(imagePath: string, cacheBust: boolean = false): string {
-    if (!imagePath || imagePath === "default_no_image.png") {
-      return `${BASE_URL}/default_no_image.png`;
-    }
-
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-
-    const baseUrl = `${BASE_URL}/${imagePath}`;
-
-    // Add cache busting parameter for fresh images
-    if (cacheBust) {
-      const timestamp = new Date().getTime();
-      return `${baseUrl}?v=${timestamp}`;
-    }
-
-    return baseUrl;
-  }
-
-  public getVideoUrl(videoPath: string, addCacheBusting: boolean = false): string {
-    if (!videoPath) {
-      return `${BASE_URL}/default_no_video.mp4`;
-    }
-
-    if (videoPath.startsWith("http")) {
-      return videoPath;
-    }
-
-    return `${BASE_URL}/${videoPath}`;
-  }
-
   // Upload file
   public async uploadFile(file: File): Promise<ApiResponse<string>> {
     try {

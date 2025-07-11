@@ -3,6 +3,8 @@
  */
 
 const DEFAULT_IMAGE_URL = `${process.env.REACT_APP_API_URL}/default_no_image.png`;
+const DEFAULT_VIDEO_URL = `${process.env.REACT_APP_API_URL}/default_no_video.png`;
+const DEFAULT_AVATAR_URL = `${process.env.REACT_APP_API_URL}/defaultUser.png`;
 
 /**
  * Get image URL with fallback to default image
@@ -27,14 +29,30 @@ export const getImageUrl = (imagePath?: string): string => {
  * @returns Full avatar URL with fallback
  */
 export const getAvatarUrl = (avatar?: string): string => {
-  if (!avatar || avatar === "default_no_image.png") {
-    return DEFAULT_IMAGE_URL;
+  if (!avatar || avatar === "defaultUser.png") {
+    return DEFAULT_AVATAR_URL;
   }
   if (avatar.startsWith("http")) {
     return avatar;
   }
   return `${process.env.REACT_APP_API_URL}/${avatar}`;
 };
+
+/**
+ * Get video URL with fallback to default video (consistent with other pages)
+ * @param videoPath - The video path from API
+ * @returns Full video URL with fallback
+ */
+
+export const getVideoUrl = (videoPath?: string): string => {
+  if (!videoPath) {
+    return DEFAULT_VIDEO_URL;
+  }
+  if (videoPath.startsWith("http")) {
+    return videoPath;
+  }
+  return `${process.env.REACT_APP_API_URL}/${videoPath}`;
+}
 
 /**
  * Handle image load error by setting fallback image
@@ -54,7 +72,7 @@ export const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>) 
 export const handleVideoError = (event: React.SyntheticEvent<HTMLVideoElement>) => {
   const target = event.target as HTMLVideoElement;
   const img = document.createElement("img");
-  img.src = DEFAULT_IMAGE_URL;
+  img.src = DEFAULT_VIDEO_URL;
   img.style.width = target.style.width || "120px";
   img.style.height = target.style.height || "80px";
   img.style.objectFit = "cover";
@@ -72,6 +90,7 @@ const imageUtils = {
   getAvatarUrl,
   handleImageError,
   handleVideoError,
+  getVideoUrl,
   DEFAULT_IMAGE_URL,
 };
 

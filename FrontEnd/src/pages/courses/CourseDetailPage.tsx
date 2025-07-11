@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, CardMedia, Button, Grid, Chip, Divider, Paper, List, ListItem, ListItemIcon, ListItemText, Alert } from "@mui/material";
+import { Container, Typography, Box, Card, CardContent, CardMedia, Button, Chip, Divider, Paper, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import { AccessTime as AccessTimeIcon, CheckCircle as CheckCircleIcon, ArrowBack as ArrowBackIcon, PlayArrow as PlayArrowIcon } from "@mui/icons-material";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { CourseService, CourseDetail } from "../../services/CourseService";

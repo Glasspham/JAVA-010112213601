@@ -9,6 +9,7 @@ import { AuthService } from "../../services/AuthService";
 import { CourseService, CourseResponse } from "../../services/CourseService";
 import { ProgramService } from "../../services/ProgramService";
 import { ProgramSearch } from "../../dto/ProgramSearch";
+import { getImageUrl, handleImageError } from "../../utils/imageUtils";
 
 const HomePage: React.FC = () => {
   const _authService = new AuthService();
@@ -260,7 +261,7 @@ const HomePage: React.FC = () => {
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 4 }}>
               {latestCourses.map((course) => (
                 <Card key={course.id} sx={{ height: "100%", display: "flex", flexDirection: "column", borderRadius: 2 }}>
-                  <CardMedia component="img" height="140" image={courseService.getImageUrl(course.image)} alt={course.name} />
+                  <CardMedia component="img" height="140" image={getImageUrl(course.image)} alt={course.name} onError={handleImageError}/>
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Typography gutterBottom variant="h5" component="h3">
                       {course.name}
@@ -310,7 +311,7 @@ const HomePage: React.FC = () => {
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 4 }}>
                 {upcomingPrograms.map((program) => (
                   <Card key={program.id} sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, borderRadius: 2 }}>
-                    <CardMedia component="img" sx={{ width: { sm: 200 }, height: { xs: 200, sm: "auto" } }} image={programService.getImageUrl(program.image)} alt={program.title} />
+                    <CardMedia component="img" sx={{ width: { sm: 200 }, height: { xs: 200, sm: "auto" } }} image={getImageUrl(program.image)} alt={program.title} />
                     <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
                       <CardContent sx={{ flex: "1 0 auto" }}>
                         <Typography component="h3" variant="h5">

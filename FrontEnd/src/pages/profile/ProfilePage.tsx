@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Container, Box, Typography, Card, CardContent, Avatar, Divider, Chip, Paper, CircularProgress, Alert, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from "@mui/material";
-import { Person as PersonIcon, Email as EmailIcon, Phone as PhoneIcon, Work as WorkIcon, CalendarToday as CalendarIcon, Badge as BadgeIcon, Edit as EditIcon, PhotoCamera as PhotoCameraIcon, Add as AddIcon, Delete as DeleteIcon, Lock as LockIcon } from "@mui/icons-material";
+import { Container, Box, Typography, Card, CardContent, Avatar, Divider, Chip, Paper, CircularProgress, Alert, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
+import { Email as EmailIcon, Phone as PhoneIcon, Work as WorkIcon, CalendarToday as CalendarIcon, Badge as BadgeIcon, Edit as EditIcon, PhotoCamera as PhotoCameraIcon, Add as AddIcon, Delete as DeleteIcon, Lock as LockIcon } from "@mui/icons-material";
 import { AuthService } from "../../services/AuthService";
 import { FileService } from "../../services/FileService";
 import { UserProfileDTO } from "../../dto/UserProfileDTO";
 import { UpdateProfileDTO } from "../../dto/UpdateProfileDTO";
 import { UpdatePasswordDTO } from "../../dto/UpdatePasswordDTO";
 import { toast } from "react-toastify";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 const ProfilePage: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfileDTO | null>(null);
@@ -294,7 +295,7 @@ const ProfilePage: React.FC = () => {
             }}
           >
             <Avatar
-              src={`${process.env.REACT_APP_API_URL}/${userProfile.avatar}`}
+              src={getAvatarUrl(userProfile.avatar)}
               alt={userProfile.fullname}
               sx={{
                 width: 100,
@@ -380,7 +381,7 @@ const ProfilePage: React.FC = () => {
           <Box sx={{ mt: 2 }}>
             {/* Upload Avatar */}
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-              <Avatar src={previewImage || `${process.env.REACT_APP_API_URL}/${userProfile?.avatar}`} alt="Preview" sx={{ width: 100, height: 100, mb: 2 }} />
+              <Avatar src={previewImage || getAvatarUrl(userProfile?.avatar)} alt="Preview" sx={{ width: 100, height: 100, mb: 2 }} />
               <input accept="image/*" style={{ display: "none" }} id="avatar-upload" type="file" onChange={handleFileChange} />
               <label htmlFor="avatar-upload">
                 <Button variant="outlined" component="span" startIcon={<PhotoCameraIcon />}>

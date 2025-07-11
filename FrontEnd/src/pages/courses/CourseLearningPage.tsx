@@ -4,6 +4,7 @@ import { PlayArrow as PlayArrowIcon } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
 import { CourseService, CourseDetailItem } from "../../services/CourseService";
 import ClientLayout from "../../components/layout/ClientLayout";
+import { getVideoUrl, handleVideoError } from "../../utils/imageUtils";
 
 const CourseLearningPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -148,7 +149,7 @@ const CourseLearningPage: React.FC = () => {
 
                   {currentLesson.video && (
                     <Box sx={{ mb: 3 }}>
-                      <video width="100%" height="400" controls src={courseService.getVideoUrl(currentLesson.video)} style={{ borderRadius: 8 }}>
+                      <video width="100%" height="400" controls src={getVideoUrl(currentLesson.video)} style={{ borderRadius: 8 }} onError={handleVideoError}>
                         Trình duyệt của bạn không hỗ trợ video.
                       </video>
                     </Box>

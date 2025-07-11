@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, Button, Paper, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, LinearProgress, Divider, Alert, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Container, Typography, Box, Card, CardContent, Button, Paper, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, LinearProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Survey, Question, Answer, SurveyMark } from "../../types/survey";
+import { Survey, SurveyMark } from "../../types/survey";
 import { SurveyService } from "../../services/SurveyService";
 import { AuthService } from "../../services/AuthService";
 import { useAuth } from "../../contexts/AuthContext";

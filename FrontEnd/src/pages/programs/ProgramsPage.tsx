@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, CardMedia, Button, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Chip, Pagination, Grid, Paper, Divider, Alert } from "@mui/material";
+import { Container, Typography, Box, Card, CardContent, CardMedia, Button, TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Chip, Pagination, Paper, Divider, Alert } from "@mui/material";
 import { Search as SearchIcon, CalendarMonth as CalendarMonthIcon, LocationOn as LocationOnIcon, People as PeopleIcon } from "@mui/icons-material";
+import { getImageUrl, handleImageError } from "../../utils/imageUtils";
 import { Link, useNavigate } from "react-router-dom";
 import { CommunityProgram } from "../../types/program";
 import { ProgramService } from "../../services/ProgramService";
@@ -49,7 +50,7 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
       endDate: new Date(startDate.getTime() + 2 * 60 * 60 * 1000), // Default 2 hours duration
       capacity: apiData.capacity,
       registeredCount: apiData.users ? apiData.users.length : 0,
-      image: apiData.image ? programService.getImageUrl(apiData.image) : programService.getImageUrl(""),
+      image: apiData.image ? getImageUrl(apiData.image) : getImageUrl(""),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -267,7 +268,7 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
             Chương trình sắp diễn ra
           </Typography>
           <Card sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, borderRadius: 2, overflow: "hidden" }}>
-            <CardMedia component="img" sx={{ width: { xs: "100%", md: 300 }, height: { xs: 200, md: "auto" } }} image={upcomingPrograms[0].image} alt={upcomingPrograms[0].title} />
+            <CardMedia component="img" sx={{ width: { xs: "100%", md: 300 }, height: { xs: 200, md: "auto" } }} image={upcomingPrograms[0].image} alt={upcomingPrograms[0].title} onError={handleImageError}/>
             <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
               <CardContent sx={{ flex: "1 0 auto" }}>
                 <Typography component="h3" variant="h5" gutterBottom>
@@ -367,7 +368,7 @@ const ProgramsPage: React.FC<ProgramsPageProps> = ({ isAdmin = false }) => {
           {currentPrograms.map((program) => (
             <Box key={program.id}>
               <Card className="program-card" onClick={() => handleCardClick(program.id)} sx={{ cursor: "pointer" }}>
-                <CardMedia component="img" className="program-image" image={program.image} alt={program.title} />
+                <CardMedia component="img" className="program-image" image={program.image} alt={program.title} onError={handleImageError}/>
                 <CardContent className="card-content">
                   <Typography className="program-title" variant="h5" component="h3">
                     {program.title}

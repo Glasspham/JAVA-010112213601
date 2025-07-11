@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, Snackbar, Avatar, Rating, SelectChangeEvent, CircularProgress } from "@mui/material";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, Snackbar, Avatar, SelectChangeEvent, CircularProgress } from "@mui/material";
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Visibility as VisibilityIcon, Phone as PhoneIcon, Email as EmailIcon } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import { UserService } from "../../services/UserService";
@@ -7,6 +7,7 @@ import { UserSearch } from "../../dto/UserSearch";
 import { UserDTO } from "../../dto/UserDTO";
 import { FileService } from "../../services/FileService";
 import { toast } from "react-toastify";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 const AdminConsultantsPage: React.FC = () => {
   // State for consultants data
@@ -93,7 +94,7 @@ const AdminConsultantsPage: React.FC = () => {
             bio: "", // API không có bio
             email: user.email,
             phone: user.phone,
-            avatar: user.avatar ? `${process.env.REACT_APP_API_URL}/${user.avatar}` : "",
+            avatar: user.avatar ? getAvatarUrl(user.avatar) : getAvatarUrl(""),
             rating: 5, // Default rating
             availability: true, // Default availability
             createdAt: new Date(user.createDate),
@@ -247,7 +248,7 @@ const AdminConsultantsPage: React.FC = () => {
 
         // Set avatar preview nếu có
         if (userData.avatar) {
-          setAvatarPreview(`${process.env.REACT_APP_API_URL}/${userData.avatar}`);
+          setAvatarPreview(getAvatarUrl(userData.avatar));
         } else {
           setAvatarPreview(null);
         }
@@ -772,7 +773,7 @@ const AdminConsultantsPage: React.FC = () => {
                 Ảnh đại diện
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar src={avatarPreview || (formData.avatar ? `${process.env.REACT_APP_API_URL}/${formData.avatar}` : "")} sx={{ width: 80, height: 80 }} />
+                <Avatar src={avatarPreview || (formData.avatar ? getAvatarUrl(formData.avatar) : "")} sx={{ width: 80, height: 80 }} />
                 <Box>
                   <input accept="image/*" style={{ display: "none" }} id="avatar-upload" type="file" onChange={handleAvatarChange} />
                   <label htmlFor="avatar-upload">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, Button, Grid, Chip, Divider, Paper, Avatar, Rating, List, ListItem, ListItemIcon, ListItemText, Alert, Snackbar, Tab, Tabs, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
+import { Container, Typography, Box, Card, Button, Chip, Divider, Paper, Avatar, Rating, List, ListItem, ListItemIcon, ListItemText, Alert, Tab, Tabs, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, EventNote as EventNoteIcon, Phone as PhoneIcon, Email as EmailIcon, School as SchoolIcon, Star as StarIcon, CheckCircle as CheckCircleIcon, AccessTime as AccessTimeIcon, Close as CloseIcon } from "@mui/icons-material";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -9,6 +9,7 @@ import { AppointmentCreateRequest } from "../../types/appointment";
 import { AuthService } from "../../services/AuthService";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -79,7 +80,7 @@ const ConsultantDetailPage: React.FC = () => {
             fullname: userData.fullname,
             email: userData.email,
             phoneNumber: userData.phone,
-            profilePicture: userData.avatar ? `${process.env.REACT_APP_API_URL}/${userData.avatar}` : "",
+            profilePicture: userData.avatar ? getAvatarUrl(userData.avatar) : getAvatarUrl("default-avatar.png"),
             specialization: userData.majors || [],
             education: userData.position || "Chuyên viên tư vấn",
             experience: 5, // Default experience

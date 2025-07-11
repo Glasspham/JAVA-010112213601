@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, CardMedia, Button, Paper, Grid, Divider, List, ListItem, ListItemIcon, ListItemText, Chip, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField, FormControlLabel, Checkbox, LinearProgress, Snackbar } from "@mui/material";
-import { ArrowBack as ArrowBackIcon, CalendarMonth as CalendarMonthIcon, LocationOn as LocationOnIcon, People as PeopleIcon, AccessTime as AccessTimeIcon, CheckCircle as CheckCircleIcon, EventAvailable as EventAvailableIcon } from "@mui/icons-material";
+import { Container, Typography, Box, Card, CardContent, CardMedia, Button, Divider, List, ListItem, ListItemIcon, ListItemText, Chip, Alert, Dialog, DialogTitle, DialogContent, DialogActions, LinearProgress } from "@mui/material";
+import { ArrowBack as ArrowBackIcon, CalendarMonth as CalendarMonthIcon, LocationOn as LocationOnIcon, People as PeopleIcon, AccessTime as AccessTimeIcon, EventAvailable as EventAvailableIcon } from "@mui/icons-material";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { CommunityProgram } from "../../types/program";
 import { ProgramService } from "../../services/ProgramService";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/ProgramCard.css";
 import { toast } from "react-toastify";
+import { getImageUrl, handleImageError } from "../../utils/imageUtils";
 
 const ProgramDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +51,7 @@ const ProgramDetailPage: React.FC = () => {
       endDate: new Date(startDate.getTime() + 2 * 60 * 60 * 1000), // Default 2 hours duration
       capacity: apiData.capacity,
       registeredCount: apiData.users ? apiData.users.length : 0,
-      image: apiData.image ? programService.getImageUrl(apiData.image) : programService.getImageUrl(""),
+      image: apiData.image ? getImageUrl(apiData.image) : getImageUrl(""),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -219,7 +220,7 @@ const ProgramDetailPage: React.FC = () => {
       </Button>
 
       <Card sx={{ borderRadius: 2, overflow: "hidden", mb: 4 }}>
-        <CardMedia component="img" height="300" image={program.image} alt={program.title} sx={{ objectFit: "cover" }} />
+        <CardMedia component="img" height="300" image={program.image} alt={program.title} sx={{ objectFit: "cover" }} onError={handleImageError}/>
         <CardContent>
           <Typography variant="h4" component="h1" gutterBottom>
             {program.title}

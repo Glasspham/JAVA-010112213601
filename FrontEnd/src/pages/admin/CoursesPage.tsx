@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, FormGroup, FormControlLabel, Checkbox, SelectChangeEvent, CircularProgress, Card, CardContent, CardActions, Avatar } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Visibility as VisibilityIcon, Upload as UploadIcon, VideoLibrary as VideoIcon } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, FormGroup, FormControlLabel, Checkbox, SelectChangeEvent, CircularProgress, Card, CardContent, Avatar } from "@mui/material";
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Upload as UploadIcon, VideoLibrary as VideoIcon } from "@mui/icons-material";
 import { CourseService, CourseDTO, CourseDetail, CourseResponse, CourseSearch } from "../../services/CourseService";
-import { handleImageError, handleVideoError } from "../../utils/imageUtils";
+import { getImageUrl, handleImageError, getVideoUrl, handleVideoError } from "../../utils/imageUtils";
 import { toast } from "react-toastify";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -150,14 +149,14 @@ const AdminCoursesPage: React.FC = () => {
 
         // Set image preview if exists
         if (courseDetail.image) {
-          setImagePreview(courseService.getImageUrl(courseDetail.image));
+          setImagePreview(getImageUrl(courseDetail.image));
         }
 
         // Set video previews for existing videos
         const videoPreviewsObj: { [key: number]: string } = {};
         courseDetail.courseDetail.forEach((detail, index) => {
           if (detail.video) {
-            videoPreviewsObj[index] = courseService.getVideoUrl(detail.video, true); // Add cache busting
+            videoPreviewsObj[index] = getVideoUrl(detail.video);
           }
         });
         setVideoPreviews(videoPreviewsObj);
@@ -469,9 +468,10 @@ const AdminCoursesPage: React.FC = () => {
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <Avatar
                           key={`${course.id}-${course.updateDate || course.createDate}`} // Force re-render when course updates
-                          src={courseService.getImageUrl(course.image, true)} // Use cache busting
+                          src={getImageUrl(course.image)} // Use cache busting
                           alt={course.name}
                           sx={{ width: 40, height: 40 }}
+                          onError={handleImageError}
                         />
                         <Box>
                           <Typography variant="subtitle2">{course.name}</Typography>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, Card, CardContent, Button, Paper, Tabs, Tab, Divider, List, ListItem, ListItemText, ListItemAvatar, Avatar, Chip, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Grid, IconButton } from "@mui/material";
-import { EventNote as EventNoteIcon, Person as PersonIcon, CalendarMonth as CalendarMonthIcon, AccessTime as AccessTimeIcon, Add as AddIcon, Close as CloseIcon } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom";
-import { Appointment, AppointmentStatus, Specialist, AppointmentCreateRequest } from "../../types/appointment";
+import { Container, Typography, Box, Button, Paper, Tabs, Tab, Divider, List, ListItem, ListItemText, ListItemAvatar, Avatar, Chip, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
+import { Person as PersonIcon, CalendarMonth as CalendarMonthIcon, AccessTime as AccessTimeIcon, Add as AddIcon, Close as CloseIcon } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { Appointment, Specialist, AppointmentCreateRequest } from "../../types/appointment";
 import { AppointmentService } from "../../services/AppointmentService";
 import { AuthService } from "../../services/AuthService";
 import { useAuth } from "../../contexts/AuthContext";

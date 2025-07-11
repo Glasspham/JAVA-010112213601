@@ -51,18 +51,6 @@ export class ProgramService {
     }
   }
 
-  public getImageUrl(imagePath: string): string {
-    if (!imagePath || imagePath === "default_no_image.png") {
-      return `${BASE_URL}/default_no_image.png`;
-    }
-
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-
-    return `${BASE_URL}/${imagePath}`;
-  }
-
   public async findAll(programSearch: ProgramSearch) {
     try {
       const params = new URLSearchParams();

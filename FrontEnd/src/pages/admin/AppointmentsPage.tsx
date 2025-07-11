@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Container, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Button, IconButton, Tooltip, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, CircularProgress, SelectChangeEvent } from "@mui/material";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Refresh as RefreshIcon, Visibility as VisibilityIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from "@mui/icons-material";
-import { Appointment, AppointmentStatus, Specialist, AppointmentCreateRequest } from "../../types/appointment";
+import { Add as AddIcon, Search as SearchIcon, Refresh as RefreshIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { Appointment, Specialist, AppointmentCreateRequest } from "../../types/appointment";
 import { AppointmentService } from "../../services/AppointmentService";
-import { AuthService } from "../../services/AuthService";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -13,7 +12,6 @@ import { toast } from "react-toastify";
 
 const AdminAppointmentsPage: React.FC = () => {
   const appointmentService = new AppointmentService();
-  const authService = new AuthService();
 
   // State for appointments data
   const [appointments, setAppointments] = useState<Appointment[]>([]);

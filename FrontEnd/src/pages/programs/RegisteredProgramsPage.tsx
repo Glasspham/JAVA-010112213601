@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import ClientLayout from "../../components/layout/ClientLayout";
 import { ProgramService } from "../../services/ProgramService";
 import { CommunityProgram } from "../../types/program";
+import { getImageUrl, handleImageError } from "../../utils/imageUtils"; // Assuming you have a utility function to get image URLs
 
 const RegisteredProgramsPage: React.FC = () => {
   const [programs, setPrograms] = useState<CommunityProgram[]>([]);
@@ -37,7 +38,7 @@ const RegisteredProgramsPage: React.FC = () => {
           location: item.address,
           capacity: item.capacity,
           registeredCount: item.users ? item.users.length : 0,
-          image: item.image ? `${process.env.REACT_APP_API_URL}/${item.image}` : `${process.env.REACT_APP_API_URL}/default_no_image.png`,
+          image: item.image ? getImageUrl(item.image) : getImageUrl(""),
         }));
         setPrograms(mappedPrograms);
       }
@@ -88,7 +89,7 @@ const RegisteredProgramsPage: React.FC = () => {
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 3 }}>
             {programs.map((program) => (
               <Card key={program.id} sx={{ borderRadius: 2, overflow: "hidden" }}>
-                <CardMedia component="img" height="200" image={program.image} alt={program.title} />
+                <CardMedia component="img" height="200" image={program.image} alt={program.title} onError={handleImageError}/>
                 <CardContent>
                   <Typography variant="h6" component="h3" gutterBottom sx={{ mb: 2 }}>
                     {program.title}
