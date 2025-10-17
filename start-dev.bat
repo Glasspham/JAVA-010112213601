@@ -76,6 +76,20 @@ echo ╔════════════════════════
 echo ║    Starting Frontend...    ║
 echo ╚════════════════════════════╝
 echo.
+rem Ensure dependencies are installed (react-scripts must be available)
+if not exist "FrontEnd\node_modules\.bin\react-scripts" (
+    echo react-scripts not found, installing dependencies in FrontEnd...
+    if exist "FrontEnd\package-lock.json" (
+        pushd FrontEnd
+        npm ci
+        popd
+    ) else (
+        pushd FrontEnd
+        npm install
+        popd
+    )
+)
+
 start cmd /k "cd FrontEnd && npm start -- --host 0.0.0.0"
 
 echo ═════════════════════════════════════════════
